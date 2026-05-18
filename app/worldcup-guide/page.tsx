@@ -128,7 +128,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'talanger', label: '🚀 Talanger' },
   { id: 'sverige', label: '🇸🇪 Sverige' },
   { id: 'favoriter', label: '📊 Favoriter' },
-  { id: 'mörkhästar', label: '🐴 Mörkahästar' },
+  { id: 'mörkhästar', label: '💥 Skrällchanser' },
   { id: 'fakta', label: '💡 Fakta' },
 ]
 
@@ -513,7 +513,7 @@ function DarkHorsesTab() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">Mörkahästar</h2>
+        <h2 className="text-xl font-bold mb-1">Skrällchanser</h2>
         <p className="text-gray-400 text-sm">Lag som kan gå längre än de flesta tror.</p>
       </div>
 
