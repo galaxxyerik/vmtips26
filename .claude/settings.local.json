@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\bracket-logic.ts\" \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\lib\\\\bracket-logic.ts\")"
+    ]
+  }
+}

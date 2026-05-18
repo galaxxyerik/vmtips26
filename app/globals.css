@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-surface-900 text-gray-100 antialiased;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-pitch-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pitch-500 focus:outline-none focus:ring-2 focus:ring-pitch-500 focus:ring-offset-2 focus:ring-offset-surface-900 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface-600 px-5 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:bg-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2 focus:ring-offset-surface-900 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-gray-400 transition-colors hover:bg-surface-700 hover:text-gray-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .card {
+    @apply rounded-xl border border-surface-600 bg-surface-800 p-5;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-surface-500 bg-surface-700 px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-pitch-500 focus:outline-none focus:ring-1 focus:ring-pitch-500;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-300 mb-1.5;
+  }
+
+  .pick-btn {
+    @apply flex-1 rounded-lg border py-2 text-sm font-bold transition-all focus:outline-none;
+  }
+
+  .pick-btn-unselected {
+    @apply border-surface-500 bg-surface-700 text-gray-400 hover:border-pitch-600 hover:text-pitch-400;
+  }
+
+  .pick-btn-selected-1 {
+    @apply border-pitch-500 bg-pitch-900/40 text-pitch-300;
+  }
+
+  .pick-btn-selected-X {
+    @apply border-yellow-500 bg-yellow-900/40 text-yellow-300;
+  }
+
+  .pick-btn-selected-2 {
+    @apply border-blue-500 bg-blue-900/40 text-blue-300;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-pitch-900/50 text-pitch-400 border border-pitch-800;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-900/50 text-yellow-400 border border-yellow-800;
+  }
+
+  .badge-gray {
+    @apply badge bg-surface-600 text-gray-400 border border-surface-500;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-pitch-400 to-emerald-300 bg-clip-text text-transparent;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
