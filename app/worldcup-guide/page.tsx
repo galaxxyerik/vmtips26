@@ -177,13 +177,13 @@ const FAVORITES = [
 type Tab = 'grupper' | 'stjärnor' | 'talanger' | 'sverige' | 'favoriter' | 'mörkhästar' | 'fakta'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'grupper', label: '🏟 Grupper' },
-  { id: 'stjärnor', label: '⭐ Stjärnor' },
-  { id: 'talanger', label: '🚀 Talanger' },
+  { id: 'grupper', label: 'Grupper' },
+  { id: 'stjärnor', label: 'Stjärnor' },
+  { id: 'talanger', label: 'Talanger' },
   { id: 'sverige', label: '🇸🇪 Sverige' },
-  { id: 'favoriter', label: '📊 Favoriter' },
-  { id: 'mörkhästar', label: '💥 Skrällchanser' },
-  { id: 'fakta', label: '💡 Fakta' },
+  { id: 'favoriter', label: 'Favoriter' },
+  { id: 'mörkhästar', label: 'Skrällchanser' },
+  { id: 'fakta', label: 'Fakta' },
 ]
 
 export default function WorldCupGuidePage() {
@@ -207,16 +207,16 @@ export default function WorldCupGuidePage() {
           </div>
 
           {/* Tournament facts strip */}
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10">
             {[
               { label: 'Lag', value: '48' },
               { label: 'Grupper', value: '12 (A–L)' },
               { label: 'Matcher', value: '104' },
               { label: 'Final', value: '19 jul · MetLife' },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-surface-800 rounded-lg px-3 py-2.5 text-center">
-                <div className="text-lg font-bold text-pitch-400">{value}</div>
-                <div className="text-xs text-gray-500">{label}</div>
+              <div key={label} className="bg-navy-900 px-3 py-2.5 text-center">
+                <div className="font-display font-black text-lg text-swe-yellow">{value}</div>
+                <div className="text-[10px] text-white/30 uppercase tracking-wider">{label}</div>
               </div>
             ))}
           </div>
@@ -263,48 +263,66 @@ export default function WorldCupGuidePage() {
 
 function GroupsTab() {
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">Gruppspelet</h2>
-        <p className="text-gray-400 text-sm">
-          12 grupper (A–L) med 4 lag vardera. De 2 bästa plus 8 bästa tredjeplacerade går vidare.
-          <br /><span className="text-pitch-400">W</span> = förutspådd etta · <span className="text-yellow-400">Q</span> = vidare · <span className="text-gray-500">E</span> = åker hem
+    <div className="space-y-0">
+      <div className="border border-white/10 px-4 py-3 bg-navy-900 mb-4">
+        <div className="label mb-1">VM 2026 · Gruppspel</div>
+        <p className="text-white/40 text-xs leading-relaxed">
+          12 grupper (A–L) · 4 lag vardera · De 2 bästa + 8 bästa tredjeplacerade går vidare
+          <span className="mx-2">·</span>
+          <span className="text-pitch-400 font-display font-black">W</span> = etta ·{' '}
+          <span className="text-swe-yellow font-display font-black">Q</span> = vidare ·{' '}
+          <span className="text-white/25 font-display font-black">E</span> = åker hem
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {GROUPS.map(g => (
           <div
             key={g.letter}
-            className={`card ${g.letter === 'F' ? 'border-pitch-700 bg-pitch-900/10' : ''}`}
+            className={`border ${g.letter === 'F' ? 'border-swe-yellow/30' : 'border-white/10'}`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-base">
-                Grupp {g.letter}
-                {g.letter === 'F' && <span className="ml-2 badge-green text-xs">Sverige</span>}
-              </h3>
-              <span className="text-xs text-gray-500">🔥 {g.hotMatch}</span>
+            {/* Group header */}
+            <div className={`px-4 py-2 flex items-center justify-between ${
+              g.letter === 'F' ? 'bg-swe-yellow/10' : 'bg-navy-900'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-black text-sm uppercase tracking-wider text-white">
+                  Grupp {g.letter}
+                </span>
+                {g.letter === 'F' && (
+                  <span className="text-[9px] font-display font-black uppercase tracking-wider border border-swe-yellow/40 text-swe-yellow px-1.5 py-0.5">
+                    Sverige
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-white/30 font-display font-black uppercase truncate ml-2">
+                {g.hotMatch}
+              </span>
             </div>
 
-            <div className="space-y-1.5 mb-3">
+            {/* Teams */}
+            <div className="divide-y divide-white/5">
               {g.teams.map(team => (
-                <div key={team.name} className="flex items-center gap-2">
-                  <span className="text-lg w-7">{team.flag}</span>
+                <div key={team.name} className="flex items-center gap-2 px-4 py-2">
+                  <span className="text-base w-6 flex-shrink-0">{team.flag}</span>
                   <span className={`flex-1 text-sm font-medium ${
-                    team.name === 'Sverige' ? 'text-pitch-300' : 'text-gray-200'
+                    team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/80'
                   }`}>{team.name}</span>
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
-                    team.prediction === 'W' ? 'text-pitch-400 bg-pitch-900/40' :
-                    team.prediction === 'Q' ? 'text-yellow-400 bg-yellow-900/30' :
-                    'text-gray-600 bg-surface-700'
+                  <span className={`text-[10px] font-display font-black px-1.5 py-0.5 border ${
+                    team.prediction === 'W'
+                      ? 'text-pitch-400 border-pitch-500/30 bg-pitch-900/20'
+                      : team.prediction === 'Q'
+                      ? 'text-swe-yellow border-swe-yellow/30'
+                      : 'text-white/20 border-white/10'
                   }`}>{team.prediction}</span>
                 </div>
               ))}
             </div>
 
-            <p className="text-xs text-gray-500 leading-relaxed border-t border-surface-700 pt-3">
-              {g.analysis}
-            </p>
+            {/* Analysis */}
+            <div className="px-4 py-2.5 border-t border-white/5">
+              <p className="text-[11px] text-white/40 leading-relaxed">{g.analysis}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -319,53 +337,65 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">{title}</h2>
-        <p className="text-gray-400 text-sm">{subtitle}</p>
+      <div className="border border-white/10 px-4 py-3 bg-navy-900 mb-4">
+        <div className="label mb-0.5">{title}</div>
+        <p className="text-white/40 text-xs">{subtitle}</p>
       </div>
 
-      <div className="space-y-3">
-        {players.map(p => (
-          <div
-            key={p.name}
-            className="card cursor-pointer hover:border-surface-500 transition-colors"
-            onClick={() => setExpanded(expanded === p.name ? null : p.name)}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl flex-shrink-0">{p.flag}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-gray-100">{p.name}</span>
-                  <span className="badge-gray text-xs">{p.position}</span>
-                  <span className="text-xs text-gray-500">{p.country}</span>
+      <div className="border border-white/10 divide-y divide-white/5">
+        {players.map((p, i) => (
+          <div key={p.name}>
+            <button
+              className="w-full flex items-center gap-0 text-left hover:bg-navy-900/40 transition-colors"
+              onClick={() => setExpanded(expanded === p.name ? null : p.name)}
+            >
+              {/* Rank */}
+              <div className="w-10 flex-shrink-0 flex items-center justify-center self-stretch border-r border-white/5 bg-navy-900/50">
+                <span className="font-display font-black text-sm text-white/20 tnum">{String(i + 1).padStart(2, '0')}</span>
+              </div>
+
+              {/* Flag */}
+              <div className="w-10 flex-shrink-0 flex items-center justify-center self-stretch border-r border-white/5">
+                <span className="text-xl">{p.flag}</span>
+              </div>
+
+              {/* Main info */}
+              <div className="flex-1 px-4 py-3 min-w-0">
+                <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
+                  {p.name}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">{p.club} · {p.age} år</div>
+                <div className="text-[11px] text-white/35 mt-0.5">
+                  {p.position} · {p.club} · {p.country} · {p.age} år
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="text-[10px] font-display font-black border border-pitch-500/30 text-pitch-400 px-1.5 py-0.5">
+                    {p.stat}
+                  </span>
+                  <span className="text-[10px] text-white/25">{p.statLabel}</span>
+                </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-xl font-bold text-pitch-400">{p.rating}</div>
-                <div className="text-xs text-gray-600">/ 10</div>
+
+              {/* Rating */}
+              <div className="px-4 text-right flex-shrink-0">
+                <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
+                <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
               </div>
-            </div>
+            </button>
 
-            {/* Stat badge */}
-            <div className="mt-2 flex items-center gap-2">
-              <span className="badge-green text-xs">{p.stat}</span>
-              <span className="text-xs text-gray-500">{p.statLabel}</span>
-            </div>
-
-            {/* Expanded detail */}
             {expanded === p.name && (
-              <div className="mt-4 pt-4 border-t border-surface-700 space-y-3">
-                <p className="text-sm text-gray-300 leading-relaxed">{p.why}</p>
-                <div className="bg-surface-700/50 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-gray-400 mb-1">Spelstil</p>
-                  <p className="text-xs text-gray-300 leading-relaxed">{p.style}</p>
+              <div className="px-4 pb-4 pt-3 border-t border-white/5 bg-navy-900/30 space-y-3">
+                <p className="text-sm text-white/65 leading-relaxed">{p.why}</p>
+                <div className="border border-white/10 px-3 py-2.5">
+                  <div className="label text-[9px] mb-1">Spelstil</div>
+                  <p className="text-xs text-white/50 leading-relaxed">{p.style}</p>
                 </div>
               </div>
             )}
 
             {expanded !== p.name && (
-              <p className="text-xs text-gray-600 mt-2 line-clamp-2">{p.why}</p>
+              <div className="px-14 pb-2.5 -mt-1">
+                <p className="text-[11px] text-white/30 line-clamp-1">{p.why}</p>
+              </div>
             )}
           </div>
         ))}
@@ -539,29 +569,27 @@ function SwedenTab() {
 
 function FavoritesTab() {
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">Turneringsfavoriter</h2>
-        <p className="text-gray-400 text-sm">Oddsbaserade vinstchanser för de starkaste lagen.</p>
+    <div className="space-y-4">
+      <div className="border border-white/10 px-4 py-3 bg-navy-900">
+        <div className="label mb-0.5">Turneringsfavoriter</div>
+        <p className="text-white/40 text-xs">Oddsbaserade vinstchanser för de starkaste lagen.</p>
       </div>
 
-      <div className="space-y-3 mb-8">
+      <div className="border border-white/10 divide-y divide-white/5">
         {FAVORITES.map((f, i) => (
-          <div key={f.country} className="flex items-center gap-4">
-            <div className="w-6 text-sm text-gray-600 text-right">{i + 1}</div>
-            <span className="text-2xl">{f.flag}</span>
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-semibold text-sm text-gray-200">{f.country}</span>
-                <span className="text-sm font-bold text-pitch-400">{f.pct}%</span>
+          <div key={f.country} className="flex items-center gap-4 px-4 py-3">
+            <span className="font-display font-black text-sm text-white/20 w-5 text-right tnum flex-shrink-0">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span className="text-xl flex-shrink-0">{f.flag}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="font-display font-black uppercase tracking-wide text-sm text-white">{f.country}</span>
+                <span className="font-display font-black text-swe-yellow tnum">{f.pct}%</span>
               </div>
-              <div className="h-2 bg-surface-700 rounded-full overflow-hidden">
+              <div className="h-0.5 bg-white/10 overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${
-                    i === 0 ? 'bg-pitch-500' :
-                    i === 1 ? 'bg-pitch-600' :
-                    i === 2 ? 'bg-pitch-700' : 'bg-surface-500'
-                  }`}
+                  className="h-full bg-swe-yellow transition-all"
                   style={{ width: `${(f.pct / 19) * 100}%` }}
                 />
               </div>
@@ -571,32 +599,30 @@ function FavoritesTab() {
       </div>
 
       {/* Final prediction */}
-      <div className="card border-pitch-700 bg-pitch-900/15 space-y-4">
-        <h3 className="font-bold text-pitch-300">🏆 Vår finaltipp</h3>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
+      <div className="border border-swe-yellow/20 bg-swe-yellow/5">
+        <div className="px-4 py-3 border-b border-swe-yellow/15">
+          <div className="label text-swe-yellow/60">Vår finaltipp</div>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-white/10">
+          <div className="px-4 py-5 text-center">
             <div className="text-4xl mb-2">🇫🇷</div>
-            <div className="font-bold text-yellow-300">Frankrike</div>
-            <div className="text-xs text-gray-500">Mästare</div>
+            <div className="font-display font-black uppercase tracking-wide text-swe-yellow text-sm">Frankrike</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-0.5">Mästare</div>
           </div>
-          <div className="text-center">
+          <div className="px-4 py-5 text-center">
             <div className="text-4xl mb-2">🇧🇷</div>
-            <div className="font-bold text-gray-300">Brasilien</div>
-            <div className="text-xs text-gray-500">Runners-up</div>
+            <div className="font-display font-black uppercase tracking-wide text-white text-sm">Brasilien</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-0.5">Runners-up</div>
           </div>
         </div>
-
-        <div className="bg-surface-700/50 rounded-lg p-3 space-y-2">
-          <p className="text-xs font-semibold text-gray-400">Motivering</p>
-          <p className="text-sm text-gray-300 leading-relaxed">
-            Frankrike är det enda laget med världsklass på varje position och en anfallare i absolut prime.
-            Mbappé, Dembélé, Griezmann up front — Zaïre-Emery och Tchouaméni i mitten — Saliba och
-            Upamecano bak. Det finns inget svar på detta lag.
+        <div className="px-4 py-3 border-t border-white/10 space-y-2">
+          <p className="text-xs text-white/55 leading-relaxed">
+            Frankrike är det enda laget med världsklass på varje position. Mbappé, Dembélé, Griezmann up front —
+            Zaïre-Emery och Tchouaméni i mitten — Saliba och Upamecano bak. Det finns inget svar på detta lag.
           </p>
-          <div className="pt-2 border-t border-surface-600">
-            <p className="text-xs text-gray-400 font-semibold">Skyttekung</p>
-            <p className="text-sm text-pitch-300 font-bold">Kylian Mbappé (Frankrike) — 9 mål</p>
+          <div className="pt-2 border-t border-white/10">
+            <span className="label text-[9px]">Skyttekung · </span>
+            <span className="text-xs text-swe-yellow font-display font-black uppercase">Kylian Mbappé (Frankrike) — 9 mål</span>
           </div>
         </div>
       </div>
@@ -608,39 +634,37 @@ function FavoritesTab() {
 
 function DarkHorsesTab() {
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">Skrällchanser</h2>
-        <p className="text-gray-400 text-sm">Lag som kan gå längre än de flesta tror.</p>
+    <div className="space-y-4">
+      <div className="border border-white/10 px-4 py-3 bg-navy-900">
+        <div className="label mb-0.5">Skrällchanser</div>
+        <p className="text-white/40 text-xs">Lag som kan gå längre än de flesta tror.</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="border border-white/10 divide-y divide-white/5">
         {DARK_HORSES.map(d => (
-          <div key={d.country} className="card">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-3xl">{d.flag}</span>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-100">{d.country}</span>
-                  <span className="badge-yellow text-xs">Max: {d.maxFinish}</span>
+          <div key={d.country} className="px-4 py-4">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-3xl leading-none flex-shrink-0">{d.flag}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                  <span className="font-display font-black uppercase tracking-wide text-white">{d.country}</span>
+                  <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow/80 px-1.5 py-0.5">
+                    Max: {d.maxFinish}
+                  </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">Nyckelspelare: {d.keyPlayer}</div>
+                <div className="text-[11px] text-white/35">Nyckelspelare: {d.keyPlayer}</div>
               </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-yellow-400">{d.strength}/10</div>
-                <div className="text-xs text-gray-600">styrka</div>
+              <div className="text-right flex-shrink-0">
+                <div className="font-display font-black text-xl text-swe-yellow tnum">{d.strength}</div>
+                <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
               </div>
             </div>
 
-            {/* Strength bar */}
-            <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden mb-3">
-              <div
-                className="h-full bg-yellow-600 rounded-full"
-                style={{ width: `${(d.strength / 10) * 100}%` }}
-              />
+            <div className="h-px bg-white/10 mb-3 overflow-hidden">
+              <div className="h-full bg-swe-yellow/60" style={{ width: `${(d.strength / 10) * 100}%` }} />
             </div>
 
-            <p className="text-sm text-gray-300 leading-relaxed">{d.why}</p>
+            <p className="text-xs text-white/55 leading-relaxed">{d.why}</p>
           </div>
         ))}
       </div>
@@ -652,17 +676,21 @@ function DarkHorsesTab() {
 
 function FactsTab() {
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-1">VM-fakta</h2>
-        <p className="text-gray-400 text-sm">25 saker du bör veta inför VM 2026.</p>
+    <div className="space-y-4">
+      <div className="border border-white/10 px-4 py-3 bg-navy-900">
+        <div className="label mb-0.5">VM-fakta</div>
+        <p className="text-white/40 text-xs">{FACTS.length} saker du bör veta inför VM 2026.</p>
       </div>
 
-      <div className="space-y-2">
+      <div className="border border-white/10 divide-y divide-white/5">
         {FACTS.map((fact, i) => (
-          <div key={i} className="card py-3 flex gap-3">
-            <span className="text-pitch-600 font-bold text-sm w-5 flex-shrink-0 text-right">{i + 1}</span>
-            <p className="text-sm text-gray-300 leading-relaxed">{fact}</p>
+          <div key={i} className="flex gap-0">
+            <div className="w-10 flex-shrink-0 flex items-start justify-center pt-3 border-r border-white/5 bg-navy-900/50">
+              <span className="font-display font-black text-[11px] text-white/20 tnum">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+            </div>
+            <p className="flex-1 px-4 py-3 text-sm text-white/60 leading-relaxed">{fact}</p>
           </div>
         ))}
       </div>
