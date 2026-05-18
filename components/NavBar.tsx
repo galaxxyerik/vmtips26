@@ -20,37 +20,53 @@ export default function NavBar({ userName, isAdmin }: NavBarProps) {
     router.refresh()
   }
 
-  const linkClass = (path: string) =>
-    `px-2.5 py-1 text-xs font-medium transition-colors border ${
-      pathname.startsWith(path)
-        ? 'border-surface-500 text-white bg-surface-700'
-        : 'border-transparent text-gray-400 hover:text-white'
-    }`
+  const navLink = (path: string, label: string) => {
+    const active = pathname.startsWith(path)
+    return (
+      <Link
+        href={path}
+        className={`relative flex h-14 items-center px-3 text-xs font-display font-black uppercase tracking-[0.1em] transition-colors ${
+          active ? 'text-white' : 'text-white/45 hover:text-white'
+        }`}
+      >
+        {label}
+        {active && (
+          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-swe-yellow" />
+        )}
+      </Link>
+    )
+  }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-surface-700 bg-surface-900/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="font-bold text-white text-sm">
-          VM<span className="text-yellow-400">-tips 26</span>
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-navy-950">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        {/* Wordmark */}
+        <Link href="/" className="font-display font-black text-white text-lg uppercase tracking-[0.06em]">
+          VM<span className="text-swe-yellow">-TIPS 26</span>
         </Link>
 
-        <div className="flex items-center gap-1">
-          <Link href="/worldcup-guide" className={linkClass('/worldcup-guide')}>VM-guide</Link>
-          <Link href="/regler" className={linkClass('/regler')}>Regler</Link>
-          <Link href="/dashboard" className={linkClass('/dashboard')}>Tabell</Link>
-          {isAdmin && <Link href="/admin" className={linkClass('/admin')}>Admin</Link>}
+        <div className="flex items-center">
+          {navLink('/worldcup-guide', 'VM-guide')}
+          {navLink('/regler', 'Regler')}
+          {navLink('/dashboard', 'Tabell')}
+          {isAdmin && navLink('/admin', 'Admin')}
 
-          <div className="ml-2 flex items-center gap-2">
+          <div className="ml-3 flex items-center gap-2">
             {userName ? (
               <>
-                <span className="text-xs text-gray-500 hidden sm:block">{userName}</span>
-                <button onClick={handleSignOut}
-                  className="px-2.5 py-1 text-xs border border-surface-600 text-gray-400 hover:text-white hover:border-surface-400 transition-colors">
+                <span className="text-xs text-white/30 hidden sm:block">{userName}</span>
+                <button
+                  onClick={handleSignOut}
+                  className="px-3 py-1.5 text-xs font-display font-black uppercase tracking-[0.1em] border border-white/15 text-white/45 hover:text-white hover:border-white/30 transition-colors"
+                >
                   Logga ut
                 </button>
               </>
             ) : (
-              <Link href="/login" className="px-2.5 py-1 text-xs border border-surface-600 text-gray-400 hover:text-white hover:border-surface-400 transition-colors">
+              <Link
+                href="/login"
+                className="px-3 py-1.5 text-xs font-display font-black uppercase tracking-[0.1em] border border-white/15 text-white/45 hover:text-white hover:border-white/30 transition-colors"
+              >
                 Logga in
               </Link>
             )}

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,8 +14,9 @@
   }
 
   body {
-    @apply bg-surface-900 text-gray-100 antialiased;
+    @apply bg-navy-950 text-gray-100 antialiased;
     font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv11';
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -23,67 +26,72 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-pitch-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pitch-500 focus:outline-none focus:ring-2 focus:ring-pitch-500 focus:ring-offset-2 focus:ring-offset-surface-900 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 bg-swe-yellow text-navy-950 px-5 h-11 font-display font-black uppercase tracking-[0.12em] transition-colors hover:bg-swe-yellowHi focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface-600 px-5 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:bg-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-500 focus:ring-offset-2 focus:ring-offset-surface-900 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 bg-transparent text-white border border-white/20 px-5 h-11 font-display font-black uppercase tracking-[0.12em] transition-colors hover:bg-white/5 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-gray-400 transition-colors hover:bg-surface-700 hover:text-gray-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white/55 transition-colors hover:bg-white/5 hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .card {
-    @apply rounded-xl border border-surface-600 bg-surface-800 p-5;
+    @apply bg-navy-900 border border-white/10 p-5;
   }
 
   .input {
-    @apply w-full rounded-lg border border-surface-500 bg-surface-700 px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 transition-colors focus:border-pitch-500 focus:outline-none focus:ring-1 focus:ring-pitch-500;
+    @apply w-full bg-navy-900 border border-white/10 px-3 py-2.5 text-[14px] text-white placeholder:text-white/35 transition-colors focus:border-swe-yellow focus:outline-none;
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-300 mb-1.5;
+    @apply block font-display font-black uppercase text-[10px] tracking-[0.18em] text-white/55 mb-1.5;
   }
 
   .pick-btn {
-    @apply flex-1 rounded-lg border py-2 text-sm font-bold transition-all focus:outline-none;
+    @apply flex-1 border py-2 text-sm font-bold transition-all focus:outline-none;
   }
 
   .pick-btn-unselected {
-    @apply border-surface-500 bg-surface-700 text-gray-400 hover:border-pitch-600 hover:text-pitch-400;
+    @apply border-white/15 bg-navy-900 text-white/40 hover:border-swe-yellow/50 hover:text-white/70;
   }
 
   .pick-btn-selected-1 {
-    @apply border-pitch-500 bg-pitch-900/40 text-pitch-300;
+    @apply border-pitch-500 bg-pitch-900/40 text-pitch-400;
   }
 
   .pick-btn-selected-X {
-    @apply border-yellow-500 bg-yellow-900/40 text-yellow-300;
+    @apply border-swe-yellow bg-swe-yellow/10 text-swe-yellow;
   }
 
   .pick-btn-selected-2 {
-    @apply border-blue-500 bg-blue-900/40 text-blue-300;
+    @apply border-swe-blue bg-swe-blue/10 text-blue-300;
   }
 
   .badge {
-    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium;
   }
 
   .badge-green {
-    @apply badge bg-pitch-900/50 text-pitch-400 border border-pitch-800;
+    @apply badge bg-pitch-900/50 text-pitch-400 border border-pitch-500/30;
   }
 
   .badge-yellow {
-    @apply badge bg-yellow-900/50 text-yellow-400 border border-yellow-800;
+    @apply badge bg-swe-yellow/10 text-swe-yellow border border-swe-yellow/30;
   }
 
   .badge-gray {
-    @apply badge bg-surface-600 text-gray-400 border border-surface-500;
+    @apply badge bg-white/5 text-white/40 border border-white/10;
   }
 }
 
 @layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
   .text-gradient {
     @apply bg-gradient-to-r from-pitch-400 to-emerald-300 bg-clip-text text-transparent;
   }

@@ -67,23 +67,25 @@ export default function LandingPage() {
   const canStart = name.trim().length > 0 && email.trim().length > 0
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 bg-navy-950">
+      {/* Resume modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-sm border border-surface-600 bg-surface-900 p-6 space-y-4">
-            <h2 className="font-bold text-white">Du har ett påbörjat tips</h2>
+          <div className="w-full max-w-sm border border-white/15 bg-navy-900 p-6 space-y-4">
+            <div className="label">Påbörjat tips</div>
+            <h2 className="font-display font-black text-white text-xl uppercase tracking-wide">
+              Vill du fortsätta?
+            </h2>
             {draftTime && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-white/35 tnum">
                 Senast ändrat: {new Date(draftTime).toLocaleString('sv-SE')}
               </p>
             )}
-            <div className="flex gap-2">
-              <button onClick={handleResume}
-                className="flex-1 py-2 bg-yellow-500 text-black text-sm font-bold hover:bg-yellow-400 transition-colors">
+            <div className="flex gap-2 pt-1">
+              <button onClick={handleResume} className="btn-primary flex-1">
                 Fortsätt →
               </button>
-              <button onClick={handleRestart}
-                className="flex-1 py-2 border border-surface-600 text-gray-400 text-sm hover:text-white hover:border-surface-400 transition-colors">
+              <button onClick={handleRestart} className="btn-secondary flex-1">
                 Börja om
               </button>
             </div>
@@ -92,53 +94,52 @@ export default function LandingPage() {
       )}
 
       <div className="max-w-md w-full space-y-8">
+        {/* Hero wordmark */}
         <div className="text-center">
-          <h1 className="text-4xl font-black mb-2">
-            VM<span className="text-yellow-400">-tips 26</span>
+          <h1 className="font-display font-black text-5xl uppercase tracking-[0.04em] text-white leading-none">
+            VM<span className="text-swe-yellow">-TIPS</span>
+            <span className="block text-3xl text-white/40 mt-1">2026</span>
           </h1>
-          <p className="text-gray-400">Tippa VM 2026 med dina vänner</p>
+          <p className="text-white/45 text-sm mt-3">Tippa VM 2026 med dina vänner</p>
         </div>
 
+        {/* Entry form */}
         <form onSubmit={handleStart} className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ditt namn</label>
+            <label className="label">Ditt namn</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Förnamn Efternamn"
               autoComplete="name"
-              className="w-full bg-surface-800 border border-surface-600 px-3 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500"
+              className="input"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Din e-post</label>
+            <label className="label">Din e-post</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="din@epost.se"
               autoComplete="email"
-              className="w-full bg-surface-800 border border-surface-600 px-3 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500"
+              className="input"
             />
           </div>
-          {error && <p className="text-xs text-red-400">{error}</p>}
-          <button type="submit" disabled={!canStart}
-            className={`w-full py-3 text-base font-bold transition-colors ${
-              canStart
-                ? 'bg-yellow-500 text-black hover:bg-yellow-400'
-                : 'bg-surface-700 text-gray-600 cursor-not-allowed'
-            }`}>
-            ⚽ Börja tippa!
+          {error && <p className="text-xs text-loss-500">{error}</p>}
+          <button type="submit" disabled={!canStart} className="btn-primary w-full mt-1">
+            Börja tippa →
           </button>
         </form>
 
-        <div className="flex justify-center gap-6 text-xs text-gray-600">
-          <Link href="/dashboard" className="hover:text-white transition-colors">🏆 Se tabellen</Link>
-          <Link href="/regler" className="hover:text-white transition-colors">📋 Regler</Link>
-          <Link href="/login" className="hover:text-white transition-colors">🔑 Logga in</Link>
+        {/* Footer links */}
+        <div className="flex justify-center gap-6 text-xs text-white/30">
+          <Link href="/dashboard" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Tabell</Link>
+          <Link href="/regler" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Regler</Link>
+          <Link href="/login" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Logga in</Link>
         </div>
-        <p className="text-center text-xs text-gray-600">Insats: 100 kr · Deadline: 11 juni 2026</p>
+        <p className="text-center text-xs text-white/20 tnum">Insats: 100 kr · Deadline: 11 juni 2026</p>
       </div>
     </main>
   )

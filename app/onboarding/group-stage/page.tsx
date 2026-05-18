@@ -76,7 +76,7 @@ export default function GroupStagePage() {
     return map
   }, [matches])
 
-  if (loading || !draft) return <div className="flex min-h-screen items-center justify-center text-gray-400">Laddar...</div>
+  if (loading || !draft) return <div className="flex min-h-screen items-center justify-center text-white/35">Laddar...</div>
 
   const gm = groupedMatches()
   const totalMatches = matches.length
@@ -98,16 +98,16 @@ export default function GroupStagePage() {
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
       {/* Header */}
       <div className="mb-4">
-        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Steg 1 av 3 · Gruppspel</div>
-        <h1 className="text-xl font-bold mb-2">Tippa gruppspelet</h1>
+        <div className="label">Steg 1 av 3 · Gruppspel</div>
+        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tippa gruppspelet</h1>
         <div className="flex items-center gap-2 text-xs">
-          <span className={pickedCount === totalMatches && totalMatches > 0 ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+          <span className={`tnum ${pickedCount === totalMatches && totalMatches > 0 ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
             {pickedCount}/{totalMatches} matcher
           </span>
-          <div className="flex-1 h-1 bg-surface-700">
-            <div className="h-full bg-yellow-500 transition-all" style={{ width: `${totalMatches ? pickedCount/totalMatches*100 : 0}%` }} />
+          <div className="flex-1 h-0.5 bg-white/10">
+            <div className="h-full bg-swe-yellow transition-all" style={{ width: `${totalMatches ? pickedCount/totalMatches*100 : 0}%` }} />
           </div>
-          <span className={thirdPlaceOk ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+          <span className={`tnum ${thirdPlaceOk ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
             {draft.thirdPlaceSelected.length}/8 treor
           </span>
         </div>
@@ -117,12 +117,12 @@ export default function GroupStagePage() {
       <div className="flex flex-wrap gap-1 mb-4">
         {GROUPS.map(g => (
           <button key={g} onClick={() => setActiveGroup(g)}
-            className={`px-2.5 py-1 text-xs font-bold border transition-colors ${
+            className={`px-2.5 py-1 text-xs font-display font-black uppercase border transition-colors ${
               activeGroup === g
-                ? 'bg-yellow-500 text-black border-yellow-500'
+                ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
                 : groupDone(g)
-                ? 'bg-pitch-900/30 text-pitch-400 border-pitch-800'
-                : 'bg-surface-800 text-gray-400 border-surface-600 hover:text-white'
+                ? 'bg-pitch-900/30 text-pitch-400 border-pitch-500/30'
+                : 'bg-navy-900 text-white/40 border-white/10 hover:text-white'
             }`}>
             {g}
             {groupDone(g) && activeGroup !== g && <span className="ml-1 text-pitch-400">✓</span>}
@@ -146,20 +146,18 @@ export default function GroupStagePage() {
       />
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-3 py-3">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-navy-950/95 backdrop-blur px-3 py-3">
         <div className="mx-auto max-w-2xl flex items-center justify-between gap-3">
-          <div className="text-xs text-gray-500 space-y-0.5">
+          <div className="text-xs text-white/30 space-y-0.5">
             {!allMatchesPicked && <div>· Tippa alla {totalMatches} matcher</div>}
             {!thirdPlaceOk && <div>· Välj exakt 8 treor ({draft.thirdPlaceSelected.length}/8)</div>}
             {!allScorers && <div>· Fyll i skyttekung i alla grupper</div>}
           </div>
-          <button onClick={() => canProceed && router.push('/onboarding/bracket')}
+          <button
+            onClick={() => canProceed && router.push('/onboarding/bracket')}
             disabled={!canProceed}
-            className={`px-6 py-2 text-sm font-bold border transition-colors ${
-              canProceed
-                ? 'bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-400'
-                : 'bg-surface-700 text-gray-600 border-surface-600 cursor-not-allowed'
-            }`}>
+            className={canProceed ? 'btn-primary' : 'btn-primary opacity-40 cursor-not-allowed'}
+          >
             Nästa: Slutspel →
           </button>
         </div>
@@ -188,13 +186,13 @@ function GroupPanel({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Grupp {group}</h2>
+      <h2 className="font-display font-black text-sm uppercase tracking-wider text-white/60">Grupp {group}</h2>
 
       {/* Matches */}
       {matches.length === 0 ? (
-        <p className="text-gray-600 text-sm">Inga matcher inlagda ännu.</p>
+        <p className="text-white/30 text-sm">Inga matcher inlagda ännu.</p>
       ) : (
-        <div className="border border-surface-600 divide-y divide-surface-700">
+        <div className="border border-white/10 divide-y divide-white/5">
           {matches.map(m => (
             <MatchRow key={m.id} match={m} pick={matchPicks[m.id] ?? null} onPick={p => onPick(m.id, p)} />
           ))}
@@ -203,23 +201,23 @@ function GroupPanel({
 
       {/* Group table (shown after all 3 picked) */}
       {allPicked && tableOrder.length === 4 && (
-        <div className="border border-surface-600">
-          <div className="px-3 py-1.5 bg-surface-800 border-b border-surface-600 text-xs font-bold text-gray-400 uppercase tracking-wider">
+        <div className="border border-white/10">
+          <div className="px-3 py-1.5 bg-navy-900 border-b border-white/10 label">
             Gruppordning (justera med pilarna)
           </div>
           {tableOrder.map((team, idx) => (
-            <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-surface-700 last:border-0 bg-surface-800/50">
-              <span className="w-5 text-center text-xs font-bold text-gray-500">{idx + 1}</span>
-              <span className="flex-1 text-sm font-medium text-gray-200">{team}</span>
+            <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-white/5 last:border-0 bg-navy-900/50">
+              <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
+              <span className="flex-1 text-sm font-medium text-white/80">{team}</span>
               <div className="flex gap-1">
                 <button onClick={() => idx > 0 && onReorder(idx, idx - 1)}
                   disabled={idx === 0}
-                  className="w-6 h-6 text-gray-500 hover:text-white disabled:opacity-20 text-xs border border-surface-600 hover:border-surface-400">
+                  className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
                   ↑
                 </button>
                 <button onClick={() => idx < tableOrder.length - 1 && onReorder(idx, idx + 1)}
                   disabled={idx === tableOrder.length - 1}
-                  className="w-6 h-6 text-gray-500 hover:text-white disabled:opacity-20 text-xs border border-surface-600 hover:border-surface-400">
+                  className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
                   ↓
                 </button>
               </div>
@@ -230,16 +228,16 @@ function GroupPanel({
 
       {/* Third place + scorer (shown after all picked) */}
       {allPicked && (
-        <div className="border border-surface-600 divide-y divide-surface-700">
+        <div className="border border-white/10 divide-y divide-white/5">
           <label className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer ${thirdPlaceDisabled && !thirdPlaceSelected ? 'opacity-40' : ''}`}>
             <input
               type="checkbox"
               checked={thirdPlaceSelected}
               disabled={thirdPlaceDisabled && !thirdPlaceSelected}
               onChange={e => onThirdPlace(e.target.checked)}
-              className="w-4 h-4 accent-yellow-500"
+              className="w-4 h-4 accent-swe-yellow"
             />
-            <span className="text-sm text-gray-300">
+            <span className="text-sm text-white/70">
               Trea-laget går vidare ({tableOrder[2] || '?'})
             </span>
           </label>
@@ -249,7 +247,7 @@ function GroupPanel({
               value={scorer}
               onChange={e => onScorer(e.target.value)}
               placeholder={`Skyttekung grupp ${group}...`}
-              className="w-full bg-transparent text-sm text-gray-200 placeholder-gray-600 outline-none border-b border-surface-600 pb-1 focus:border-yellow-500"
+              className="w-full bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
             />
           </div>
         </div>
@@ -264,23 +262,23 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
   const timeStr = kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="flex items-center gap-1 px-2 py-2 bg-surface-800/30 hover:bg-surface-800/60 transition-colors">
-      <div className="w-20 text-right text-xs text-gray-500 hidden sm:block">{dateStr} {timeStr}</div>
+    <div className="flex items-center gap-1 px-2 py-2 bg-navy-900/30 hover:bg-navy-900/70 transition-colors">
+      <div className="w-20 text-right text-xs text-white/25 hidden sm:block tnum">{dateStr} {timeStr}</div>
       <div className="flex-1 flex items-center gap-1 min-w-0">
-        <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-yellow-400' : 'text-gray-300'}`}>
+        <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-swe-yellow' : 'text-white/75'}`}>
           {match.home_team}
         </span>
         {(['1', 'X', '2'] as Pick[]).map(opt => (
           <button key={opt} onClick={() => onPick(opt)}
-            className={`w-8 h-7 text-xs font-bold border transition-colors flex-shrink-0 ${
+            className={`w-8 h-7 text-xs font-display font-black border transition-colors flex-shrink-0 ${
               pick === opt
-                ? 'bg-yellow-500 text-black border-yellow-500'
-                : 'bg-surface-700 text-gray-400 border-surface-600 hover:text-white hover:border-surface-400'
+                ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
+                : 'bg-navy-800 text-white/40 border-white/10 hover:text-white hover:border-white/30'
             }`}>
             {opt}
           </button>
         ))}
-        <span className={`flex-1 text-left text-sm font-medium truncate ${pick === '2' ? 'text-yellow-400' : 'text-gray-300'}`}>
+        <span className={`flex-1 text-left text-sm font-medium truncate ${pick === '2' ? 'text-swe-yellow' : 'text-white/75'}`}>
           {match.away_team}
         </span>
       </div>

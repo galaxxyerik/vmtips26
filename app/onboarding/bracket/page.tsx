@@ -144,14 +144,14 @@ export default function BracketPage() {
   if (error) return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-sm text-center space-y-4">
-        <p className="text-red-400 text-sm">{error}</p>
-        <button onClick={() => router.push('/onboarding/group-stage')} className="px-4 py-2 border border-surface-600 text-sm text-gray-300 hover:text-white">← Tillbaka</button>
+        <p className="text-loss-500 text-sm">{error}</p>
+        <button onClick={() => router.push('/onboarding/group-stage')} className="btn-secondary">← Tillbaka</button>
       </div>
     </div>
   )
 
   if (!draft || allMatches.length === 0) return (
-    <div className="flex min-h-screen items-center justify-center text-gray-400 text-sm">Bygger bracket...</div>
+    <div className="flex min-h-screen items-center justify-center text-white/35 text-sm">Bygger bracket...</div>
   )
 
   const picks = draft.bracketPicks
@@ -164,14 +164,14 @@ export default function BracketPage() {
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
       <div className="mb-4">
-        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Steg 2 av 3 · Slutspel</div>
-        <h1 className="text-xl font-bold mb-2">Tippa slutspelet</h1>
+        <div className="label">Steg 2 av 3 · Slutspel</div>
+        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tippa slutspelet</h1>
         <div className="flex items-center gap-2 text-xs">
-          <span className={canProceed ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+          <span className={`tnum ${canProceed ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
             {pickedKnockout}/{nonBronzeMatches.length} matcher
           </span>
-          <div className="flex-1 h-1 bg-surface-700">
-            <div className="h-full bg-yellow-500 transition-all"
+          <div className="flex-1 h-0.5 bg-white/10">
+            <div className="h-full bg-swe-yellow transition-all"
               style={{ width: `${nonBronzeMatches.length ? pickedKnockout/nonBronzeMatches.length*100 : 0}%` }} />
           </div>
         </div>
@@ -182,11 +182,11 @@ export default function BracketPage() {
         if (roundMatches.length === 0) return null
         return (
           <div key={round} className="mb-6">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <h2 className="font-display font-black text-xs uppercase tracking-wider text-white/40 mb-2 flex items-center gap-2">
               {ROUND_LABELS[round]}
-              <span className="text-gray-700">{roundMatches.length} matcher</span>
+              <span className="text-white/20 font-normal">{roundMatches.length} matcher</span>
             </h2>
-            <div className="border border-surface-600 divide-y divide-surface-700">
+            <div className="border border-white/10 divide-y divide-white/5">
               {roundMatches.map(m => (
                 <BracketMatchRow
                   key={m.matchNumber}
@@ -200,14 +200,14 @@ export default function BracketPage() {
         )
       })}
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-3 py-3">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-navy-950/95 backdrop-blur px-3 py-3">
         <div className="mx-auto max-w-2xl flex items-center justify-between">
-          <button onClick={() => router.push('/onboarding/group-stage')} className="text-xs text-gray-500 hover:text-white px-3 py-2">← Tillbaka</button>
-          <button onClick={() => canProceed && router.push('/onboarding/final-details')}
+          <button onClick={() => router.push('/onboarding/group-stage')} className="text-xs text-white/35 hover:text-white px-3 py-2 transition-colors">← Tillbaka</button>
+          <button
+            onClick={() => canProceed && router.push('/onboarding/final-details')}
             disabled={!canProceed}
-            className={`px-6 py-2 text-sm font-bold border transition-colors ${
-              canProceed ? 'bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-400' : 'bg-surface-700 text-gray-600 border-surface-600 cursor-not-allowed'
-            }`}>
+            className={canProceed ? 'btn-primary' : 'btn-primary opacity-40 cursor-not-allowed'}
+          >
             Nästa: Detaljer →
           </button>
         </div>
@@ -220,25 +220,25 @@ function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: 
   const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Förlorare') || t.startsWith('Etta') || t.startsWith('Tvåa')
 
   return (
-    <div className="flex items-center px-2 py-1.5 gap-1 bg-surface-800/30 hover:bg-surface-800/50">
-      <span className="text-xs text-gray-700 font-mono w-8 flex-shrink-0">{match.label}</span>
+    <div className="flex items-center px-2 py-1.5 gap-1 bg-navy-900/30 hover:bg-navy-900/60 transition-colors">
+      <span className="text-xs text-white/20 font-mono w-8 flex-shrink-0 tnum">{match.label}</span>
       <div className="flex-1 flex gap-1">
         {[match.team1, match.team2].map(team => (
           <button key={team} onClick={() => !isPlaceholder(team) && onPick(team)}
             disabled={isPlaceholder(team)}
             className={`flex-1 py-1.5 px-1 text-xs font-medium border text-center transition-colors ${
               isPlaceholder(team)
-                ? 'border-surface-700 text-gray-700 bg-surface-800 cursor-not-allowed'
+                ? 'border-white/5 text-white/15 bg-navy-900/30 cursor-not-allowed'
                 : pick === team
-                ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
-                : 'border-surface-600 text-gray-400 hover:text-white hover:border-surface-400'
+                ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow'
+                : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
             }`}>
             {team}
           </button>
         ))}
       </div>
       {pick && !isPlaceholder(match.team1) && !isPlaceholder(match.team2) && (
-        <span className="text-xs text-yellow-500 w-4 flex-shrink-0">✓</span>
+        <span className="text-xs text-swe-yellow w-4 flex-shrink-0">✓</span>
       )}
     </div>
   )

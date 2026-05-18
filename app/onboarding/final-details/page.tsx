@@ -66,67 +66,77 @@ export default function FinalDetailsPage() {
   return (
     <div className="mx-auto max-w-lg px-3 py-6 pb-12">
       <div className="mb-6">
-        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Steg 3 av 3 · Detaljer</div>
-        <h1 className="text-xl font-bold">Sista detaljer</h1>
+        <div className="label">Steg 3 av 3 · Detaljer</div>
+        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sista detaljer</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Tournament scorer */}
-        <div className="border border-surface-600 p-3">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-            Skyttekung i hela VM
-          </label>
+        <div className="card">
+          <label className="label">Skyttekung i hela VM</label>
           <input
             type="text"
             value={tournamentScorer}
             onChange={e => setTournamentScorer(e.target.value)}
             placeholder="Spelarens namn..."
-            className="w-full bg-surface-800 border border-surface-600 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500"
+            className="input"
           />
-          <p className="text-xs text-gray-600 mt-1">Rätt svar ger 5 bonuspoäng</p>
+          <p className="text-xs text-white/30 mt-2">Rätt svar ger 5 bonuspoäng</p>
         </div>
 
         {/* Optional password */}
-        <div className="border border-surface-600 border-dashed p-3">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-            Lösenord <span className="text-gray-600 font-normal normal-case">(valfritt — för att följa ditt tips i realtid)</span>
+        <div className="border border-dashed border-white/10 p-4">
+          <label className="label">
+            Lösenord <span className="text-white/25 font-normal normal-case tracking-normal">(valfritt — för att följa ditt tips i realtid)</span>
           </label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             placeholder="Minst 8 tecken..."
             minLength={8}
-            className="w-full bg-surface-800 border border-surface-600 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500" />
-          <p className="text-xs text-gray-600 mt-1">Om du fyller i lösenord skapas ett konto automatiskt.</p>
+            className="input"
+          />
+          <p className="text-xs text-white/30 mt-2">Om du fyller i lösenord skapas ett konto automatiskt.</p>
         </div>
 
         {/* Swish box */}
-        <div className="border border-yellow-800 bg-yellow-900/10 p-4">
+        <div className="border border-swe-yellow/30 bg-swe-yellow/5 p-4">
           <div className="text-center mb-3">
-            <div className="text-xs text-yellow-600 uppercase tracking-wider mb-1">Betalning</div>
-            <div className="text-lg font-bold text-yellow-400">100 kr via Swish</div>
-            <div className="text-sm text-yellow-300">Erik Engstrand · 0768919007</div>
+            <div className="label text-swe-yellow/70">Betalning</div>
+            <div className="font-display font-black text-2xl uppercase text-swe-yellow tracking-wide">100 kr via Swish</div>
+            <div className="text-sm text-white/60 mt-0.5">Erik Engstrand · 0768919007</div>
           </div>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input type="checkbox" checked={swishChecked} onChange={e => setSwishChecked(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-yellow-500 flex-shrink-0" />
-            <span className="text-xs text-gray-400">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={swishChecked}
+              onChange={e => setSwishChecked(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-swe-yellow flex-shrink-0"
+            />
+            <span className="text-xs text-white/45 leading-relaxed">
               Jag förstår att mitt deltagande är bindande när jag har swishat 100 kr till Erik Engstrand (0768919007). Jag är med i spelet när Erik bekräftat betalningen.
             </span>
           </label>
         </div>
 
         {error && (
-          <p className="text-sm text-red-400 bg-red-900/20 border border-red-800 px-3 py-2">{error}</p>
+          <p className="text-sm text-loss-500 bg-loss-900/30 border border-loss-500/30 px-3 py-2">{error}</p>
         )}
 
         <div className="flex items-center justify-between pt-2">
-          <button type="button" onClick={() => router.push('/onboarding/bracket')}
-            className="text-xs text-gray-500 hover:text-white px-3 py-2">← Tillbaka</button>
-          <button type="submit" disabled={!canSubmit}
-            className={`px-8 py-2.5 text-sm font-bold border transition-colors ${
-              canSubmit
-                ? 'bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-400'
-                : 'bg-surface-700 text-gray-600 border-surface-600 cursor-not-allowed'
-            }`}>
+          <button
+            type="button"
+            onClick={() => router.push('/onboarding/bracket')}
+            className="text-xs text-white/35 hover:text-white px-3 py-2 transition-colors"
+          >
+            ← Tillbaka
+          </button>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className={canSubmit ? 'btn-primary' : 'btn-primary opacity-40 cursor-not-allowed'}
+          >
             {submitting ? 'Skickar in...' : 'Skicka in mitt tips →'}
           </button>
         </div>
