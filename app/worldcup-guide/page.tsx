@@ -90,7 +90,7 @@ const GROUPS: Group[] = [
   { letter: 'C', teams: [{ name: 'Kanada', flag: '🇨🇦', prediction: 'W' }, { name: 'Ecuador', flag: '🇪🇨', prediction: 'Q' }, { name: 'Kamerun', flag: '🇨🇲', prediction: 'E' }, { name: 'Irak', flag: '🇮🇶', prediction: 'E' }], analysis: 'Kanada på hemmaplan för första gången — med Davies och David i laget är de klara vinnare. Ecuador med unge Páez tar andraplatsen.', hotMatch: 'Kanada vs. Ecuador' },
   { letter: 'D', teams: [{ name: 'Frankrike', flag: '🇫🇷', prediction: 'W' }, { name: 'Marocko', flag: '🇲🇦', prediction: 'Q' }, { name: 'Iran', flag: '🇮🇷', prediction: 'E' }, { name: 'Panama', flag: '🇵🇦', prediction: 'E' }], analysis: 'Frankrike vinner utan svettningar och Marocko visar återigen att de är Afrikas bästa. Den verkliga matchen är mötet dem emellan.', hotMatch: 'Frankrike vs. Marocko' },
   { letter: 'E', teams: [{ name: 'Spanien', flag: '🇪🇸', prediction: 'W' }, { name: 'Senegal', flag: '🇸🇳', prediction: 'Q' }, { name: 'Saudiarabien', flag: '🇸🇦', prediction: 'E' }, { name: 'Jamaica', flag: '🇯🇲', prediction: 'E' }], analysis: 'Spanien vinner enkelt med Yamal och Pedri i toppform. Senegals generation tar andraplatsen.', hotMatch: 'Spanien vs. Senegal' },
-  { letter: 'F', teams: [{ name: 'Sverige', flag: '🇸🇪', prediction: 'Q' }, { name: 'Nederländerna', flag: '🇳🇱', prediction: 'W' }, { name: 'Japan', flag: '🇯🇵', prediction: 'Q' }, { name: 'Tunisien', flag: '🇹🇳', prediction: 'E' }], analysis: 'Dödsgruppen lever upp till sitt namn. Nederländerna är favoriter men Sverige och Japan är klara utmanare. Tunisien kan ta poäng mot vem som helst.', hotMatch: 'Sverige vs. Japan 🇸🇪' },
+  { letter: 'F', teams: [{ name: 'Sverige', flag: '🇸🇪', prediction: 'Q' }, { name: 'Nederländerna', flag: '🇳🇱', prediction: 'W' }, { name: 'Japan', flag: '🇯🇵', prediction: 'Q' }, { name: 'Tunisien', flag: '🇹🇳', prediction: 'E' }], analysis: 'Dödsgruppen lever upp till sitt namn. Nederländerna är favoriter men Sverige och Japan är klara utmanare. Tunisien kan ta poäng mot vem som helst.', hotMatch: 'Sverige vs. Japan' },
   { letter: 'G', teams: [{ name: 'Brasilien', flag: '🇧🇷', prediction: 'W' }, { name: 'Nigeria', flag: '🇳🇬', prediction: 'Q' }, { name: 'Honduras', flag: '🇭🇳', prediction: 'E' }, { name: 'Jordanien', flag: '🇯🇴', prediction: 'E' }], analysis: 'Brasilien vinner utan svettningar. Nigeria är Afrikas andra bästa lag och tar andraplatsen med ett generationsskifte i truppen.', hotMatch: 'Brasilien vs. Nigeria' },
   { letter: 'H', teams: [{ name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', prediction: 'W' }, { name: 'Venezuela', flag: '🇻🇪', prediction: 'Q' }, { name: 'Mali', flag: '🇲🇱', prediction: 'E' }, { name: 'Uzbekistan', flag: '🇺🇿', prediction: 'E' }], analysis: 'England kör hem gruppen med Bellingham och Kane i form. Venezuela är turneringens verkliga joker — ungt, expansivt och ingen vet hur man stoppar dem.', hotMatch: 'England vs. Venezuela' },
   { letter: 'I', teams: [{ name: 'Portugal', flag: '🇵🇹', prediction: 'W' }, { name: 'Argentina', flag: '🇦🇷', prediction: 'Q' }, { name: 'Guinea', flag: '🇬🇳', prediction: 'E' }, { name: 'Nya Zeeland', flag: '🇳🇿', prediction: 'E' }], analysis: 'Turneringens mest explosiva grupp. Portugal vs. Argentina avgör förstaplatsen — en match som hela världen ser.', hotMatch: 'Portugal vs. Argentina' },
@@ -180,7 +180,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'grupper', label: 'Grupper' },
   { id: 'stjärnor', label: 'Stjärnor' },
   { id: 'talanger', label: 'Talanger' },
-  { id: 'sverige', label: '🇸🇪 Sverige' },
+  { id: 'sverige', label: 'Sverige' },
   { id: 'favoriter', label: 'Favoriter' },
   { id: 'mörkhästar', label: 'Skrällchanser' },
   { id: 'fakta', label: 'Fakta' },
@@ -304,7 +304,6 @@ function GroupsTab() {
             <div className="divide-y divide-white/5">
               {g.teams.map(team => (
                 <div key={team.name} className="flex items-center gap-2 px-4 py-2">
-                  <span className="text-base w-6 flex-shrink-0">{team.flag}</span>
                   <span className={`flex-1 text-sm font-medium ${
                     team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/80'
                   }`}>{team.name}</span>
@@ -349,16 +348,6 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
               className="w-full flex items-center gap-0 text-left hover:bg-navy-900/40 transition-colors"
               onClick={() => setExpanded(expanded === p.name ? null : p.name)}
             >
-              {/* Rank */}
-              <div className="w-10 flex-shrink-0 flex items-center justify-center self-stretch border-r border-white/5 bg-navy-900/50">
-                <span className="font-display font-black text-sm text-white/20 tnum">{String(i + 1).padStart(2, '0')}</span>
-              </div>
-
-              {/* Flag */}
-              <div className="w-10 flex-shrink-0 flex items-center justify-center self-stretch border-r border-white/5">
-                <span className="text-xl">{p.flag}</span>
-              </div>
-
               {/* Main info */}
               <div className="flex-1 px-4 py-3 min-w-0">
                 <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
@@ -393,7 +382,7 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
             )}
 
             {expanded !== p.name && (
-              <div className="px-14 pb-2.5 -mt-1">
+              <div className="px-4 pb-2.5 -mt-1">
                 <p className="text-[11px] text-white/30 line-clamp-1">{p.why}</p>
               </div>
             )}
@@ -424,7 +413,6 @@ function SwedenTab() {
       {/* ── Title block ── */}
       <div className="border border-white/10 border-t-0 px-5 py-5 bg-navy-900">
         <div className="flex items-center gap-4">
-          <span className="text-5xl leading-none">🇸🇪</span>
           <div>
             <div className="label text-swe-yellow/70 mb-0.5">Grupp F · VM 2026</div>
             <h2 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sverige</h2>
@@ -455,7 +443,6 @@ function SwedenTab() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xl leading-none">{m.opponentFlag}</span>
                   <span className="font-display font-black uppercase tracking-wide text-white text-sm">
                     Sverige vs {m.opponent}
                   </span>
@@ -578,10 +565,6 @@ function FavoritesTab() {
       <div className="border border-white/10 divide-y divide-white/5">
         {FAVORITES.map((f, i) => (
           <div key={f.country} className="flex items-center gap-4 px-4 py-3">
-            <span className="font-display font-black text-sm text-white/20 w-5 text-right tnum flex-shrink-0">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span className="text-xl flex-shrink-0">{f.flag}</span>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center mb-1.5">
                 <span className="font-display font-black uppercase tracking-wide text-sm text-white">{f.country}</span>
@@ -605,14 +588,12 @@ function FavoritesTab() {
         </div>
         <div className="grid grid-cols-2 divide-x divide-white/10">
           <div className="px-4 py-5 text-center">
-            <div className="text-4xl mb-2">🇫🇷</div>
-            <div className="font-display font-black uppercase tracking-wide text-swe-yellow text-sm">Frankrike</div>
-            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-0.5">Mästare</div>
+            <div className="font-display font-black uppercase tracking-wide text-swe-yellow text-xl">Frankrike</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-1">Mästare</div>
           </div>
           <div className="px-4 py-5 text-center">
-            <div className="text-4xl mb-2">🇧🇷</div>
-            <div className="font-display font-black uppercase tracking-wide text-white text-sm">Brasilien</div>
-            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-0.5">Runners-up</div>
+            <div className="font-display font-black uppercase tracking-wide text-white text-xl">Brasilien</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wider mt-1">Runners-up</div>
           </div>
         </div>
         <div className="px-4 py-3 border-t border-white/10 space-y-2">
@@ -644,7 +625,6 @@ function DarkHorsesTab() {
         {DARK_HORSES.map(d => (
           <div key={d.country} className="px-4 py-4">
             <div className="flex items-start gap-3 mb-3">
-              <span className="text-3xl leading-none flex-shrink-0">{d.flag}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
                   <span className="font-display font-black uppercase tracking-wide text-white">{d.country}</span>
