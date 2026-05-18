@@ -125,12 +125,17 @@ export default function BracketPage() {
   function handlePick(matchNumber: number, team: string) {
     if (!draft) return
     const prevPick = draft.bracketPicks[matchNumber]
-    if (prevPick === team) return
+    const nextPicks = { ...draft.bracketPicks }
 
-    // Clear downstream picks if team changes
-    const nextPicks = { ...draft.bracketPicks, [matchNumber]: team }
+    if (prevPick === team) {
+      // Toggle off: clear this pick and all downstream occurrences of the team
+      delete nextPicks[matchNumber]
+    } else {
+      nextPicks[matchNumber] = team
+    }
+
+    // Always clear the old team from every downstream match
     if (prevPick) {
-      // Remove any downstream picks that had the old team
       for (const [key, val] of Object.entries(nextPicks)) {
         if (val === prevPick) delete nextPicks[Number(key)]
       }
@@ -226,11 +231,12 @@ function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: 
         {[match.team1, match.team2].map(team => (
           <button key={team} onClick={() => !isPlaceholder(team) && onPick(team)}
             disabled={isPlaceholder(team)}
+            title={pick === team ? 'Klicka för att avmarkera' : undefined}
             className={`flex-1 py-1.5 px-1 text-xs font-medium border text-center transition-colors ${
               isPlaceholder(team)
                 ? 'border-white/5 text-white/15 bg-navy-900/30 cursor-not-allowed'
                 : pick === team
-                ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow'
+                ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow hover:bg-loss-900/20 hover:border-loss-500/40'
                 : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
             }`}>
             {team}
