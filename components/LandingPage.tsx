@@ -67,16 +67,18 @@ export default function LandingPage() {
   const canStart = name.trim().length > 0 && email.trim().length > 0
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 overflow-hidden">
+    <main className="relative min-h-screen bg-navy-950 text-white overflow-hidden">
       {/* Stadium background */}
       <img
         src="/images/potm.avif"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover object-center"
+        style={{ zIndex: 0 }}
       />
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-navy-950/80" />
+      {/* Overlays — left-heavy gradient to darken bg behind content */}
+      <div className="absolute inset-0 bg-gradient-to-b from-navy-950/60 via-navy-950/75 to-navy-950" style={{ zIndex: 1 }} />
+      <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-950/60 to-transparent" style={{ zIndex: 1 }} />
 
       {/* Resume modal */}
       {showModal && (
@@ -103,53 +105,86 @@ export default function LandingPage() {
         </div>
       )}
 
-      <div className="relative z-10 max-w-md w-full space-y-8">
-        {/* Hero wordmark */}
-        <div className="text-center">
-          <h1 className="font-display font-black text-5xl uppercase tracking-[0.04em] text-white leading-none">
-            VM<span className="text-swe-yellow">-TIPS</span>
-            <span className="block text-3xl text-white/40 mt-1">2026</span>
-          </h1>
-          <p className="text-white/45 text-sm mt-3">Tippa VM 2026 med dina vänner</p>
+      {/* Navbar */}
+      <nav className="relative z-10 flex h-14 items-center justify-between px-6 border-b border-white/10">
+        <span className="font-display font-black text-white text-lg uppercase tracking-[0.06em]">
+          VM<span className="text-swe-yellow">-TIPS 26</span>
+        </span>
+        <div className="flex items-center gap-4 text-xs font-display font-black uppercase tracking-[0.1em] text-white/40">
+          <Link href="/dashboard" className="hover:text-white transition-colors">Tabell</Link>
+          <Link href="/worldcup-guide" className="hover:text-white transition-colors">VM-bibel</Link>
+          <Link href="/regler" className="hover:text-white transition-colors">Regler</Link>
+          <Link href="/login" className="hover:text-white transition-colors">Admin</Link>
+        </div>
+      </nav>
+
+      {/* Hero content */}
+      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 max-w-2xl">
+        {/* Eyebrow */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-px w-8 bg-swe-yellow" />
+          <div className="font-display font-black uppercase tracking-[0.22em] text-[10px] text-swe-yellow">
+            11 juni — 19 juli 2026 · USA / CAN / MEX
+          </div>
         </div>
 
+        {/* Giant headline */}
+        <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.02em] text-[clamp(72px,14vw,160px)]">
+          HELA VM.<br />
+          <span className="text-swe-yellow">ETT TIPS.</span>
+        </h1>
+
+        <p className="mt-6 text-base sm:text-lg text-white/60 max-w-md leading-snug font-medium">
+          48 matcher. 12 grupper. Ett slutspel.<br />
+          En insats. En vinnare. Alla andra köper öl.
+        </p>
+
         {/* Entry form */}
-        <form onSubmit={handleStart} className="space-y-3">
-          <div>
-            <label className="label">Ditt namn</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Förnamn Efternamn"
-              autoComplete="name"
-              className="input"
-            />
-          </div>
-          <div>
-            <label className="label">Din e-post</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="din@epost.se"
-              autoComplete="email"
-              className="input"
-            />
-          </div>
+        <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-sm">
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Ditt namn"
+            autoComplete="name"
+            className="input"
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Din e-post"
+            autoComplete="email"
+            className="input"
+          />
           {error && <p className="text-xs text-loss-500">{error}</p>}
-          <button type="submit" disabled={!canStart} className="btn-primary w-full mt-1">
-            Börja tippa →
+          <button type="submit" disabled={!canStart} className="btn-primary w-full text-base">
+            Påbörja ditt tips →
           </button>
         </form>
 
-        {/* Footer links */}
-        <div className="flex justify-center gap-6 text-xs text-white/30">
-          <Link href="/dashboard" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Tabell</Link>
-          <Link href="/regler" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Regler</Link>
-          <Link href="/login" className="hover:text-white transition-colors uppercase tracking-wider font-display font-black">Logga in</Link>
+        <p className="mt-4 text-xs text-white/20 tnum">Insats: 100 kr · Deadline: 11 juni 2026</p>
+      </div>
+
+      {/* Bottom strap — Sverige info */}
+      <div className="absolute bottom-0 inset-x-0 z-10">
+        <div className="h-0.5 bg-gradient-to-r from-swe-yellow via-swe-blue to-swe-yellow opacity-60" />
+        <div className="bg-navy-950/90 border-t border-white/10">
+          <div className="px-6 h-14 flex items-center gap-6 text-xs">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-display font-black text-swe-yellow uppercase tracking-wider text-sm">SVERIGE</span>
+              <span className="text-white/30">·</span>
+              <span className="font-mono tnum text-white/50">Grupp F · premiär 15 jun 21:00</span>
+            </div>
+            <div className="h-4 w-px bg-white/10 hidden sm:block" />
+            <div className="hidden sm:flex items-center gap-5 text-white/35 font-display font-black uppercase tracking-wider text-xs">
+              <Link href="/dashboard" className="hover:text-white transition-colors">Tabell</Link>
+              <Link href="/worldcup-guide" className="hover:text-white transition-colors">VM-bibel</Link>
+              <Link href="/regler" className="hover:text-white transition-colors">Regler</Link>
+            </div>
+            <div className="ml-auto font-mono text-[10px] tnum text-white/25 uppercase tracking-wider">100 kr · 1 vinnare</div>
+          </div>
         </div>
-        <p className="text-center text-xs text-white/20 tnum">Insats: 100 kr · Deadline: 11 juni 2026</p>
       </div>
     </main>
   )

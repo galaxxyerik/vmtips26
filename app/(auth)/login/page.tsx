@@ -31,13 +31,13 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 bg-navy-950">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-1">
+        <div className="text-center">
           <Link href="/" className="font-display font-black text-2xl uppercase tracking-[0.06em] text-white">
             VM<span className="text-swe-yellow">-TIPS 26</span>
           </Link>
-          <p className="text-white/40 text-sm mt-2">Logga in på ditt konto</p>
+          <p className="text-white/40 text-sm mt-2">Admin-inloggning</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4">
@@ -80,11 +80,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500">
-          Inget konto?{' '}
-          <Link href="/register" className="text-pitch-400 hover:text-swe-yellow font-medium transition-colors">
-            Skapa konto
-          </Link>
+        <p className="text-center text-xs text-white/20">
+          <Link href="/" className="hover:text-white transition-colors">← Tillbaka till startsidan</Link>
         </p>
       </div>
     </main>
