@@ -3,186 +3,164 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { loadOnboarding, saveOnboarding, setStep, deriveThirdPlaceTeams } from '@/lib/onboarding-storage'
-import type { DbMatch, GroupLabel, Pick } from '@/lib/types'
+import { loadDraft, saveDraft, setStep, computeGroupStandings } from '@/lib/onboarding-storage'
+import type { VmtMatch, Pick, GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
-
-const TOTAL_STEPS = 5
 
 export default function GroupStagePage() {
   const router = useRouter()
   const supabase = createClient()
-  const [matches, setMatches] = useState<DbMatch[]>([])
-  const [picks, setPicks] = useState<Record<number, Pick>>({})
-  const [loading, setLoading] = useState(true)
+  const [matches, setMatches] = useState<VmtMatch[]>([])
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [activeGroup, setActiveGroup] = useState<GroupLabel>('A')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setStep('group-stage')
-    const state = loadOnboarding()
-    setPicks(state.groupPicks)
-
-    supabase
-      .from('matches')
-      .select('*')
-      .eq('phase', 'group')
-      .order('kickoff')
-      .then(({ data }) => {
-        setMatches((data as DbMatch[]) ?? [])
-        setLoading(false)
-      })
+    const d = loadDraft()
+    setDraft(d)
+    supabase.from('vmt_matches').select('*').eq('phase', 'group').order('kickoff')
+      .then(({ data }) => { setMatches((data as VmtMatch[]) ?? []); setLoading(false) })
   }, [])
 
-  const grouped = useCallback(() => {
-    const map: Record<GroupLabel, DbMatch[]> = {} as Record<GroupLabel, DbMatch[]>
-    for (const g of GROUPS) map[g] = []
-    for (const m of matches) {
-      if (m.group_label) map[m.group_label].push(m)
-    }
-    return map
-  }, [matches])
-
-  function handlePick(matchId: number, pick: Pick) {
-    setPicks(prev => {
-      const next = { ...prev, [matchId]: pick }
-      const state = loadOnboarding()
-      state.groupPicks = next
-      saveOnboarding(state)
+  function update(fn: (d: OnboardingDraft) => OnboardingDraft) {
+    setDraft(prev => {
+      if (!prev) return prev
+      const next = fn({ ...prev })
+      saveDraft(next)
       return next
     })
   }
 
-  const groupMap = grouped()
+  function handlePick(matchId: number, pick: Pick) {
+    update(d => {
+      const next = { ...d, matchPicks: { ...d.matchPicks, [matchId]: pick } }
+      // Auto-compute group table order if all 3 matches in the group are picked
+      const match = matches.find(m => m.id === matchId)
+      if (!match?.group_label) return next
+      const groupMatches = matches.filter(m => m.group_label === match.group_label)
+      const allPicked = groupMatches.every(m => m.id === matchId ? true : next.matchPicks[m.id])
+      if (allPicked) {
+        const standings = computeGroupStandings(groupMatches, next.matchPicks)
+        next.groupTableOrder = { ...next.groupTableOrder, [match.group_label]: standings.map(s => s.team) }
+      }
+      return next
+    })
+  }
+
+  function handleTableReorder(group: string, fromIdx: number, toIdx: number) {
+    update(d => {
+      const order = [...(d.groupTableOrder[group] ?? [])]
+      const [moved] = order.splice(fromIdx, 1)
+      order.splice(toIdx, 0, moved)
+      return { ...d, groupTableOrder: { ...d.groupTableOrder, [group]: order } }
+    })
+  }
+
+  function handleThirdPlace(group: string, checked: boolean) {
+    update(d => {
+      const selected = d.thirdPlaceSelected.filter(g => g !== group)
+      if (checked && selected.length < 8) selected.push(group)
+      return { ...d, thirdPlaceSelected: selected }
+    })
+  }
+
+  function handleScorer(group: string, value: string) {
+    update(d => ({ ...d, groupScorers: { ...d.groupScorers, [group]: value } }))
+  }
+
+  const groupedMatches = useCallback(() => {
+    const map: Record<GroupLabel, VmtMatch[]> = {} as Record<GroupLabel, VmtMatch[]>
+    for (const g of GROUPS) map[g] = []
+    for (const m of matches) { if (m.group_label) map[m.group_label as GroupLabel].push(m) }
+    return map
+  }, [matches])
+
+  if (loading || !draft) return <div className="flex min-h-screen items-center justify-center text-gray-400">Laddar...</div>
+
+  const gm = groupedMatches()
   const totalMatches = matches.length
-  const pickedCount = Object.keys(picks).length
-  const allPicked = pickedCount === totalMatches && totalMatches > 0
+  const pickedCount = Object.keys(draft.matchPicks).length
+  const allMatchesPicked = pickedCount === totalMatches && totalMatches > 0
+  const allTablesConfirmed = GROUPS.every(g => (draft.groupTableOrder[g]?.length ?? 0) === 4)
+  const thirdPlaceOk = draft.thirdPlaceSelected.length === 8
+  const allScorers = GROUPS.every(g => draft.groupScorers[g]?.trim())
+  const canProceed = allMatchesPicked && allTablesConfirmed && thirdPlaceOk && allScorers
 
-  function handleNext() {
-    if (!allPicked) return
-    // Derive third-place teams from picks and save to state
-    const groupMatchesForDerive = matches.map(m => ({
-      id: m.id,
-      group_label: m.group_label ?? '',
-      home_team: m.home_team,
-      away_team: m.away_team,
-    }))
-    const thirdPlaceMap = deriveThirdPlaceTeams(groupMatchesForDerive, picks)
-    const state = loadOnboarding()
-    state.thirdPlaceGroups = thirdPlaceMap as Record<GroupLabel, string>
-    saveOnboarding(state)
-    router.push('/onboarding/third-place')
-  }
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-400">Laddar matcher...</div>
-      </div>
-    )
-  }
-
-  if (matches.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="text-center space-y-3">
-          <p className="text-2xl">⏳</p>
-          <p className="text-gray-300 font-semibold">Matcher laddas in</p>
-          <p className="text-gray-500 text-sm max-w-xs">
-            Gruppspelsmatcherna är inte inlagda ännu. Kom tillbaka senare.
-          </p>
-        </div>
-      </div>
-    )
+  const groupDone = (g: GroupLabel) => {
+    const gMatches = gm[g]
+    return gMatches.every(m => draft.matchPicks[m.id]) &&
+      (draft.groupTableOrder[g]?.length === 4) &&
+      draft.groupScorers[g]?.trim()
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 pb-28">
+    <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
       {/* Header */}
-      <div className="mb-6 space-y-3">
-        <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-medium">
-          <span>Steg 1 av {TOTAL_STEPS}</span>
-          <span>·</span>
-          <span>Gruppspel</span>
-        </div>
-        <h1 className="text-2xl font-bold">Tippa gruppspelet</h1>
-        <p className="text-gray-400 text-sm">
-          Välj 1 (hemmavinst), X (oavgjort) eller 2 (bortavinst) för varje match.
-          {totalMatches > 0 && (
-            <span className="ml-1 text-pitch-400 font-medium">
-              {pickedCount}/{totalMatches} tippade
-            </span>
-          )}
-        </p>
-
-        {/* Progress bar */}
-        <div className="h-1.5 bg-surface-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-pitch-600 rounded-full transition-all duration-300"
-            style={{ width: `${totalMatches ? (pickedCount / totalMatches) * 100 : 0}%` }}
-          />
+      <div className="mb-4">
+        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Steg 1 av 3 · Gruppspel</div>
+        <h1 className="text-xl font-bold mb-2">Tippa gruppspelet</h1>
+        <div className="flex items-center gap-2 text-xs">
+          <span className={pickedCount === totalMatches && totalMatches > 0 ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+            {pickedCount}/{totalMatches} matcher
+          </span>
+          <div className="flex-1 h-1 bg-surface-700">
+            <div className="h-full bg-yellow-500 transition-all" style={{ width: `${totalMatches ? pickedCount/totalMatches*100 : 0}%` }} />
+          </div>
+          <span className={thirdPlaceOk ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+            {draft.thirdPlaceSelected.length}/8 treor
+          </span>
         </div>
       </div>
 
       {/* Group tabs */}
-      <div className="flex gap-1 flex-wrap mb-6">
-        {GROUPS.map(g => {
-          const gMatches = groupMap[g]
-          const gPicked = gMatches.filter(m => picks[m.id]).length
-          const gDone = gMatches.length > 0 && gPicked === gMatches.length
-          return (
-            <button
-              key={g}
-              onClick={() => setActiveGroup(g)}
-              className={`relative rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
-                activeGroup === g
-                  ? 'bg-pitch-600 text-white'
-                  : gDone
-                  ? 'bg-pitch-900/40 text-pitch-400 border border-pitch-800'
-                  : 'bg-surface-700 text-gray-400 hover:text-white'
-              }`}
-            >
-              Grupp {g}
-              {gDone && activeGroup !== g && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-pitch-500" />
-              )}
-            </button>
-          )
-        })}
+      <div className="flex flex-wrap gap-1 mb-4">
+        {GROUPS.map(g => (
+          <button key={g} onClick={() => setActiveGroup(g)}
+            className={`px-2.5 py-1 text-xs font-bold border transition-colors ${
+              activeGroup === g
+                ? 'bg-yellow-500 text-black border-yellow-500'
+                : groupDone(g)
+                ? 'bg-pitch-900/30 text-pitch-400 border-pitch-800'
+                : 'bg-surface-800 text-gray-400 border-surface-600 hover:text-white'
+            }`}>
+            {g}
+            {groupDone(g) && activeGroup !== g && <span className="ml-1 text-pitch-400">✓</span>}
+          </button>
+        ))}
       </div>
 
-      {/* Matches for active group */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-200">Grupp {activeGroup}</h2>
-        {groupMap[activeGroup].length === 0 ? (
-          <p className="text-gray-500 text-sm">Inga matcher i denna grupp ännu.</p>
-        ) : (
-          groupMap[activeGroup].map(match => (
-            <MatchCard
-              key={match.id}
-              match={match}
-              pick={picks[match.id] ?? null}
-              onPick={pick => handlePick(match.id, pick)}
-            />
-          ))
-        )}
-      </div>
+      {/* Active group content */}
+      <GroupPanel
+        group={activeGroup}
+        matches={gm[activeGroup]}
+        matchPicks={draft.matchPicks}
+        tableOrder={draft.groupTableOrder[activeGroup] ?? []}
+        thirdPlaceSelected={draft.thirdPlaceSelected.includes(activeGroup)}
+        thirdPlaceDisabled={!draft.thirdPlaceSelected.includes(activeGroup) && draft.thirdPlaceSelected.length >= 8}
+        scorer={draft.groupScorers[activeGroup] ?? ''}
+        onPick={handlePick}
+        onReorder={(from, to) => handleTableReorder(activeGroup, from, to)}
+        onThirdPlace={checked => handleThirdPlace(activeGroup, checked)}
+        onScorer={val => handleScorer(activeGroup, val)}
+      />
 
-      {/* Fixed bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-4 py-4">
-        <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
-            {allPicked ? (
-              <span className="text-pitch-400 font-medium">Alla matcher tippade ✓</span>
-            ) : (
-              <span>{totalMatches - pickedCount} matcher kvar</span>
-            )}
-          </p>
-          <button
-            onClick={handleNext}
-            disabled={!allPicked}
-            className="btn-primary px-8"
-          >
-            Nästa: Tredjeplacerade →
+      {/* Bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-3 py-3">
+        <div className="mx-auto max-w-2xl flex items-center justify-between gap-3">
+          <div className="text-xs text-gray-500 space-y-0.5">
+            {!allMatchesPicked && <div>· Tippa alla {totalMatches} matcher</div>}
+            {!thirdPlaceOk && <div>· Välj exakt 8 treor ({draft.thirdPlaceSelected.length}/8)</div>}
+            {!allScorers && <div>· Fyll i skyttekung i alla grupper</div>}
+          </div>
+          <button onClick={() => canProceed && router.push('/onboarding/bracket')}
+            disabled={!canProceed}
+            className={`px-6 py-2 text-sm font-bold border transition-colors ${
+              canProceed
+                ? 'bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-400'
+                : 'bg-surface-700 text-gray-600 border-surface-600 cursor-not-allowed'
+            }`}>
+            Nästa: Slutspel →
           </button>
         </div>
       </div>
@@ -190,58 +168,121 @@ export default function GroupStagePage() {
   )
 }
 
-function MatchCard({
-  match,
-  pick,
-  onPick,
+function GroupPanel({
+  group, matches, matchPicks, tableOrder, thirdPlaceSelected,
+  thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer
 }: {
-  match: DbMatch
-  pick: Pick | null
-  onPick: (p: Pick) => void
+  group: GroupLabel
+  matches: VmtMatch[]
+  matchPicks: Record<number, Pick>
+  tableOrder: string[]
+  thirdPlaceSelected: boolean
+  thirdPlaceDisabled: boolean
+  scorer: string
+  onPick: (id: number, pick: Pick) => void
+  onReorder: (from: number, to: number) => void
+  onThirdPlace: (checked: boolean) => void
+  onScorer: (val: string) => void
 }) {
+  const allPicked = matches.length > 0 && matches.every(m => matchPicks[m.id])
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Grupp {group}</h2>
+
+      {/* Matches */}
+      {matches.length === 0 ? (
+        <p className="text-gray-600 text-sm">Inga matcher inlagda ännu.</p>
+      ) : (
+        <div className="border border-surface-600 divide-y divide-surface-700">
+          {matches.map(m => (
+            <MatchRow key={m.id} match={m} pick={matchPicks[m.id] ?? null} onPick={p => onPick(m.id, p)} />
+          ))}
+        </div>
+      )}
+
+      {/* Group table (shown after all 3 picked) */}
+      {allPicked && tableOrder.length === 4 && (
+        <div className="border border-surface-600">
+          <div className="px-3 py-1.5 bg-surface-800 border-b border-surface-600 text-xs font-bold text-gray-400 uppercase tracking-wider">
+            Gruppordning (justera med pilarna)
+          </div>
+          {tableOrder.map((team, idx) => (
+            <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-surface-700 last:border-0 bg-surface-800/50">
+              <span className="w-5 text-center text-xs font-bold text-gray-500">{idx + 1}</span>
+              <span className="flex-1 text-sm font-medium text-gray-200">{team}</span>
+              <div className="flex gap-1">
+                <button onClick={() => idx > 0 && onReorder(idx, idx - 1)}
+                  disabled={idx === 0}
+                  className="w-6 h-6 text-gray-500 hover:text-white disabled:opacity-20 text-xs border border-surface-600 hover:border-surface-400">
+                  ↑
+                </button>
+                <button onClick={() => idx < tableOrder.length - 1 && onReorder(idx, idx + 1)}
+                  disabled={idx === tableOrder.length - 1}
+                  className="w-6 h-6 text-gray-500 hover:text-white disabled:opacity-20 text-xs border border-surface-600 hover:border-surface-400">
+                  ↓
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Third place + scorer (shown after all picked) */}
+      {allPicked && (
+        <div className="border border-surface-600 divide-y divide-surface-700">
+          <label className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer ${thirdPlaceDisabled && !thirdPlaceSelected ? 'opacity-40' : ''}`}>
+            <input
+              type="checkbox"
+              checked={thirdPlaceSelected}
+              disabled={thirdPlaceDisabled && !thirdPlaceSelected}
+              onChange={e => onThirdPlace(e.target.checked)}
+              className="w-4 h-4 accent-yellow-500"
+            />
+            <span className="text-sm text-gray-300">
+              Trea-laget går vidare ({tableOrder[2] || '?'})
+            </span>
+          </label>
+          <div className="px-3 py-2.5">
+            <input
+              type="text"
+              value={scorer}
+              onChange={e => onScorer(e.target.value)}
+              placeholder={`Skyttekung grupp ${group}...`}
+              className="w-full bg-transparent text-sm text-gray-200 placeholder-gray-600 outline-none border-b border-surface-600 pb-1 focus:border-yellow-500"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null; onPick: (p: Pick) => void }) {
   const kickoff = new Date(match.kickoff)
-  const dateStr = kickoff.toLocaleDateString('sv-SE', {
-    weekday: 'short', month: 'short', day: 'numeric'
-  })
+  const dateStr = kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
   const timeStr = kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className={`card transition-all ${pick ? 'border-surface-500' : 'border-surface-600'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-gray-500">{dateStr} · {timeStr}</span>
-        {pick && (
-          <span className={`badge ${
-            pick === '1' ? 'badge-green' : pick === 'X' ? 'badge-yellow' : 'badge bg-blue-900/50 text-blue-400 border border-blue-800'
-          }`}>
-            {pick === '1' ? match.home_team : pick === '2' ? match.away_team : 'Oavgjort'}
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3 mb-3">
-        <span className="flex-1 text-right font-semibold text-sm text-gray-100 truncate">
+    <div className="flex items-center gap-1 px-2 py-2 bg-surface-800/30 hover:bg-surface-800/60 transition-colors">
+      <div className="w-20 text-right text-xs text-gray-500 hidden sm:block">{dateStr} {timeStr}</div>
+      <div className="flex-1 flex items-center gap-1 min-w-0">
+        <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-yellow-400' : 'text-gray-300'}`}>
           {match.home_team}
         </span>
-        <span className="text-xs text-gray-600 font-bold px-1">vs</span>
-        <span className="flex-1 text-left font-semibold text-sm text-gray-100 truncate">
-          {match.away_team}
-        </span>
-      </div>
-
-      <div className="flex gap-2">
         {(['1', 'X', '2'] as Pick[]).map(opt => (
-          <button
-            key={opt}
-            onClick={() => onPick(opt)}
-            className={`pick-btn ${
+          <button key={opt} onClick={() => onPick(opt)}
+            className={`w-8 h-7 text-xs font-bold border transition-colors flex-shrink-0 ${
               pick === opt
-                ? opt === '1' ? 'pick-btn-selected-1' : opt === 'X' ? 'pick-btn-selected-X' : 'pick-btn-selected-2'
-                : 'pick-btn-unselected'
-            }`}
-          >
-            {opt === '1' ? '1' : opt === 'X' ? 'X' : '2'}
+                ? 'bg-yellow-500 text-black border-yellow-500'
+                : 'bg-surface-700 text-gray-400 border-surface-600 hover:text-white hover:border-surface-400'
+            }`}>
+            {opt}
           </button>
         ))}
+        <span className={`flex-1 text-left text-sm font-medium truncate ${pick === '2' ? 'text-yellow-400' : 'text-gray-300'}`}>
+          {match.away_team}
+        </span>
       </div>
     </div>
   )

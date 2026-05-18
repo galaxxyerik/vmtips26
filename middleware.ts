@@ -9,9 +9,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
@@ -26,19 +24,15 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Protected routes: require auth
-  const protectedPaths = ['/onboarding', '/dashboard', '/admin']
+  // Only dashboard and admin require auth
+  const protectedPaths = ['/dashboard', '/admin']
   const isProtected = protectedPaths.some(p => pathname.startsWith(p))
-
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Auth routes: redirect if already logged in
-  const authPaths = ['/login', '/register']
-  const isAuth = authPaths.some(p => pathname.startsWith(p))
-
-  if (isAuth && user) {
+  if (['/login', '/register'].some(p => pathname.startsWith(p)) && user) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
@@ -46,7 +40,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

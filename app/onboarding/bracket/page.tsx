@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadOnboarding, saveOnboarding, setStep } from '@/lib/onboarding-storage'
+import { loadDraft, saveDraft, setStep } from '@/lib/onboarding-storage'
 import { buildR32Bracket, type R32Match } from '@/lib/bracket-logic'
-import type { GroupLabel } from '@/lib/types'
+import type { GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 
 interface KnockoutMatch {
@@ -12,225 +12,187 @@ interface KnockoutMatch {
   label: string
   team1: string
   team2: string
-  phase: 'r32' | 'r16' | 'qf' | 'sf' | 'final'
+  round: 'r32' | 'r16' | 'qf' | 'sf' | 'bronze' | 'final'
 }
 
-const PHASE_LABELS: Record<string, string> = {
-  r32: 'Omgång 32',
-  r16: 'Omgång 16',
-  qf: 'Kvartsfinal',
-  sf: 'Semifinal',
-  final: 'Final',
+const ROUND_LABELS: Record<string, string> = {
+  r32: 'Omgång 32', r16: 'Åttondelsfinaler', qf: 'Kvartsfinaler',
+  sf: 'Semifinaler', bronze: 'Bronsmatch', final: 'Final',
 }
 
 export default function BracketPage() {
   const router = useRouter()
-  const [r32Matches, setR32Matches] = useState<R32Match[] | null>(null)
-  const [bracketPicks, setBracketPicks] = useState<Record<number, string>>({})
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [allMatches, setAllMatches] = useState<KnockoutMatch[]>([])
+  const [r32Base, setR32Base] = useState<R32Match[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setStep('bracket')
-    const state = loadOnboarding()
-    const {
-      groupPicks,
-      thirdPlaceGroups,
-      advancingThirdGroups,
-    } = state
+    const d = loadDraft()
+    setDraft(d)
 
-    if (!advancingThirdGroups || advancingThirdGroups.length !== 8) {
-      router.push('/onboarding/third-place')
+    // Validate step 1 complete
+    if (d.thirdPlaceSelected.length !== 8) {
+      router.push('/onboarding/group-stage')
       return
     }
 
-    setBracketPicks(state.bracketPicks ?? {})
+    // Build group winners/runners-up from table order
+    const groupWinners: Record<GroupLabel, string> = {} as Record<GroupLabel, string>
+    const groupRunnersUp: Record<GroupLabel, string> = {} as Record<GroupLabel, string>
+    const thirdPlaceTeams: Partial<Record<GroupLabel, string>> = {}
 
-    // Build group winner/runner-up from picks
-    const groupWinners = {} as Record<GroupLabel, string>
-    const groupRunnersUp = {} as Record<GroupLabel, string>
-    const thirdPlaceTeams = thirdPlaceGroups as Partial<Record<GroupLabel, string>>
-
-    // We compute winners/runners-up by team points from picks
-    // (simplified: user doesn't explicitly pick winners — we derive from the match results)
-    // For the bracket, we use placeholder team names based on group label
     for (const g of GROUPS) {
-      groupWinners[g] = `Etta Grupp ${g}`
-      groupRunnersUp[g] = `Tvåa Grupp ${g}`
+      const order = d.groupTableOrder[g] ?? []
+      groupWinners[g] = order[0] ?? `Etta grupp ${g}`
+      groupRunnersUp[g] = order[1] ?? `Tvåa grupp ${g}`
+      thirdPlaceTeams[g] = order[2] ?? `Trea grupp ${g}`
     }
 
-    // Try to build from actual match data if we have it in localStorage
     const r32 = buildR32Bracket(
       groupWinners,
       groupRunnersUp,
       thirdPlaceTeams as Record<GroupLabel, string>,
-      advancingThirdGroups as GroupLabel[]
+      d.thirdPlaceSelected as GroupLabel[]
     )
 
     if (!r32) {
-      setError('Kunde inte bygga slutspelsbracket. Kontrollera dina tredjeplaceringsval.')
+      setError('Kunde inte bygga slutspelsbracket. Gå tillbaka och kontrollera dina tredjeplatsval.')
       return
     }
 
-    setR32Matches(r32)
-
-    // Build the full bracket chain
-    const initial: KnockoutMatch[] = r32.map(m => ({
-      matchNumber: m.matchNumber,
-      label: `M${m.matchNumber}`,
-      team1: m.team1,
-      team2: m.team2,
-      phase: 'r32',
-    }))
-    setAllMatches(initial)
+    setR32Base(r32)
   }, [])
 
-  // Resolve bracket forward from r32 picks
   useEffect(() => {
-    if (!r32Matches) return
-    rebuildBracket(bracketPicks)
-  }, [r32Matches, bracketPicks])
+    if (!r32Base || !draft) return
+    rebuildAllMatches(r32Base, draft.bracketPicks)
+  }, [r32Base, draft?.bracketPicks])
 
-  function rebuildBracket(picks: Record<number, string>) {
-    if (!r32Matches) return
-
-    const r32: KnockoutMatch[] = r32Matches.map(m => ({
+  function rebuildAllMatches(r32: R32Match[], picks: Record<number, string>) {
+    const r32m: KnockoutMatch[] = r32.map(m => ({
       matchNumber: m.matchNumber,
       label: `M${m.matchNumber}`,
       team1: m.team1,
       team2: m.team2,
-      phase: 'r32',
+      round: 'r32',
     }))
 
-    // Winners of r32 (match numbers 73-88) → r16 matches (89-96)
-    // Pairings from FIFA Art. 12.7: M89=W73 vs W74, M90=W75 vs W76 etc.
-    const r32Winners = (r32Matches ?? []).map(m => picks[m.matchNumber] ?? `Vinnare M${m.matchNumber}`)
+    const w = (mn: number) => picks[mn] ?? `Vinnare M${mn}`
 
-    // R32 match order: 73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88
-    const w = (idx: number) => r32Winners[idx] ?? `Vinnare R32 match ${idx + 1}`
-
-    const r16: KnockoutMatch[] = [
-      { matchNumber: 89, label: 'M89', team1: w(0), team2: w(1), phase: 'r16' },
-      { matchNumber: 90, label: 'M90', team1: w(2), team2: w(3), phase: 'r16' },
-      { matchNumber: 91, label: 'M91', team1: w(4), team2: w(5), phase: 'r16' },
-      { matchNumber: 92, label: 'M92', team1: w(6), team2: w(7), phase: 'r16' },
-      { matchNumber: 93, label: 'M93', team1: w(8), team2: w(9), phase: 'r16' },
-      { matchNumber: 94, label: 'M94', team1: w(10), team2: w(11), phase: 'r16' },
-      { matchNumber: 95, label: 'M95', team1: w(12), team2: w(13), phase: 'r16' },
-      { matchNumber: 96, label: 'M96', team1: w(14), team2: w(15), phase: 'r16' },
+    const r32Nums = r32.map(m => m.matchNumber) // 73-88
+    const r16m: KnockoutMatch[] = [
+      { matchNumber: 89, label: 'M89', team1: w(r32Nums[0]), team2: w(r32Nums[1]), round: 'r16' },
+      { matchNumber: 90, label: 'M90', team1: w(r32Nums[2]), team2: w(r32Nums[3]), round: 'r16' },
+      { matchNumber: 91, label: 'M91', team1: w(r32Nums[4]), team2: w(r32Nums[5]), round: 'r16' },
+      { matchNumber: 92, label: 'M92', team1: w(r32Nums[6]), team2: w(r32Nums[7]), round: 'r16' },
+      { matchNumber: 93, label: 'M93', team1: w(r32Nums[8]), team2: w(r32Nums[9]), round: 'r16' },
+      { matchNumber: 94, label: 'M94', team1: w(r32Nums[10]), team2: w(r32Nums[11]), round: 'r16' },
+      { matchNumber: 95, label: 'M95', team1: w(r32Nums[12]), team2: w(r32Nums[13]), round: 'r16' },
+      { matchNumber: 96, label: 'M96', team1: w(r32Nums[14]), team2: w(r32Nums[15]), round: 'r16' },
     ]
 
-    const r16w = r16.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
-    const qf: KnockoutMatch[] = [
-      { matchNumber: 97, label: 'QF1', team1: r16w[0], team2: r16w[1], phase: 'qf' },
-      { matchNumber: 98, label: 'QF2', team1: r16w[2], team2: r16w[3], phase: 'qf' },
-      { matchNumber: 99, label: 'QF3', team1: r16w[4], team2: r16w[5], phase: 'qf' },
-      { matchNumber: 100, label: 'QF4', team1: r16w[6], team2: r16w[7], phase: 'qf' },
+    const r16w = r16m.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
+    const qfm: KnockoutMatch[] = [
+      { matchNumber: 97, label: 'QF1', team1: r16w[0], team2: r16w[1], round: 'qf' },
+      { matchNumber: 98, label: 'QF2', team1: r16w[2], team2: r16w[3], round: 'qf' },
+      { matchNumber: 99, label: 'QF3', team1: r16w[4], team2: r16w[5], round: 'qf' },
+      { matchNumber: 100, label: 'QF4', team1: r16w[6], team2: r16w[7], round: 'qf' },
     ]
 
-    const qfw = qf.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
-    const sf: KnockoutMatch[] = [
-      { matchNumber: 101, label: 'SF1', team1: qfw[0], team2: qfw[1], phase: 'sf' },
-      { matchNumber: 102, label: 'SF2', team1: qfw[2], team2: qfw[3], phase: 'sf' },
+    const qfw = qfm.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
+    const sfm: KnockoutMatch[] = [
+      { matchNumber: 101, label: 'SF1', team1: qfw[0], team2: qfw[1], round: 'sf' },
+      { matchNumber: 102, label: 'SF2', team1: qfw[2], team2: qfw[3], round: 'sf' },
     ]
 
-    const sfw = sf.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
-    const final: KnockoutMatch[] = [
-      { matchNumber: 103, label: 'Final', team1: sfw[0], team2: sfw[1], phase: 'final' },
-    ]
+    const sfw = sfm.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
+    const bronzeM: KnockoutMatch = {
+      matchNumber: 103, label: 'Bronsmatch',
+      team1: `Förlorare ${sfm[0].label}`, team2: `Förlorare ${sfm[1].label}`,
+      round: 'bronze',
+    }
+    const finalM: KnockoutMatch = {
+      matchNumber: 104, label: 'Final',
+      team1: sfw[0], team2: sfw[1],
+      round: 'final',
+    }
 
-    setAllMatches([...r32, ...r16, ...qf, ...sf, ...final])
+    setAllMatches([...r32m, ...r16m, ...qfm, ...sfm, bronzeM, finalM])
   }
 
   function handlePick(matchNumber: number, team: string) {
-    setBracketPicks(prev => {
-      const next = { ...prev, [matchNumber]: team }
-      // Invalidate downstream picks if team changes
-      const state = loadOnboarding()
-      state.bracketPicks = next
-      saveOnboarding(state)
-      return next
-    })
-  }
+    if (!draft) return
+    const prevPick = draft.bracketPicks[matchNumber]
+    if (prevPick === team) return
 
-  function handleNext() {
-    const total = allMatches.length
-    const picked = allMatches.filter(m => bracketPicks[m.matchNumber]).length
-    if (picked < total) {
-      setError(`Du har ${total - picked} matcher kvar att tippa i slutspelet.`)
-      return
+    // Clear downstream picks if team changes
+    const nextPicks = { ...draft.bracketPicks, [matchNumber]: team }
+    if (prevPick) {
+      // Remove any downstream picks that had the old team
+      for (const [key, val] of Object.entries(nextPicks)) {
+        if (val === prevPick) delete nextPicks[Number(key)]
+      }
     }
-    router.push('/onboarding/top-scorers')
+
+    const nextDraft = { ...draft, bracketPicks: nextPicks }
+    setDraft(nextDraft)
+    saveDraft(nextDraft)
   }
 
-  const phases: Array<KnockoutMatch['phase']> = ['r32', 'r16', 'qf', 'sf', 'final']
-  const pickedCount = allMatches.filter(m => bracketPicks[m.matchNumber]).length
-  const totalCount = allMatches.length
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="card max-w-md text-center space-y-4">
-          <p className="text-red-400">{error}</p>
-          <button onClick={() => router.push('/onboarding/third-place')} className="btn-secondary">
-            ← Tillbaka
-          </button>
-        </div>
+  if (error) return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="max-w-sm text-center space-y-4">
+        <p className="text-red-400 text-sm">{error}</p>
+        <button onClick={() => router.push('/onboarding/group-stage')} className="px-4 py-2 border border-surface-600 text-sm text-gray-300 hover:text-white">← Tillbaka</button>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (allMatches.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-400">Bygger bracket...</div>
-      </div>
-    )
-  }
+  if (!draft || allMatches.length === 0) return (
+    <div className="flex min-h-screen items-center justify-center text-gray-400 text-sm">Bygger bracket...</div>
+  )
+
+  const picks = draft.bracketPicks
+  const nonBronzeMatches = allMatches.filter(m => m.round !== 'bronze')
+  const pickedKnockout = nonBronzeMatches.filter(m => picks[m.matchNumber]).length
+  const canProceed = nonBronzeMatches.every(m => !!picks[m.matchNumber])
+
+  const rounds: KnockoutMatch['round'][] = ['r32', 'r16', 'qf', 'sf', 'bronze', 'final']
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 pb-28">
-      {/* Header */}
-      <div className="mb-6 space-y-3">
-        <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-medium">
-          <span>Steg 3 av 5</span>
-          <span>·</span>
-          <span>Slutspel</span>
-        </div>
-        <h1 className="text-2xl font-bold">Tippa slutspelet</h1>
-        <p className="text-gray-400 text-sm">
-          Välj vinnare i varje match. Trädet byggs ut automatiskt baserat på dina val.
-        </p>
-        <div className="flex items-center gap-2">
-          <div className={`text-sm font-semibold ${pickedCount === totalCount ? 'text-pitch-400' : 'text-gray-300'}`}>
-            {pickedCount}/{totalCount} tippade
-          </div>
-          <div className="flex-1 h-1.5 bg-surface-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-pitch-600 rounded-full transition-all duration-300"
-              style={{ width: `${totalCount ? (pickedCount / totalCount) * 100 : 0}%` }}
-            />
+    <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
+      <div className="mb-4">
+        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Steg 2 av 3 · Slutspel</div>
+        <h1 className="text-xl font-bold mb-2">Tippa slutspelet</h1>
+        <div className="flex items-center gap-2 text-xs">
+          <span className={canProceed ? 'text-yellow-400 font-bold' : 'text-gray-400'}>
+            {pickedKnockout}/{nonBronzeMatches.length} matcher
+          </span>
+          <div className="flex-1 h-1 bg-surface-700">
+            <div className="h-full bg-yellow-500 transition-all"
+              style={{ width: `${nonBronzeMatches.length ? pickedKnockout/nonBronzeMatches.length*100 : 0}%` }} />
           </div>
         </div>
       </div>
 
-      {/* Bracket by phase */}
-      {phases.map(phase => {
-        const phaseMatches = allMatches.filter(m => m.phase === phase)
-        if (phaseMatches.length === 0) return null
+      {rounds.map(round => {
+        const roundMatches = allMatches.filter(m => m.round === round)
+        if (roundMatches.length === 0) return null
         return (
-          <div key={phase} className="mb-8">
-            <h2 className="text-base font-semibold text-gray-300 mb-3 flex items-center gap-2">
-              {PHASE_LABELS[phase]}
-              <span className="badge-gray">{phaseMatches.length} matcher</span>
+          <div key={round} className="mb-6">
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+              {ROUND_LABELS[round]}
+              <span className="text-gray-700">{roundMatches.length} matcher</span>
             </h2>
-            <div className="space-y-3">
-              {phaseMatches.map(match => (
-                <BracketMatchCard
-                  key={match.matchNumber}
-                  match={match}
-                  pick={bracketPicks[match.matchNumber] ?? null}
-                  onPick={team => handlePick(match.matchNumber, team)}
+            <div className="border border-surface-600 divide-y divide-surface-700">
+              {roundMatches.map(m => (
+                <BracketMatchRow
+                  key={m.matchNumber}
+                  match={m}
+                  pick={picks[m.matchNumber] ?? null}
+                  onPick={team => handlePick(m.matchNumber, team)}
                 />
               ))}
             </div>
@@ -238,20 +200,15 @@ export default function BracketPage() {
         )
       })}
 
-      {error && (
-        <p className="mb-4 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
-
-      {/* Fixed bottom */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-4 py-4">
-        <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
-          <button onClick={() => router.push('/onboarding/third-place')} className="btn-ghost">
-            ← Tillbaka
-          </button>
-          <button onClick={handleNext} className="btn-primary px-8">
-            Nästa: Skytteliga →
+      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-700 bg-surface-900/95 backdrop-blur px-3 py-3">
+        <div className="mx-auto max-w-2xl flex items-center justify-between">
+          <button onClick={() => router.push('/onboarding/group-stage')} className="text-xs text-gray-500 hover:text-white px-3 py-2">← Tillbaka</button>
+          <button onClick={() => canProceed && router.push('/onboarding/final-details')}
+            disabled={!canProceed}
+            className={`px-6 py-2 text-sm font-bold border transition-colors ${
+              canProceed ? 'bg-yellow-500 text-black border-yellow-500 hover:bg-yellow-400' : 'bg-surface-700 text-gray-600 border-surface-600 cursor-not-allowed'
+            }`}>
+            Nästa: Detaljer →
           </button>
         </div>
       </div>
@@ -259,44 +216,30 @@ export default function BracketPage() {
   )
 }
 
-function BracketMatchCard({
-  match,
-  pick,
-  onPick,
-}: {
-  match: KnockoutMatch
-  pick: string | null
-  onPick: (team: string) => void
-}) {
-  const teams = [match.team1, match.team2]
-  const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Etta') || t.startsWith('Tvåa')
+function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: string | null; onPick: (t: string) => void }) {
+  const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Förlorare') || t.startsWith('Etta') || t.startsWith('Tvåa')
 
   return (
-    <div className={`card transition-all ${pick ? 'border-surface-500' : ''}`}>
-      <div className="flex items-center gap-1 mb-2">
-        <span className="text-xs text-gray-600 font-mono">{match.label}</span>
-        {pick && (
-          <span className="badge-green ml-auto">{pick}</span>
-        )}
-      </div>
-      <div className="flex gap-2">
-        {teams.map(team => (
-          <button
-            key={team}
-            onClick={() => !isPlaceholder(team) && onPick(team)}
+    <div className="flex items-center px-2 py-1.5 gap-1 bg-surface-800/30 hover:bg-surface-800/50">
+      <span className="text-xs text-gray-700 font-mono w-8 flex-shrink-0">{match.label}</span>
+      <div className="flex-1 flex gap-1">
+        {[match.team1, match.team2].map(team => (
+          <button key={team} onClick={() => !isPlaceholder(team) && onPick(team)}
             disabled={isPlaceholder(team)}
-            className={`flex-1 rounded-lg border py-2.5 px-2 text-sm font-semibold transition-all text-center ${
+            className={`flex-1 py-1.5 px-1 text-xs font-medium border text-center transition-colors ${
               isPlaceholder(team)
-                ? 'border-surface-600 bg-surface-800 text-gray-600 cursor-not-allowed'
+                ? 'border-surface-700 text-gray-700 bg-surface-800 cursor-not-allowed'
                 : pick === team
-                ? 'border-pitch-500 bg-pitch-900/40 text-pitch-300'
-                : 'border-surface-500 bg-surface-700 text-gray-300 hover:border-surface-400 hover:text-white'
-            }`}
-          >
+                ? 'border-yellow-500 bg-yellow-500/10 text-yellow-400'
+                : 'border-surface-600 text-gray-400 hover:text-white hover:border-surface-400'
+            }`}>
             {team}
           </button>
         ))}
       </div>
+      {pick && !isPlaceholder(match.team1) && !isPlaceholder(match.team2) && (
+        <span className="text-xs text-yellow-500 w-4 flex-shrink-0">✓</span>
+      )}
     </div>
   )
 }
