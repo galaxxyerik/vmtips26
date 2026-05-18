@@ -1,5 +1,5 @@
 import type { OnboardingState, GroupLabel, Pick } from './types'
-import { ONBOARDING_KEY, GROUPS } from './types'
+import { ONBOARDING_KEY } from './types'
 
 export type OnboardingStep =
   | 'group-stage'
