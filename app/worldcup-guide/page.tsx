@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
+import { EditableImage } from '@/components/Editable'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -98,16 +99,67 @@ const GROUPS: Group[] = [
   { letter: 'L', teams: [{ name: 'Norge', flag: '🇳🇴', prediction: 'W' }, { name: 'Serbien', flag: '🇷🇸', prediction: 'Q' }, { name: 'Schweiz', flag: '🇨🇭', prediction: 'E' }, { name: 'Österrike', flag: '🇦🇹', prediction: 'E' }], analysis: 'Haaland på sitt första VM — det räcker som rubrik. Norge vinner klart med Haaland och Nypan i ett ungt, hungert lag.', hotMatch: 'Norge vs. Serbien' },
 ]
 
-const SWEDEN_PLAYERS: SwedenPlayer[] = [
-  { name: 'Viktor Gyökeres', club: 'Arsenal', position: 'Anfallare', age: 28, caps: 55, season: 'En säsong som bekräftar att han är en av världens absolut bästa anfallare. 37 Premier League-mål och Champions League med Arsenal — Gyökeres är i karriärens topp vid perfekt tidpunkt för VM.', role: 'Lagets motor och nationens hopp. Allt offensivt rör sig runt och genom honom.', keyStrength: 'Explosiv avslutning med båda fötterna och ett outhålligt pressingspel som skapar kaos i uppspel.', rating: 10 },
-  { name: 'Victor Lindelöf', club: 'Aston Villa', position: 'Mittback (kapten)', age: 31, caps: 95, season: 'Kapten och klippa för Aston Villa. Lindelöf har mognat till en av Europas pålitligaste centralbackar — teknisk, lugn och med ett ledarskap som präglar hela laget.', role: 'Lagets kapten och defensiva ankare. Kommunikation och positionering är nyckeln till Potters kompakthet.', keyStrength: 'Orubblig under press med ett passningsspel från baklinjen som startar Sveriges kontringar.', rating: 8 },
-  { name: 'Dejan Kulusevski', club: 'Tottenham', position: 'Mittfältare', age: 25, caps: 48, season: 'En fullt blomstrad säsong för Tottenham med mål och assist i toppklass. Kombinerar fart och teknik med arbetskapacitet som gör honom till en av Premier Leagues mest kompletta mittfältare.', role: 'Lagets kreativa gnista och offensiva frihet. Hans rörlighet och dribbling i press ger Sverige ett unikt redskap.', keyStrength: 'Outhållig löpkapacitet kombinerat med teknisk säkerhet i trång yta och ett oväntat avslut.', rating: 8 },
-  { name: 'Alexander Isak', club: 'Newcastle United', position: 'Anfallare', age: 26, caps: 42, season: 'En säsong som befäste hans status som Premier Leagues bästa "second striker" — Isak kombinerar teknik med klinisk avslutning och rörlighet som ger centralbackar mardrömmar.', role: 'Gyökeres partner och alternativ. Förmågan att falla ned i mellanzonen och kombinera ger Gyökeres frihet bakom defensiven.', keyStrength: 'Exceptionell teknisk kontroll med hög löpfart och ett vänsterben som är svårt att förutse.', rating: 8 },
-  { name: 'Emil Forsberg', club: 'New York Red Bulls', position: 'Anfallsmittfältare', age: 34, caps: 107, season: 'MLS-karriären håller honom fräsch och motiverad — fortfarande en av landslaget mest kreativa spelare.', role: 'Erfarne kuggen som binder ihop Gyökeres och mittfältet. Spelsinne och förmåga att dra in spelet från höger.', keyStrength: 'VM-erfarenhet, spelsinne och förmågan att avgöra från set-piece-situationer.', rating: 7 },
-  { name: 'Anthony Elanga', club: 'Nottingham Forest', position: 'Vänsterytter', age: 23, caps: 18, season: 'En av Premier Leagues bästa individuella säsonger med Nottingham Forest — snabb, direkt och klinisk. Hans energi på kanten tvingar fram defensiva misstag.', role: 'Vänsterytterspetsens dynamik och extra hastighet i kontrings-lägen.', keyStrength: 'Explosiv sprintkapacitet och direkthet som gör honom till en mardröm för backs.', rating: 7 },
-  { name: 'Robin Olsen', club: 'Feyenoord', position: 'Målvakt', age: 36, caps: 65, season: 'En solid säsong i Eredivisie. Olsen är fortfarande en av Europas stabilaste målvakter med ett fotspel som passar Potters upplägg.', role: 'Förstaval i mål och lagets siste försvarare. Hans kommunikation med backlinjen är central.', keyStrength: 'Exceptionellt bra i en-mot-en-situationer och med lugn under press som smittar av sig.', rating: 7 },
-  { name: 'Isak Hien', club: 'Atalanta', position: 'Mittback', age: 25, caps: 25, season: 'Etablerat sig som en av Serie A:s pålitligaste centralbackar. Teknisk säkerhet och förmågan att spela ut press bakifrån matchar Potters krav perfekt.', role: 'Tredjeman i defensiven med flexibilitet för trepacks vid behov.', keyStrength: 'Snabb i täckningarna med ett passningstänkande som aktiverar pressingsystemet.', rating: 7 },
+interface SwedenMatch {
+  date: string; day: string; time: string; opponent: string; opponentFlag: string
+  venue: string; city: string; tv: string; note: string
+}
+const SWEDEN_MATCHES: SwedenMatch[] = [
+  { date: '15 juni', day: 'Måndag', time: '04:00', opponent: 'Tunisien', opponentFlag: '🇹🇳', venue: 'Estadio BBVA', city: 'Monterrey, Mexiko', tv: 'SVT', note: 'Måste vinna' },
+  { date: '20 juni', day: 'Lördag', time: '19:00', opponent: 'Nederländerna', opponentFlag: '🇳🇱', venue: 'NRG Stadium', city: 'Houston, USA', tv: 'TV4', note: 'Avgörande' },
+  { date: '26 juni', day: 'Fredag', time: '01:00', opponent: 'Japan', opponentFlag: '🇯🇵', venue: 'AT&T Stadium', city: 'Dallas, USA', tv: 'SVT', note: 'Sista chansen' },
 ]
+
+interface FeaturedPlayer {
+  name: string; club: string; position: string; age: number
+  desc: string; keyStrength: string; rating: number; imageKey: string
+}
+const FEATURED_PLAYERS: FeaturedPlayer[] = [
+  { name: 'Viktor Gyökeres', club: 'Arsenal', position: 'Anfallare', age: 28, desc: 'Mannen som tog Sverige till VM med hattrick mot Ukraina. Arsenal-anfallaren är i karriärens absoluta topp — explosiv, outhållig och klinisk. Detta är hans turnering att ta för sig.', keyStrength: 'Explosiv avslutning med båda fötterna, outhålligt pressingspel och förmåga att avgöra ur ingenstans.', rating: 10, imageKey: 'img.player.gyokeres' },
+  { name: 'Alexander Isak', club: 'Liverpool', position: 'Anfallare', age: 26, desc: 'Premier Leagues mest kompletta anfallare. Isak kombinerar exceptionell teknik med klinisk avslutning — hans rörlighet i mellanzonen ger Sverige ett offensivt vapen ingen förväntar sig.', keyStrength: 'Teknisk kontroll i högt tempo, ett vänsterben svårt att förutse och förmågan att skapa ur stillastående.', rating: 9, imageKey: 'img.player.isak' },
+  { name: 'Victor Lindelöf', club: 'Aston Villa', position: 'Mittback · Kapten', age: 31, desc: 'Kapten och ryggraden i Potters defensivsystem. Lindelöf har mognat till en av Europas pålitligaste centralbackar — teknisk, lugn och med ett ledarskap som präglar hela laget.', keyStrength: 'Orubblig under press, exceptionellt passningsspel bakifrån och defensivt läsande som skapar trygghet.', rating: 8, imageKey: 'img.player.lindelof' },
+  { name: 'Lucas Bergvall', club: 'Tottenham', position: 'Mittfältare', age: 19, desc: 'Turneringens yngsta stjärna i blågult. Bergvall har redan visat att han hör hemma i Premier League — teknisk, modig och med ett spelsinne sällsynt för sin ålder.', keyStrength: 'Teknisk säkerhet under press, förmåga att vända spelet och en mognad i beslutsfattandet som chockar erfarna.', rating: 8, imageKey: 'img.player.bergvall' },
+  { name: 'Anthony Elanga', club: 'Newcastle United', position: 'Ytterforward', age: 23, desc: 'Newcastles raketssnabba ytter som kan avgöra matcher på ett ögonblick. Elanga är Sveriges vapen i kontringar — hans sprintkapacitet och direkthet gör backs desperata.', keyStrength: 'Explosiv hastighet i djupled, direkthet i 1-mot-1 och outhållig press som tvingar fram misstag.', rating: 7, imageKey: 'img.player.elanga' },
+]
+
+interface SquadPlayer { name: string; club: string; pos: string }
+const SQUAD: Record<string, SquadPlayer[]> = {
+  'Målvakter': [
+    { name: 'Viktor Johansson', club: 'Stoke City', pos: 'MV' },
+    { name: 'Kristoffer Nordfeldt', club: 'AIK', pos: 'MV' },
+    { name: 'Jacob Widell Zetterström', club: 'Derby County', pos: 'MV' },
+  ],
+  'Försvar': [
+    { name: 'Victor Nilsson Lindelöf', club: 'Aston Villa', pos: 'CB' },
+    { name: 'Isak Hien', club: 'Atalanta', pos: 'CB' },
+    { name: 'Carl Starfelt', club: 'Celta de Vigo', pos: 'CB' },
+    { name: 'Gustaf Lagerbielke', club: 'SC Braga', pos: 'CB' },
+    { name: 'Emil Holm', club: 'Juventus', pos: 'RB' },
+    { name: 'Hjalmar Ekdal', club: 'Burnley', pos: 'LB' },
+    { name: 'Gabriel Gudmundsson', club: 'Leeds United', pos: 'LB' },
+    { name: 'Eric Smith', club: 'FC St Pauli', pos: 'CB' },
+    { name: 'Elliot Stroud', club: 'Mjällby AIF', pos: 'RB' },
+  ],
+  'Mittfält': [
+    { name: 'Lucas Bergvall', club: 'Tottenham', pos: 'CM' },
+    { name: 'Mattias Svanberg', club: 'VfL Wolfsburg', pos: 'CM' },
+    { name: 'Yasin Ayari', club: 'Brighton', pos: 'CM' },
+    { name: 'Daniel Svensson', club: 'Borussia Dortmund', pos: 'CM' },
+    { name: 'Jesper Karlström', club: 'Udinese', pos: 'DM' },
+    { name: 'Ken Sema', club: 'Pafos FC', pos: 'WM' },
+    { name: 'Taha Abdi Ali', club: 'Malmö FF', pos: 'CM' },
+    { name: 'Besfort Zeneli', club: 'Union Saint-Gilloise', pos: 'WM' },
+  ],
+  'Anfall': [
+    { name: 'Viktor Gyökeres', club: 'Arsenal', pos: 'ST' },
+    { name: 'Alexander Isak', club: 'Liverpool', pos: 'ST' },
+    { name: 'Anthony Elanga', club: 'Newcastle United', pos: 'LW' },
+    { name: 'Gustaf Nilsson', club: 'Club Brugge', pos: 'ST' },
+    { name: 'Alexander Bernhardsson', club: 'Holstein Kiel', pos: 'RW' },
+    { name: 'Benjamin Nygren', club: 'Celtic', pos: 'RW' },
+  ],
+}
+
+const SWEDEN_PLAYERS: SwedenPlayer[] = []
 
 const FAVORITES = [
   { country: 'Frankrike', flag: '🇫🇷', pct: 19 },
@@ -328,108 +380,126 @@ function SwedenTab() {
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null)
 
   return (
-    <div className="space-y-6">
-      {/* Hero */}
-      <div className="card border-pitch-700 bg-pitch-900/20">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">🇸🇪</span>
+    <div className="space-y-0">
+
+      {/* ── Hero image ── */}
+      <EditableImage
+        contentKey="image.sweden.hero"
+        alt="Det svenska landslaget"
+        className="w-full object-cover object-top"
+        containerClassName="w-full"
+        placeholderHeight="h-56"
+      />
+
+      {/* ── Title block ── */}
+      <div className="border border-white/10 border-t-0 px-5 py-5 bg-navy-900">
+        <div className="flex items-center gap-4">
+          <span className="text-5xl leading-none">🇸🇪</span>
           <div>
-            <h2 className="text-xl font-bold text-pitch-300">Sverige i VM 2026</h2>
-            <p className="text-sm text-gray-400">Grupp F · Coach: Graham Potter</p>
+            <div className="label text-swe-yellow/70 mb-0.5">Grupp F · VM 2026</div>
+            <h2 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sverige</h2>
+            <p className="text-white/40 text-xs mt-0.5">Coach: Graham Potter · 26 spelare uttagna</p>
+          </div>
+          <div className="ml-auto text-right">
+            <div className="font-display font-black text-4xl text-swe-yellow">65%</div>
+            <div className="text-[10px] text-white/30 uppercase tracking-wider">chans vidare</div>
           </div>
         </div>
-        <p className="text-gray-300 text-sm leading-relaxed mb-4">
-          Blågult är tillbaka. Efter åtta långa år sedan 2018 i Ryssland kliver Sverige in i VM 2026
-          med en generation som vet vad den vill. Graham Potter har byggt ett lag runt Viktor Gyökeres —
-          en anfallare i världsklass — och med den hungern är detta inte ett lag som kommer för att
-          åka hem tidigt.
+        <p className="text-white/60 text-sm leading-relaxed mt-4 border-t border-white/10 pt-4">
+          Blågult är tillbaka. Efter åtta långa år sedan 2018 kliver Sverige in i VM 2026 med en
+          generation som vet vad den vill. Graham Potter har byggt ett kompakt, snabbt lag runt
+          Viktor Gyökeres — och med den hungern är detta inte ett lag som åker hem tidigt.
         </p>
+      </div>
 
-        {/* Group prediction */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          {[
-            { flag: '🇳🇱', opp: 'Nederländerna', res: '1–2 Förlust', note: 'Svår match' },
-            { flag: '🇯🇵', opp: 'Japan', res: '2–1 Vinst', note: 'Avgörande' },
-            { flag: '🇹🇳', opp: 'Tunisien', res: '1–0 Vinst', note: 'Måste vinna' },
-          ].map(({ flag, opp, res, note }) => (
-            <div key={opp} className="bg-surface-700 rounded-lg p-3 text-center">
-              <div className="text-2xl mb-1">{flag}</div>
-              <div className="text-xs text-gray-400 mb-1">{opp}</div>
-              <div className="text-xs font-bold text-gray-200">{res}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{note}</div>
+      {/* ── Match schedule ── */}
+      <div className="border border-white/10 border-t-0">
+        <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
+          <div className="label">Matchschema · svenska tider (CEST)</div>
+        </div>
+        <div className="divide-y divide-white/5">
+          {SWEDEN_MATCHES.map((m, i) => (
+            <div key={m.opponent} className="flex items-center gap-3 px-4 py-3 hover:bg-navy-900/40 transition-colors">
+              <div className="w-7 h-7 flex items-center justify-center border border-white/15 flex-shrink-0">
+                <span className="font-display font-black text-xs text-white/40">{i + 1}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xl leading-none">{m.opponentFlag}</span>
+                  <span className="font-display font-black uppercase tracking-wide text-white text-sm">
+                    Sverige vs {m.opponent}
+                  </span>
+                  <span className="text-[10px] border border-swe-yellow/30 text-swe-yellow/70 px-1.5 py-0.5 font-display font-black uppercase">
+                    {m.note}
+                  </span>
+                </div>
+                <div className="text-xs text-white/35 mt-0.5">{m.venue} · {m.city}</div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="font-display font-black text-swe-yellow text-base tnum">{m.time}</div>
+                <div className="text-[10px] text-white/30 tnum">{m.day} {m.date}</div>
+                <div className="text-[10px] text-white/25 mt-0.5">{m.tv}</div>
+              </div>
             </div>
           ))}
         </div>
-
-        {/* Advance probability */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Chans att gå vidare från grupp</span>
-            <span className="font-bold text-pitch-400">65%</span>
-          </div>
-          <div className="h-2 bg-surface-700 rounded-full overflow-hidden">
-            <div className="h-full bg-pitch-600 rounded-full" style={{ width: '65%' }} />
-          </div>
-        </div>
-
-        <div className="mt-4 flex gap-3">
-          <div className="card py-3 flex-1 text-center bg-surface-700/50 border-0">
-            <div className="text-sm font-bold text-pitch-400">Åttondelsfinal</div>
-            <div className="text-xs text-gray-500">Max-finish-prognos</div>
-          </div>
-          <div className="card py-3 flex-1 text-center bg-yellow-900/20 border-yellow-800">
-            <div className="text-sm font-bold text-yellow-300">29 juni</div>
-            <div className="text-xs text-gray-500">Sverige i Houston</div>
-          </div>
-        </div>
       </div>
 
-      {/* Bold prediction */}
-      <div className="card border-yellow-800 bg-yellow-900/10">
-        <p className="text-xs font-semibold text-yellow-400 mb-1 uppercase tracking-wider">Djärv spaning</p>
-        <p className="text-sm text-yellow-100 leading-relaxed italic">
-          "Sverige slår Brasilien i åttondelsfinalen på straffar och Gyökeres koras till matchens
-          bäste spelare — Blågult skriver historia i Houston."
+      {/* ── Djärv spaning ── */}
+      <div className="border border-swe-yellow/20 border-t-0 bg-swe-yellow/5 px-5 py-4">
+        <div className="label text-swe-yellow/60 mb-1">Djärv spaning</div>
+        <p className="text-sm text-white/70 leading-relaxed italic">
+          &ldquo;Sverige slår Nederländerna och tar gruppsegern — Gyökeres koras till Grupp F:s bästa spelare
+          och Blågult skriver historia i Houston.&rdquo;
         </p>
       </div>
 
-      {/* Swedish squad */}
-      <div>
-        <h3 className="text-lg font-bold mb-4">Truppen</h3>
-        <div className="space-y-3">
-          {SWEDEN_PLAYERS.map(p => (
-            <div
-              key={p.name}
-              className="card cursor-pointer hover:border-surface-500 transition-colors"
-              onClick={() => setExpandedPlayer(expandedPlayer === p.name ? null : p.name)}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-gray-100">{p.name}</span>
-                    <span className="badge-gray text-xs">{p.position}</span>
-                    <span className="text-xs text-gray-500">{p.caps} A-landslagsmatcher</span>
+      {/* ── Featured players ── */}
+      <div className="border border-white/10 border-t-0">
+        <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
+          <div className="label">Nyckelspelare</div>
+        </div>
+        <div className="divide-y divide-white/5">
+          {FEATURED_PLAYERS.map(p => (
+            <div key={p.name}>
+              {/* Player row */}
+              <button
+                className="w-full flex items-stretch text-left hover:bg-navy-900/40 transition-colors"
+                onClick={() => setExpandedPlayer(expandedPlayer === p.name ? null : p.name)}
+              >
+                {/* Photo slot */}
+                <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-navy-900 border-r border-white/5">
+                  <EditableImage
+                    contentKey={p.imageKey}
+                    alt={p.name}
+                    className="w-full h-full object-cover object-top"
+                    placeholderHeight="h-20"
+                    containerClassName="w-full h-full"
+                  />
+                </div>
+                {/* Info */}
+                <div className="flex-1 px-4 py-3 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
+                        {p.name}
+                      </div>
+                      <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
+                      <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">{p.club} · {p.age} år</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-pitch-400">{p.rating}</div>
-                  <div className="text-xs text-gray-600">/ 10</div>
-                </div>
-              </div>
-
+              </button>
+              {/* Expanded */}
               {expandedPlayer === p.name && (
-                <div className="mt-4 pt-4 border-t border-surface-700 space-y-3">
-                  <p className="text-sm text-gray-300 leading-relaxed">{p.season}</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div className="bg-surface-700/50 rounded-lg p-3">
-                      <p className="text-xs font-semibold text-gray-400 mb-1">Roll i laget</p>
-                      <p className="text-xs text-gray-300 leading-relaxed">{p.role}</p>
-                    </div>
-                    <div className="bg-surface-700/50 rounded-lg p-3">
-                      <p className="text-xs font-semibold text-gray-400 mb-1">Styrka</p>
-                      <p className="text-xs text-gray-300 leading-relaxed">{p.keyStrength}</p>
-                    </div>
+                <div className="px-4 pb-4 border-t border-white/5 bg-navy-900/30 space-y-3 pt-3">
+                  <p className="text-sm text-white/65 leading-relaxed">{p.desc}</p>
+                  <div className="border border-white/10 px-3 py-2.5">
+                    <div className="label text-[9px] mb-1">Nyckestyrka</div>
+                    <p className="text-xs text-white/55 leading-relaxed">{p.keyStrength}</p>
                   </div>
                 </div>
               )}
@@ -437,6 +507,30 @@ function SwedenTab() {
           ))}
         </div>
       </div>
+
+      {/* ── Full squad ── */}
+      <div className="border border-white/10 border-t-0">
+        <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
+          <div className="label">Hela truppen · 26 spelare</div>
+        </div>
+        {Object.entries(SQUAD).map(([pos, players]) => (
+          <div key={pos} className="border-b border-white/5 last:border-0">
+            <div className="px-4 py-1.5 bg-navy-900/50">
+              <span className="text-[10px] font-display font-black uppercase tracking-widest text-white/30">{pos}</span>
+            </div>
+            <div className="divide-y divide-white/5">
+              {players.map(p => (
+                <div key={p.name} className="flex items-center gap-3 px-4 py-2 hover:bg-navy-900/30 transition-colors">
+                  <span className="w-7 text-center text-[10px] font-display font-black text-white/20 border border-white/10 py-0.5">{p.pos}</span>
+                  <span className="flex-1 text-sm text-white/80 font-medium">{p.name}</span>
+                  <span className="text-xs text-white/30">{p.club}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
     </div>
   )
 }
