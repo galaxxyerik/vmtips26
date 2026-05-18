@@ -76,7 +76,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-navy-950">
-      <NavBar userName={user.email} isAdmin />
+      <NavBar userName={user.email} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-8">
 
@@ -201,12 +201,27 @@ export default async function AdminPage() {
           <div className="px-4 py-3 border-b border-white/10 bg-navy-900">
             <div className="label">Verktyg</div>
           </div>
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-4 py-4 space-y-6">
             <div>
               <div className="text-xs text-white/50 mb-2">
-                Anropa detta för att återskapa/återställa adminlösenordet i Supabase Auth.
+                Återskapa/återställ adminlösenordet i Supabase Auth.
               </div>
               <SetupAdminButton />
+            </div>
+
+            <div>
+              <div className="label mb-2">Skapa innehållstabell (kör en gång i Supabase SQL-editor)</div>
+              <pre className="bg-navy-950 border border-white/10 text-[11px] text-white/60 p-3 overflow-x-auto leading-relaxed font-mono select-all">{`create table if not exists vmt_page_content (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+alter table vmt_page_content enable row level security;
+create policy "Public read" on vmt_page_content
+  for select using (true);`}</pre>
+              <div className="text-[11px] text-white/30 mt-1">
+                När tabellen finns kan du trycka på &ldquo;✎ Redigera sida&rdquo;-knappen (nere till höger) för att redigera text och bilder direkt på sidan.
+              </div>
             </div>
           </div>
         </div>

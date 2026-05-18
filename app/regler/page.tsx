@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
+import { EditableImage } from '@/components/Editable'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,13 +11,22 @@ export default async function ReglerPage() {
 
   return (
     <div className="min-h-screen bg-navy-950">
-      <NavBar userName={user?.email ?? null} isAdmin={user?.email === 'eeengstrand@gmail.com'} />
+      <NavBar userName={user?.email ?? null} />
 
       <main className="mx-auto max-w-2xl px-4 py-10">
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="label mb-1">Spelregler</div>
           <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Regler &amp; Poängsystem</h1>
         </div>
+
+        {/* Admin-redigerbar bannerbild */}
+        <EditableImage
+          contentKey="image.regler.banner"
+          alt="Regelsbild"
+          className="w-full object-cover max-h-48"
+          containerClassName="mb-6"
+          placeholderHeight="h-32"
+        />
 
         <div className="space-y-6 text-sm">
           <Section title="Deadline">

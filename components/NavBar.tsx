@@ -3,16 +3,17 @@
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useContent } from '@/contexts/AdminEditContext'
 
 interface NavBarProps {
   userName?: string | null
-  isAdmin?: boolean
 }
 
-export default function NavBar({ userName, isAdmin }: NavBarProps) {
+export default function NavBar({ userName }: NavBarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+  const { isAdmin } = useContent()
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -40,7 +41,6 @@ export default function NavBar({ userName, isAdmin }: NavBarProps) {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-navy-950">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        {/* Wordmark */}
         <Link href="/" className="font-display font-black text-white text-lg uppercase tracking-[0.06em]">
           VM<span className="text-swe-yellow">-TIPS 26</span>
         </Link>
@@ -52,7 +52,7 @@ export default function NavBar({ userName, isAdmin }: NavBarProps) {
           {isAdmin && navLink('/admin', 'Admin')}
 
           {userName && (
-            <div className="ml-3 flex items-center gap-2">
+            <div className="ml-3">
               <button
                 onClick={handleSignOut}
                 className="px-3 py-1.5 text-xs font-display font-black uppercase tracking-[0.1em] border border-white/15 text-white/45 hover:text-white hover:border-white/30 transition-colors"

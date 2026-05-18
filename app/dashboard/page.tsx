@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
+import { EditableImage } from '@/components/Editable'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -71,6 +72,14 @@ export default async function DashboardPage() {
 
         {!isOpen ? (
           <div className="space-y-4">
+            {/* Admin-redigerbar bannerbild */}
+            <EditableImage
+              contentKey="image.dashboard.banner"
+              alt="Dashboard-banner"
+              className="w-full object-cover max-h-48"
+              placeholderHeight="h-32"
+            />
+
             {/* Countdown */}
             <div className="border border-white/10 bg-navy-900 px-6 py-8 text-center">
               <div className="label mb-3">Ledartavlan öppnar om</div>

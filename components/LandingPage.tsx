@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { hasDraft, getDraftStep, getDraftTimestamp, clearDraft, loadDraft, saveDraft } from '@/lib/onboarding-storage'
 import { ONBOARDING_KEY } from '@/lib/types'
+import { useContent } from '@/contexts/AdminEditContext'
+import { Editable } from '@/components/Editable'
 
 const STEP_PATHS: Record<string, string> = {
   'group-stage': '/onboarding/group-stage',
@@ -20,6 +22,7 @@ function getStoredField(field: 'name' | 'email'): string {
 
 export default function LandingPage() {
   const router = useRouter()
+  const { isAdmin } = useContent()
   const [name, setName] = useState<string>(() => getStoredField('name'))
   const [email, setEmail] = useState<string>(() => getStoredField('email'))
   const [error, setError] = useState('')
@@ -114,7 +117,7 @@ export default function LandingPage() {
           <Link href="/dashboard" className="hover:text-white transition-colors">Tabell</Link>
           <Link href="/worldcup-guide" className="hover:text-white transition-colors">VM-bibel</Link>
           <Link href="/regler" className="hover:text-white transition-colors">Regler</Link>
-          <Link href="/login" className="hover:text-white transition-colors">Admin</Link>
+          <Link href={isAdmin ? '/admin' : '/login'} className="hover:text-white transition-colors">Admin</Link>
         </div>
       </nav>
 
@@ -123,21 +126,28 @@ export default function LandingPage() {
         {/* Eyebrow */}
         <div className="flex items-center gap-3 mb-5">
           <div className="h-px w-8 bg-swe-yellow" />
-          <div className="font-display font-black uppercase tracking-[0.22em] text-[10px] text-swe-yellow">
-            11 juni — 19 juli 2026 · USA / CAN / MEX
-          </div>
+          <Editable
+            contentKey="landing.eyebrow"
+            fallback="11 juni — 19 juli 2026 · USA / CAN / MEX"
+            className="font-display font-black uppercase tracking-[0.22em] text-[10px] text-swe-yellow"
+          />
         </div>
 
         {/* Giant headline */}
         <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.02em] text-[clamp(72px,14vw,160px)]">
-          HELA VM.<br />
-          <span className="text-swe-yellow">ETT TIPS.</span>
+          <Editable contentKey="landing.hero.line1" fallback="HELA VM." /><br />
+          <span className="text-swe-yellow">
+            <Editable contentKey="landing.hero.line2" fallback="ETT TIPS." />
+          </span>
         </h1>
 
-        <p className="mt-6 text-base sm:text-lg text-white/60 max-w-md leading-snug font-medium">
-          48 matcher. 12 grupper. Ett slutspel.<br />
-          En insats. En vinnare. Alla andra köper öl.
-        </p>
+        <Editable
+          contentKey="landing.subtitle"
+          fallback="48 matcher. 12 grupper. Ett slutspel. En insats. En vinnare. Alla andra köper öl."
+          multiline
+          as="p"
+          className="mt-6 text-base sm:text-lg text-white/60 max-w-md leading-snug font-medium"
+        />
 
         {/* Entry form */}
         <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-sm">
@@ -163,7 +173,12 @@ export default function LandingPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-xs text-white/20 tnum">Insats: 100 kr · Deadline: 11 juni 2026</p>
+        <Editable
+          contentKey="landing.deadline"
+          fallback="Insats: 100 kr · Deadline: 11 juni 2026"
+          as="p"
+          className="mt-4 text-xs text-white/20 tnum"
+        />
       </div>
 
       {/* Bottom strap — Sverige info */}
