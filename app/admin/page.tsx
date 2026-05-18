@@ -1,87 +1,73 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import { redirect } from 'next/navigation'
 import AdminConfirmButton from './AdminConfirmButton'
 
 export const dynamic = 'force-dynamic'
 
+const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+
 export default async function AdminPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: dbUser } = await supabase
-    .from('users')
-    .select('name, is_admin')
-    .eq('id', user?.id)
-    .single()
+  if (!user || user.email !== ADMIN_EMAIL) redirect('/')
 
-  if (!dbUser?.is_admin) redirect('/dashboard')
+  const service = createServiceClient()
 
-  // Fetch all submissions
-  const { data: submissions } = await supabase
-    .from('submission_status')
-    .select('user_id, submitted, confirmed, confirmed_at')
-    .eq('submitted', true)
-    .order('confirmed', { ascending: true })
+  const { data: submissions } = await service
+    .from('vmt_submissions')
+    .select('id, name, email, submitted_at, confirmed, total_points, user_id')
+    .order('submitted_at', { ascending: false })
 
-  const userIds = (submissions ?? []).map(s => s.user_id)
-  const { data: users } = await supabase
-    .from('users')
-    .select('id, name, email, created_at')
-    .in('id', userIds)
-
-  const userMap = Object.fromEntries((users ?? []).map(u => [u.id, u]))
+  const total = submissions?.length ?? 0
+  const confirmed = submissions?.filter(s => s.confirmed).length ?? 0
 
   return (
     <div className="min-h-screen bg-surface-900">
-      <NavBar userName={dbUser?.name} isAdmin={true} />
+      <NavBar userName={user.email} isAdmin />
 
       <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Admin</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            {(submissions ?? []).length} inskickade tips ·{' '}
-            {(submissions ?? []).filter(s => s.confirmed).length} bekräftade
+          <p className="text-gray-500 text-sm mt-1">
+            {total} inskickade · {confirmed} bekräftade · {total - confirmed} väntar
           </p>
         </div>
 
-        <div className="card p-0 overflow-hidden">
-          <div className="px-5 py-4 border-b border-surface-700 grid grid-cols-4 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <div className="border border-surface-600">
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 py-2 bg-surface-800 border-b border-surface-600 text-xs font-bold text-gray-500 uppercase tracking-wider">
             <span>Namn</span>
             <span>E-post</span>
             <span>Inskickad</span>
             <span className="text-right">Status</span>
           </div>
 
-          {(submissions ?? []).length === 0 ? (
-            <div className="px-5 py-12 text-center text-gray-500 text-sm">
+          {total === 0 ? (
+            <div className="px-4 py-12 text-center text-gray-600 text-sm">
               Inga tips inskickade ännu.
             </div>
           ) : (
             <div className="divide-y divide-surface-700">
-              {(submissions ?? []).map(sub => {
-                const u = userMap[sub.user_id]
-                return (
-                  <div key={sub.user_id} className="px-5 py-4 grid grid-cols-4 gap-4 items-center">
-                    <div className="text-sm font-medium text-gray-200 truncate">
-                      {u?.name ?? '—'}
-                    </div>
-                    <div className="text-sm text-gray-400 truncate">{u?.email ?? '—'}</div>
-                    <div className="text-xs text-gray-500">
-                      {u?.created_at
-                        ? new Date(u.created_at).toLocaleDateString('sv-SE')
-                        : '—'}
-                    </div>
-                    <div className="flex justify-end">
-                      {sub.confirmed ? (
-                        <span className="badge-green">✓ Bekräftad</span>
-                      ) : (
-                        <AdminConfirmButton userId={sub.user_id} />
-                      )}
-                    </div>
+              {(submissions ?? []).map(sub => (
+                <div key={sub.id} className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 py-3 items-center">
+                  <span className="text-sm font-medium text-gray-200 truncate">{sub.name}</span>
+                  <span className="text-sm text-gray-500 truncate">{sub.email}</span>
+                  <span className="text-xs text-gray-600">
+                    {sub.submitted_at
+                      ? new Date(sub.submitted_at).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                      : '—'}
+                  </span>
+                  <div className="flex justify-end">
+                    {sub.confirmed ? (
+                      <span className="text-xs text-pitch-400 font-bold">✓ Bekräftad</span>
+                    ) : (
+                      <AdminConfirmButton submissionId={sub.id} />
+                    )}
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

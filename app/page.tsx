@@ -1,22 +1,24 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import LandingPage from '@/components/LandingPage'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // If logged in, check if they have a submission
   if (user) {
-    const { data: status } = await supabase
-      .from('submission_status')
-      .select('submitted')
+    const { data: submission } = await supabase
+      .from('vmt_submissions')
+      .select('id')
       .eq('user_id', user.id)
       .single()
 
-    if (status?.submitted) redirect('/dashboard')
-    else redirect('/onboarding/group-stage')
+    if (submission) {
+      const { redirect } = await import('next/navigation')
+      redirect('/dashboard')
+    }
   }
 
   return <LandingPage />
