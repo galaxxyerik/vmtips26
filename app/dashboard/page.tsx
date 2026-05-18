@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Link from 'next/link'
 
@@ -13,6 +13,16 @@ export default async function DashboardPage() {
 
   const now = new Date()
   const isOpen = now >= OPENS_AT
+
+  // Always fetch participant count
+  const service = createServiceClient()
+  const { count: totalParticipants } = await service
+    .from('vmt_submissions')
+    .select('id', { count: 'exact', head: true })
+  const { count: confirmedParticipants } = await service
+    .from('vmt_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('confirmed', true)
 
   let submissions: { id: string; name: string; total_points: number; confirmed: boolean; user_id: string | null }[] = []
   let mySubmission = null
@@ -36,6 +46,12 @@ export default async function DashboardPage() {
   }
 
   const ranked = submissions.map((s, i) => ({ ...s, rank: i + 1 }))
+  const pot = (confirmedParticipants ?? 0) * 100
+
+  // Countdown
+  const msLeft = OPENS_AT.getTime() - now.getTime()
+  const daysLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24)))
+  const hoursLeft = Math.max(0, Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)))
 
   return (
     <div className="min-h-screen bg-navy-950">
@@ -53,9 +69,68 @@ export default async function DashboardPage() {
         </div>
 
         {!isOpen ? (
-          <div className="border border-white/10 bg-navy-900 py-16 text-center space-y-3">
-            <div className="font-display font-black text-4xl uppercase text-swe-yellow">11 JUNI · 21:00</div>
-            <p className="text-white/40 text-sm">Tabellen öppnar när första matchen sparkar igång.</p>
+          <div className="space-y-4">
+            {/* Countdown */}
+            <div className="border border-white/10 bg-navy-900 px-6 py-8 text-center">
+              <div className="label mb-3">Ledartavlan öppnar om</div>
+              <div className="font-display font-black text-5xl uppercase text-swe-yellow tracking-wider">
+                {daysLeft}d {hoursLeft}h
+              </div>
+              <div className="text-white/40 text-sm mt-2">11 juni · kl 21:00 (CEST)</div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 border border-white/10">
+              <div className="px-5 py-5 border-r border-white/10">
+                <div className="label mb-1">Anmälda</div>
+                <div className="font-display font-black text-3xl text-white">
+                  {totalParticipants ?? 0}
+                  <span className="text-base text-white/40 ml-1">deltagare</span>
+                </div>
+              </div>
+              <div className="px-5 py-5">
+                <div className="label mb-1">Bekräftad pott</div>
+                <div className="font-display font-black text-3xl text-swe-yellow">
+                  {pot.toLocaleString('sv-SE')}
+                  <span className="text-base text-swe-yellow/60 ml-1">kr</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sverige info */}
+            <div className="border border-white/10">
+              <div className="px-4 py-3 border-b border-white/10 bg-navy-900">
+                <div className="label">Sverige i VM 2026</div>
+              </div>
+              <div className="divide-y divide-white/5">
+                {[
+                  { label: 'Grupp', value: 'F — "Dödsgruppen"' },
+                  { label: 'Motståndare', value: 'Nederländerna, Japan, Tunisien' },
+                  { label: 'Förbundskapten', value: 'Graham Potter' },
+                  { label: 'Kapten', value: 'Victor Lindelöf' },
+                  { label: 'Hetaste namn', value: 'Viktor Gyökeres (Arsenal)' },
+                  { label: 'Senaste VM', value: '2018 i Ryssland (kvartsfinal)' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="text-xs text-white/40 uppercase tracking-wide">{label}</span>
+                    <span className="text-sm text-white/80 font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-5 py-4 flex items-center justify-between">
+              <div>
+                <div className="font-display font-black uppercase tracking-wide text-white text-sm">
+                  Inte lagt in ditt tips ännu?
+                </div>
+                <div className="text-xs text-white/40 mt-0.5">Sista chansen innan 11 juni.</div>
+              </div>
+              <Link href="/" className="btn-primary text-sm px-5 h-9 flex items-center">
+                Tippa nu →
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -82,7 +157,7 @@ export default async function DashboardPage() {
                   <div className="col-span-9 font-display font-black uppercase text-[9px] tracking-[0.16em] text-white/40">Spelare</div>
                   <div className="col-span-2 text-right font-display font-black uppercase text-[9px] tracking-[0.16em] text-white/40">Poäng</div>
                 </div>
-                {ranked.map((entry, i) => (
+                {ranked.map((entry) => (
                   <div key={entry.id} className={`grid grid-cols-12 items-center px-4 h-11 border-b border-white/5 last:border-0 ${
                     entry.user_id === user?.id ? 'bg-swe-yellow/8 border-l-2 border-l-swe-yellow' : ''
                   }`}>

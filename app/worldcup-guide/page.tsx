@@ -132,25 +132,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'fakta', label: '💡 Fakta' },
 ]
 
-// June 11 2026 21:00 Swedish time (UTC+2) = 19:00 UTC
-const OPENS_AT = new Date('2026-06-11T19:00:00Z')
-
 export default function WorldCupGuidePage() {
   const [tab, setTab] = useState<Tab>('grupper')
-  const isOpen = new Date() >= OPENS_AT
-
-  if (!isOpen) {
-    return (
-      <div className="min-h-screen bg-navy-950 flex flex-col items-center justify-center px-4">
-        <div className="text-center space-y-4 max-w-sm">
-          <div className="font-display font-black text-5xl uppercase text-swe-yellow">VM-BIBEL</div>
-          <h1 className="font-display font-black text-2xl uppercase text-white">Öppnar 11 juni · 21:00</h1>
-          <p className="text-white/40 text-sm">VM-bibeln med lag, spelare och gruppanalys öppnar när turneringen sparkar igång.</p>
-          <Link href="/" className="btn-secondary inline-flex mt-4">← Tillbaka</Link>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-surface-900">
