@@ -28,19 +28,19 @@ export default async function AdminPage() {
       .order('submitted_at', { ascending: false }),
     service
       .from('vmt_tournament_scorer_pick')
-      .select('submission_id, player_name, team'),
+      .select('submission_id, player_name'),
     service
       .from('vmt_bracket_picks')
-      .select('submission_id, team_name')
+      .select('submission_id, pick_team')
       .eq('match_number', 104),
     service
       .from('vmt_group_scorer_picks')
-      .select('submission_id, player_name, team'),
+      .select('submission_id, player_name'),
   ])
 
   const scorerMap = Object.fromEntries((scorerPicks ?? []).map(p => [p.submission_id, p]))
   const championMap = Object.fromEntries((bracketPicks ?? []).map(p => [p.submission_id, p]))
-  const groupScorerMap: Record<string, { player_name: string; team: string }[]> = {}
+  const groupScorerMap: Record<string, { player_name: string }[]> = {}
   for (const g of (groupScorers ?? [])) {
     if (!groupScorerMap[g.submission_id]) groupScorerMap[g.submission_id] = []
     groupScorerMap[g.submission_id].push(g)
@@ -55,7 +55,7 @@ export default async function AdminPage() {
   for (const p of (scorerPicks ?? [])) {
     const sub = submissions?.find(s => s.id === p.submission_id)
     if (sub?.confirmed) {
-      const key = `${p.player_name} (${p.team})`
+      const key = p.player_name
       scorerCounts[key] = (scorerCounts[key] ?? 0) + 1
     }
   }
@@ -67,7 +67,7 @@ export default async function AdminPage() {
   for (const p of (bracketPicks ?? [])) {
     const sub = submissions?.find(s => s.id === p.submission_id)
     if (sub?.confirmed) {
-      championCounts[p.team_name] = (championCounts[p.team_name] ?? 0) + 1
+      championCounts[p.pick_team] = (championCounts[p.pick_team] ?? 0) + 1
     }
   }
   const topChampions = Object.entries(championCounts)
@@ -180,7 +180,7 @@ export default async function AdminPage() {
                       {scorer ? `${scorer.player_name}` : <span className="text-white/20">—</span>}
                     </span>
                     <span className="text-xs text-white/60 whitespace-nowrap">
-                      {champion ? champion.team_name : <span className="text-white/20">—</span>}
+                      {champion ? champion.pick_team : <span className="text-white/20">—</span>}
                     </span>
                     <span className="font-display font-black tnum text-swe-yellow text-lg">
                       {sub.total_points ?? 0}

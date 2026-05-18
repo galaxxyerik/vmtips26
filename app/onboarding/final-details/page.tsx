@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadDraft, clearDraft } from '@/lib/onboarding-storage'
+import { loadDraft, saveDraft, clearDraft } from '@/lib/onboarding-storage'
 
 export default function FinalDetailsPage() {
   const router = useRouter()
@@ -80,6 +80,13 @@ export default function FinalDetailsPage() {
             onChange={e => setTournamentScorer(e.target.value)}
             placeholder="Spelarens namn..."
             className="input"
+            onBlur={e => {
+              const trimmed = e.target.value.trim()
+              setTournamentScorer(trimmed)
+              const d = loadDraft()
+              d.tournamentScorer = trimmed
+              saveDraft(d)
+            }}
           />
           <p className="text-xs text-white/30 mt-2">Rätt svar ger 5 bonuspoäng</p>
         </div>

@@ -34,9 +34,9 @@ export default function GroupStagePage() {
   }
 
   function handlePick(matchId: number, pick: Pick) {
+    const hadBracketPicks = Object.keys(draft?.bracketPicks ?? {}).length > 0
     update(d => {
       const next = { ...d, matchPicks: { ...d.matchPicks, [matchId]: pick } }
-      // Auto-compute group table order if all 3 matches in the group are picked
       const match = matches.find(m => m.id === matchId)
       if (!match?.group_label) return next
       const groupMatches = matches.filter(m => m.group_label === match.group_label)
@@ -44,9 +44,12 @@ export default function GroupStagePage() {
       if (allPicked) {
         const standings = computeGroupStandings(groupMatches, next.matchPicks)
         next.groupTableOrder = { ...next.groupTableOrder, [match.group_label]: standings.map(s => s.team) }
+        // Changing a match pick alters group standings → bracket seeding is stale
+        if (Object.keys(d.bracketPicks).length > 0) next.bracketPicks = {}
       }
       return next
     })
+    if (hadBracketPicks) setBracketCleared(true)
   }
 
   function handleTableReorder(group: string, fromIdx: number, toIdx: number) {
