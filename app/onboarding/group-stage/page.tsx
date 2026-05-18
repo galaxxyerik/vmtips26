@@ -210,31 +210,49 @@ function GroupPanel({
       )}
 
       {/* Group table (shown after all 3 picked) */}
-      {allPicked && tableOrder.length === 4 && (
-        <div className="border border-white/10">
-          <div className="px-3 py-1.5 bg-navy-900 border-b border-white/10 label">
-            Gruppordning (justera med pilarna)
-          </div>
-          {tableOrder.map((team, idx) => (
-            <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-white/5 last:border-0 bg-navy-900/50">
-              <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
-              <span className="flex-1 text-sm font-medium text-white/80">{team}</span>
-              <div className="flex gap-1">
-                <button onClick={() => idx > 0 && onReorder(idx, idx - 1)}
-                  disabled={idx === 0}
-                  className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
-                  ↑
-                </button>
-                <button onClick={() => idx < tableOrder.length - 1 && onReorder(idx, idx + 1)}
-                  disabled={idx === tableOrder.length - 1}
-                  className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
-                  ↓
-                </button>
-              </div>
+      {allPicked && tableOrder.length === 4 && (() => {
+        const statsMap = Object.fromEntries(
+          computeGroupStandings(matches, matchPicks).map(s => [s.team, s])
+        )
+        return (
+          <div className="border border-white/10">
+            <div className="px-3 py-1.5 bg-navy-900 border-b border-white/10 label">
+              Gruppordning (justera med pilarna)
             </div>
-          ))}
-        </div>
-      )}
+            {tableOrder.map((team, idx) => {
+              const s = statsMap[team]
+              return (
+                <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-white/5 last:border-0 bg-navy-900/50">
+                  <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
+                  <span className="flex-1 text-sm font-medium text-white/80">{team}</span>
+                  {s && (
+                    <span className="text-[10px] text-white/30 tnum tabular-nums">
+                      {s.w}V {s.d}O {s.l}F
+                    </span>
+                  )}
+                  {s && (
+                    <span className="w-8 text-right font-display font-black text-swe-yellow tnum text-sm">
+                      {s.pts}p
+                    </span>
+                  )}
+                  <div className="flex gap-1">
+                    <button onClick={() => idx > 0 && onReorder(idx, idx - 1)}
+                      disabled={idx === 0}
+                      className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
+                      ↑
+                    </button>
+                    <button onClick={() => idx < tableOrder.length - 1 && onReorder(idx, idx + 1)}
+                      disabled={idx === tableOrder.length - 1}
+                      className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
+                      ↓
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* Third place + scorer (shown after all picked) */}
       {allPicked && (
