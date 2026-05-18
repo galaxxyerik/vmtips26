@@ -7,8 +7,6 @@ import { loadDraft, clearDraft } from '@/lib/onboarding-storage'
 export default function FinalDetailsPage() {
   const router = useRouter()
   const [tournamentScorer, setTournamentScorer] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [swishChecked, setSwishChecked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -17,9 +15,6 @@ export default function FinalDetailsPage() {
   useEffect(() => {
     const d = loadDraft()
     setTournamentScorer(d.tournamentScorer || '')
-    setName(d.name || '')
-    setEmail(d.email || '')
-    // Validate previous steps
     if (Object.keys(d.bracketPicks).length === 0) {
       router.push('/onboarding/bracket')
     }
@@ -28,18 +23,23 @@ export default function FinalDetailsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!swishChecked) { setError('Du måste bekräfta Swish-betalningen.'); return }
-    if (!name.trim() || !email.trim()) { setError('Namn och e-post krävs.'); return }
     setSubmitting(true)
     setError(null)
 
     const draft = loadDraft()
 
+    if (!draft.name || !draft.email) {
+      setError('Namn eller e-post saknas — gå tillbaka till startsidan.')
+      setSubmitting(false)
+      return
+    }
+
     const res = await fetch('/api/submit-picks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim(),
+        name: draft.name,
+        email: draft.email,
         password: password || null,
         tournamentScorer: tournamentScorer.trim(),
         matchPicks: draft.matchPicks,
@@ -61,7 +61,7 @@ export default function FinalDetailsPage() {
     router.push('/onboarding/success')
   }
 
-  const canSubmit = name.trim() && email.trim() && swishChecked && !submitting
+  const canSubmit = swishChecked && !submitting
 
   return (
     <div className="mx-auto max-w-lg px-3 py-6 pb-12">
@@ -84,22 +84,6 @@ export default function FinalDetailsPage() {
             className="w-full bg-surface-800 border border-surface-600 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500"
           />
           <p className="text-xs text-gray-600 mt-1">Rätt svar ger 5 bonuspoäng</p>
-        </div>
-
-        {/* Name & email */}
-        <div className="border border-surface-600 p-3 space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ditt namn</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} required
-              placeholder="Förnamn Efternamn"
-              className="w-full bg-surface-800 border border-surface-600 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Din e-post</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-              placeholder="din@epost.se"
-              className="w-full bg-surface-800 border border-surface-600 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-yellow-500" />
-          </div>
         </div>
 
         {/* Optional password */}
