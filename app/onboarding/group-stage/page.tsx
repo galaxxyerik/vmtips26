@@ -14,6 +14,7 @@ export default function GroupStagePage() {
   const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [activeGroup, setActiveGroup] = useState<GroupLabel>('A')
   const [loading, setLoading] = useState(true)
+  const [bracketCleared, setBracketCleared] = useState(false)
 
   useEffect(() => {
     setStep('group-stage')
@@ -49,12 +50,16 @@ export default function GroupStagePage() {
   }
 
   function handleTableReorder(group: string, fromIdx: number, toIdx: number) {
+    const hadBracketPicks = Object.keys(draft?.bracketPicks ?? {}).length > 0
     update(d => {
       const order = [...(d.groupTableOrder[group] ?? [])]
       const [moved] = order.splice(fromIdx, 1)
       order.splice(toIdx, 0, moved)
-      return { ...d, groupTableOrder: { ...d.groupTableOrder, [group]: order } }
+      const next = { ...d, groupTableOrder: { ...d.groupTableOrder, [group]: order } }
+      if (Object.keys(d.bracketPicks).length > 0) next.bracketPicks = {}
+      return next
     })
+    if (hadBracketPicks) setBracketCleared(true)
   }
 
   function handleThirdPlace(group: string, checked: boolean) {
@@ -67,6 +72,10 @@ export default function GroupStagePage() {
 
   function handleScorer(group: string, value: string) {
     update(d => ({ ...d, groupScorers: { ...d.groupScorers, [group]: value } }))
+  }
+
+  function handleScorerBlur(group: string) {
+    update(d => ({ ...d, groupScorers: { ...d.groupScorers, [group]: (d.groupScorers[group] ?? '').trim() } }))
   }
 
   const groupedMatches = useCallback(() => {
@@ -113,6 +122,14 @@ export default function GroupStagePage() {
         </div>
       </div>
 
+      {/* Bracket cleared notice */}
+      {bracketCleared && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 mb-3 border border-swe-yellow/30 bg-swe-yellow/5 text-xs text-swe-yellow/80">
+          <span>Grupptabellen ändrades — ditt slutspelstips har återställts.</span>
+          <button onClick={() => setBracketCleared(false)} className="text-white/30 hover:text-white ml-2">✕</button>
+        </div>
+      )}
+
       {/* Group tabs */}
       <div className="flex flex-wrap gap-1 mb-4">
         {GROUPS.map(g => (
@@ -143,6 +160,7 @@ export default function GroupStagePage() {
         onReorder={(from, to) => handleTableReorder(activeGroup, from, to)}
         onThirdPlace={checked => handleThirdPlace(activeGroup, checked)}
         onScorer={val => handleScorer(activeGroup, val)}
+        onScorerBlur={() => handleScorerBlur(activeGroup)}
         onNextGroup={() => {
           const idx = GROUPS.indexOf(activeGroup)
           if (idx < GROUPS.length - 1) setActiveGroup(GROUPS[idx + 1])
@@ -174,7 +192,7 @@ export default function GroupStagePage() {
 
 function GroupPanel({
   group, matches, matchPicks, tableOrder, thirdPlaceSelected,
-  thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer,
+  thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer, onScorerBlur,
   onNextGroup, isLastGroup, groupDone,
 }: {
   group: GroupLabel
@@ -188,6 +206,7 @@ function GroupPanel({
   onReorder: (from: number, to: number) => void
   onThirdPlace: (checked: boolean) => void
   onScorer: (val: string) => void
+  onScorerBlur: () => void
   onNextGroup: () => void
   isLastGroup: boolean
   groupDone: boolean
@@ -274,6 +293,7 @@ function GroupPanel({
               type="text"
               value={scorer}
               onChange={e => onScorer(e.target.value)}
+              onBlur={onScorerBlur}
               placeholder={`Skyttekung grupp ${group}...`}
               className="w-full bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
             />

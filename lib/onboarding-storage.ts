@@ -41,10 +41,15 @@ export function loadDraft(): OnboardingDraft {
   }
 }
 
-export function saveDraft(draft: OnboardingDraft): void {
-  if (typeof window === 'undefined') return
-  draft.updatedAt = new Date().toISOString()
-  localStorage.setItem(ONBOARDING_KEY, JSON.stringify(draft))
+export function saveDraft(draft: OnboardingDraft): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    draft.updatedAt = new Date().toISOString()
+    localStorage.setItem(ONBOARDING_KEY, JSON.stringify(draft))
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function clearDraft(): void {
@@ -112,5 +117,7 @@ export function computeGroupStandings(
     else if (pick === 'X') { h.pts += 1; h.d++; a.pts += 1; a.d++ }
     else { a.pts += 3; a.w++; h.l++ }
   }
-  return Object.values(stats).sort((a, b) => b.pts - a.pts || b.w - a.w)
+  return Object.values(stats).sort((a, b) =>
+    b.pts - a.pts || b.w - a.w || b.d - a.d || a.team.localeCompare(b.team)
+  )
 }

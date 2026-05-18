@@ -160,9 +160,8 @@ export default function BracketPage() {
   )
 
   const picks = draft.bracketPicks
-  const nonBronzeMatches = allMatches.filter(m => m.round !== 'bronze')
-  const pickedKnockout = nonBronzeMatches.filter(m => picks[m.matchNumber]).length
-  const canProceed = nonBronzeMatches.every(m => !!picks[m.matchNumber])
+  const pickedKnockout = allMatches.filter(m => picks[m.matchNumber]).length
+  const canProceed = allMatches.every(m => !!picks[m.matchNumber])
 
   const rounds: KnockoutMatch['round'][] = ['r32', 'r16', 'qf', 'sf', 'bronze', 'final']
 
@@ -173,7 +172,7 @@ export default function BracketPage() {
         <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tippa slutspelet</h1>
         <div className="flex items-center gap-2 text-xs">
           <span className={`tnum ${canProceed ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
-            {pickedKnockout}/{nonBronzeMatches.length} matcher
+            {pickedKnockout}/{allMatches.length} matcher
           </span>
           <div className="flex-1 h-0.5 bg-white/10">
             <div className="h-full bg-swe-yellow transition-all"
@@ -222,7 +221,7 @@ export default function BracketPage() {
 }
 
 function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: string | null; onPick: (t: string) => void }) {
-  const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Förlorare') || t.startsWith('Etta') || t.startsWith('Tvåa')
+  const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Etta') || t.startsWith('Tvåa')
 
   return (
     <div className="flex items-center px-2 py-1.5 gap-1 bg-navy-900/30 hover:bg-navy-900/60 transition-colors">

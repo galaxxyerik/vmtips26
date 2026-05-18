@@ -6,8 +6,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, password, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks } = body
 
-    if (!name || !email) {
+    if (!name?.trim() || !email?.trim()) {
       return NextResponse.json({ error: 'Namn och e-post krävs.' }, { status: 400 })
+    }
+
+    const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
+    const scorerMap = groupScorers as Record<string, string>
+    if (!ALL_GROUPS.every(g => scorerMap[g]?.trim())) {
+      return NextResponse.json({ error: 'Skyttekung saknas för en eller flera grupper.' }, { status: 400 })
+    }
+
+    const matchPickMap = matchPicks as Record<string, string>
+    if (Object.keys(matchPickMap).length === 0) {
+      return NextResponse.json({ error: 'Gruppspelstips saknas.' }, { status: 400 })
+    }
+
+    const bracketPickMap = bracketPicks as Record<string, string>
+    const requiredMatches = Array.from({ length: 32 }, (_, i) => 73 + i) // 73–104
+    const missingBracket = requiredMatches.filter(n => !bracketPickMap[n])
+    if (missingBracket.length > 0) {
+      return NextResponse.json({ error: 'Slutspelstips är ofullständigt.' }, { status: 400 })
+    }
+
+    if (!tournamentScorer?.trim()) {
+      return NextResponse.json({ error: 'Turneringsskyttekung saknas.' }, { status: 400 })
     }
 
     const supabase = createServiceClient()
