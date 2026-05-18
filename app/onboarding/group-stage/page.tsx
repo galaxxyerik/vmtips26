@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { loadOnboarding, saveOnboarding, deriveThirdPlaceTeams } from '@/lib/onboarding-storage'
+import { loadOnboarding, saveOnboarding, setStep, deriveThirdPlaceTeams } from '@/lib/onboarding-storage'
 import type { DbMatch, GroupLabel, Pick } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 
@@ -18,6 +18,7 @@ export default function GroupStagePage() {
   const [activeGroup, setActiveGroup] = useState<GroupLabel>('A')
 
   useEffect(() => {
+    setStep('group-stage')
     const state = loadOnboarding()
     setPicks(state.groupPicks)
 

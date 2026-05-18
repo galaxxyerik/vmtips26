@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Copy-Item \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\bracket-logic.ts\" \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\lib\\\\bracket-logic.ts\")"
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\bracket-logic.ts\" \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\lib\\\\bracket-logic.ts\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Erik\\\\Desktop\\\\Tripper\\\\triplist\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(find \"C:\\\\Users\\\\Erik\\\\Desktop\\\\Tripper\\\\triplist\" -type f \\\\\\( -name \"*.json\" -o -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" ! -path \"*/.vercel/*\" ! -path \"*/.npm-cache/*\" | grep -i \"data\\\\|lib\\\\|public\" | head -20)"
     ]
   }
 }

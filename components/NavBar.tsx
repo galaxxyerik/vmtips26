@@ -32,6 +32,17 @@ export default function NavBar({ userName, isAdmin }: NavBarProps) {
         {/* Nav links */}
         <div className="flex items-center gap-1">
           <Link
+            href="/worldcup-guide"
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              pathname.startsWith('/worldcup-guide')
+                ? 'bg-surface-700 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            VM-guide
+          </Link>
+
+          <Link
             href="/dashboard"
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               pathname.startsWith('/dashboard')

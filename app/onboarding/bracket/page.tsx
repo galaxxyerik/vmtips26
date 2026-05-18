@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadOnboarding, saveOnboarding } from '@/lib/onboarding-storage'
+import { loadOnboarding, saveOnboarding, setStep } from '@/lib/onboarding-storage'
 import { buildR32Bracket, type R32Match } from '@/lib/bracket-logic'
 import type { GroupLabel } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
@@ -31,6 +31,7 @@ export default function BracketPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setStep('bracket')
     const state = loadOnboarding()
     const {
       groupPicks,

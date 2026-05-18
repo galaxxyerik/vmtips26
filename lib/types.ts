@@ -71,16 +71,18 @@ export interface DbNotification {
   created_at: string
 }
 
-// Onboarding local state (stored in localStorage)
+// Onboarding local state (stored in localStorage under ONBOARDING_KEY)
 export interface OnboardingState {
-  groupPicks: Record<number, Pick>           // matchId -> pick
-  thirdPlaceGroups: Record<GroupLabel, string> // group -> team name (team that finished 3rd)
-  advancingThirdGroups: GroupLabel[]          // 8 selected 3rd-place groups
-  bracketPicks: Record<number, string>        // matchNumber -> winning team name
-  topScorerPicks: Record<string, string>      // scope -> player name
+  step: string                                 // which step the user last visited
+  updatedAt: string                            // ISO timestamp of last save
+  groupPicks: Record<number, Pick>             // matchId -> pick
+  thirdPlaceGroups: Record<GroupLabel, string> // group -> team that finished 3rd
+  advancingThirdGroups: GroupLabel[]           // 8 selected 3rd-place groups
+  bracketPicks: Record<number, string>         // matchNumber -> winning team name
+  topScorerPicks: Record<string, string>       // scope -> player name
 }
 
-export const ONBOARDING_KEY = 'vmtips26_onboarding'
+export const ONBOARDING_KEY = 'vmtips26_draft'
 
 export const GROUPS: GroupLabel[] = ['A','B','C','D','E','F','G','H','I','J','K','L']
 

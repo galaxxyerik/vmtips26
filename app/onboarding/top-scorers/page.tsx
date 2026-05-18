@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadOnboarding, saveOnboarding } from '@/lib/onboarding-storage'
+import { loadOnboarding, saveOnboarding, setStep } from '@/lib/onboarding-storage'
 import { GROUPS } from '@/lib/types'
 
 const TOURNAMENT_SCOPE = 'tournament'
@@ -12,6 +12,7 @@ export default function TopScorersPage() {
   const [scorerPicks, setScorerPicks] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    setStep('top-scorers')
     const state = loadOnboarding()
     setScorerPicks(state.topScorerPicks ?? {})
   }, [])

@@ -1,8 +1,25 @@
 import type { OnboardingState, GroupLabel, Pick } from './types'
 import { ONBOARDING_KEY, GROUPS } from './types'
 
+export type OnboardingStep =
+  | 'group-stage'
+  | 'third-place'
+  | 'bracket'
+  | 'top-scorers'
+  | 'confirm'
+
+const STEP_PATHS: Record<OnboardingStep, string> = {
+  'group-stage': '/onboarding/group-stage',
+  'third-place': '/onboarding/third-place',
+  'bracket': '/onboarding/bracket',
+  'top-scorers': '/onboarding/top-scorers',
+  'confirm': '/onboarding/confirm',
+}
+
 function emptyState(): OnboardingState {
   return {
+    step: 'group-stage',
+    updatedAt: new Date().toISOString(),
     groupPicks: {},
     thirdPlaceGroups: {} as Record<GroupLabel, string>,
     advancingThirdGroups: [],
@@ -16,7 +33,17 @@ export function loadOnboarding(): OnboardingState {
   try {
     const raw = localStorage.getItem(ONBOARDING_KEY)
     if (!raw) return emptyState()
-    return JSON.parse(raw) as OnboardingState
+    const parsed = JSON.parse(raw) as OnboardingState
+    // Back-compat: ensure new fields exist
+    return {
+      step: parsed.step ?? 'group-stage',
+      updatedAt: parsed.updatedAt ?? new Date().toISOString(),
+      groupPicks: parsed.groupPicks ?? {},
+      thirdPlaceGroups: parsed.thirdPlaceGroups ?? ({} as Record<GroupLabel, string>),
+      advancingThirdGroups: parsed.advancingThirdGroups ?? [],
+      bracketPicks: parsed.bracketPicks ?? {},
+      topScorerPicks: parsed.topScorerPicks ?? {},
+    }
   } catch {
     return emptyState()
   }
@@ -24,12 +51,53 @@ export function loadOnboarding(): OnboardingState {
 
 export function saveOnboarding(state: OnboardingState): void {
   if (typeof window === 'undefined') return
+  state.updatedAt = new Date().toISOString()
   localStorage.setItem(ONBOARDING_KEY, JSON.stringify(state))
 }
 
 export function clearOnboarding(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem(ONBOARDING_KEY)
+}
+
+/** Set the current step in the draft (call on mount of each step page) */
+export function setStep(step: OnboardingStep): void {
+  const state = loadOnboarding()
+  state.step = step
+  saveOnboarding(state)
+}
+
+/** Returns path to resume from, or null if no meaningful draft exists */
+export function getDraftResumePath(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(ONBOARDING_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as OnboardingState
+    const hasAnyPick =
+      Object.keys(parsed.groupPicks ?? {}).length > 0 ||
+      (parsed.advancingThirdGroups ?? []).length > 0 ||
+      Object.keys(parsed.bracketPicks ?? {}).length > 0 ||
+      Object.keys(parsed.topScorerPicks ?? {}).length > 0
+    if (!hasAnyPick) return null
+    const step = (parsed.step ?? 'group-stage') as OnboardingStep
+    return STEP_PATHS[step] ?? STEP_PATHS['group-stage']
+  } catch {
+    return null
+  }
+}
+
+/** Returns ISO timestamp of last save, or null if no draft */
+export function getDraftTimestamp(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(ONBOARDING_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as OnboardingState
+    return parsed.updatedAt ?? null
+  } catch {
+    return null
+  }
 }
 
 export function setGroupPick(matchId: number, pick: Pick): void {
@@ -67,7 +135,6 @@ export function deriveThirdPlaceTeams(
   groupMatches: Array<{ id: number; group_label: string; home_team: string; away_team: string }>,
   picks: Record<number, Pick>
 ): Partial<Record<GroupLabel, string>> {
-  // Track wins, draws, losses for each team per group
   const groupStats: Record<string, Record<string, { w: number; d: number; l: number; pts: number }>> = {}
 
   for (const m of groupMatches) {

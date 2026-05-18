@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadOnboarding, saveOnboarding } from '@/lib/onboarding-storage'
+import { loadOnboarding, saveOnboarding, setStep } from '@/lib/onboarding-storage'
 import type { GroupLabel } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 
@@ -15,6 +15,7 @@ export default function ThirdPlacePage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setStep('third-place')
     const state = loadOnboarding()
     if (!state.thirdPlaceGroups || Object.keys(state.thirdPlaceGroups).length === 0) {
       // No third-place data — user came here directly, go back
