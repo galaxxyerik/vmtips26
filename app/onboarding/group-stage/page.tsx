@@ -148,7 +148,7 @@ export default function GroupStagePage() {
           if (idx < GROUPS.length - 1) setActiveGroup(GROUPS[idx + 1])
         }}
         isLastGroup={GROUPS.indexOf(activeGroup) === GROUPS.length - 1}
-        groupDone={groupDone(activeGroup)}
+        groupDone={!!groupDone(activeGroup)}
       />
 
       {/* Bottom bar */}
