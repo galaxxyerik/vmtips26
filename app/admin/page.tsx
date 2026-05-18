@@ -3,6 +3,8 @@ import NavBar from '@/components/NavBar'
 import { redirect } from 'next/navigation'
 import AdminConfirmButton from './AdminConfirmButton'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()

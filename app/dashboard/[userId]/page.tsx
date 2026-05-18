@@ -3,6 +3,8 @@ import NavBar from '@/components/NavBar'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PHASE_LABELS } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
 import type { Phase } from '@/lib/types'
 
 interface Props {

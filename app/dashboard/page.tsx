@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 interface LeaderboardEntry {
   user_id: string
   name: string
