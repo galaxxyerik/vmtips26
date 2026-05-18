@@ -16,7 +16,7 @@ interface KnockoutMatch {
 }
 
 const ROUND_LABELS: Record<string, string> = {
-  r32: 'Omgång 32', r16: 'Åttondelsfinaler', qf: 'Kvartsfinaler',
+  r32: 'Sextondelsfinal', r16: 'Åttondelsfinaler', qf: 'Kvartsfinaler',
   sf: 'Semifinaler', bronze: 'Bronsmatch', final: 'Final',
 }
 

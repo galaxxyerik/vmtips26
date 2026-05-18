@@ -143,6 +143,12 @@ export default function GroupStagePage() {
         onReorder={(from, to) => handleTableReorder(activeGroup, from, to)}
         onThirdPlace={checked => handleThirdPlace(activeGroup, checked)}
         onScorer={val => handleScorer(activeGroup, val)}
+        onNextGroup={() => {
+          const idx = GROUPS.indexOf(activeGroup)
+          if (idx < GROUPS.length - 1) setActiveGroup(GROUPS[idx + 1])
+        }}
+        isLastGroup={GROUPS.indexOf(activeGroup) === GROUPS.length - 1}
+        groupDone={groupDone(activeGroup)}
       />
 
       {/* Bottom bar */}
@@ -168,7 +174,8 @@ export default function GroupStagePage() {
 
 function GroupPanel({
   group, matches, matchPicks, tableOrder, thirdPlaceSelected,
-  thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer
+  thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer,
+  onNextGroup, isLastGroup, groupDone,
 }: {
   group: GroupLabel
   matches: VmtMatch[]
@@ -181,6 +188,9 @@ function GroupPanel({
   onReorder: (from: number, to: number) => void
   onThirdPlace: (checked: boolean) => void
   onScorer: (val: string) => void
+  onNextGroup: () => void
+  isLastGroup: boolean
+  groupDone: boolean
 }) {
   const allPicked = matches.length > 0 && matches.every(m => matchPicks[m.id])
 
@@ -250,6 +260,25 @@ function GroupPanel({
               className="w-full bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
             />
           </div>
+        </div>
+      )}
+
+      {/* Next group CTA */}
+      {groupDone && !isLastGroup && (
+        <div className="flex justify-end pt-1">
+          <button
+            onClick={onNextGroup}
+            className="btn-primary text-sm px-5 h-9 flex items-center gap-1"
+          >
+            Nästa grupp →
+          </button>
+        </div>
+      )}
+      {groupDone && isLastGroup && (
+        <div className="border border-pitch-500/20 bg-pitch-900/10 px-4 py-3 text-center">
+          <span className="text-xs text-pitch-400 font-display font-black uppercase tracking-wider">
+            ✓ Alla grupper klara — fortsätt till slutspelet nedan
+          </span>
         </div>
       )}
     </div>

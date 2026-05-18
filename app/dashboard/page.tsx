@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
+import Footer from '@/components/Footer'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -192,6 +193,8 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </main>
+
+      <Footer userName={user?.email ?? null} />
     </div>
   )
 }

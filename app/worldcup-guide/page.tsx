@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import NavBar from '@/components/NavBar'
+import Footer from '@/components/Footer'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -136,19 +138,18 @@ export default function WorldCupGuidePage() {
   const [tab, setTab] = useState<Tab>('grupper')
 
   return (
-    <div className="min-h-screen bg-surface-900">
+    <div className="min-h-screen bg-navy-950">
+      <NavBar userName={null} />
+
       {/* Page header */}
-      <div className="border-b border-surface-700">
+      <div className="border-b border-white/10">
         <div className="mx-auto max-w-4xl px-4 py-8">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-300 mb-4 inline-flex items-center gap-1">
-            ← Tillbaka
-          </Link>
-          <div className="flex items-center gap-3 mt-3">
-            <span className="text-3xl">⚽</span>
+          <div className="mb-1 label">VM-Bibel</div>
+          <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold">VM 2026 — Guiden</h1>
-              <p className="text-gray-400 text-sm">
-                11 juni – 19 juli 2026 · USA, Kanada & Mexiko · 48 lag · 104 matcher
+              <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">VM 2026 — Guiden</h1>
+              <p className="text-white/40 text-sm mt-1">
+                11 juni – 19 juli 2026 · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher
               </p>
             </div>
           </div>
@@ -171,17 +172,17 @@ export default function WorldCupGuidePage() {
       </div>
 
       {/* Tab bar */}
-      <div className="sticky top-0 z-40 bg-surface-900/95 backdrop-blur border-b border-surface-700">
+      <div className="sticky top-14 z-40 bg-navy-950/95 backdrop-blur border-b border-white/10">
         <div className="mx-auto max-w-4xl px-4">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap border ${
                   tab === t.id
-                    ? 'bg-pitch-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-surface-700'
+                    ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
+                    : 'text-white/40 hover:text-white border-white/10 hover:border-white/30'
                 }`}
               >
                 {t.label}
@@ -200,6 +201,8 @@ export default function WorldCupGuidePage() {
         {tab === 'mörkhästar' && <DarkHorsesTab />}
         {tab === 'fakta' && <FactsTab />}
       </main>
+
+      <Footer />
     </div>
   )
 }

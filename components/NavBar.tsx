@@ -51,26 +51,16 @@ export default function NavBar({ userName, isAdmin }: NavBarProps) {
           {navLink('/dashboard', 'Tabell')}
           {isAdmin && navLink('/admin', 'Admin')}
 
-          <div className="ml-3 flex items-center gap-2">
-            {userName ? (
-              <>
-                <span className="text-xs text-white/30 hidden sm:block">{userName}</span>
-                <button
-                  onClick={handleSignOut}
-                  className="px-3 py-1.5 text-xs font-display font-black uppercase tracking-[0.1em] border border-white/15 text-white/45 hover:text-white hover:border-white/30 transition-colors"
-                >
-                  Logga ut
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/login"
+          {userName && (
+            <div className="ml-3 flex items-center gap-2">
+              <button
+                onClick={handleSignOut}
                 className="px-3 py-1.5 text-xs font-display font-black uppercase tracking-[0.1em] border border-white/15 text-white/45 hover:text-white hover:border-white/30 transition-colors"
               >
-                Logga in
-              </Link>
-            )}
-          </div>
+                Logga ut
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>
