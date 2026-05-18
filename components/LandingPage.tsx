@@ -67,10 +67,20 @@ export default function LandingPage() {
   const canStart = name.trim().length > 0 && email.trim().length > 0
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 bg-navy-950">
+    <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 overflow-hidden">
+      {/* Stadium background */}
+      <img
+        src="/images/potm.avif"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-navy-950/80" />
+
       {/* Resume modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
           <div className="w-full max-w-sm border border-white/15 bg-navy-900 p-6 space-y-4">
             <div className="label">Påbörjat tips</div>
             <h2 className="font-display font-black text-white text-xl uppercase tracking-wide">
@@ -93,7 +103,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      <div className="max-w-md w-full space-y-8">
+      <div className="relative z-10 max-w-md w-full space-y-8">
         {/* Hero wordmark */}
         <div className="text-center">
           <h1 className="font-display font-black text-5xl uppercase tracking-[0.04em] text-white leading-none">
