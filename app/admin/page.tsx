@@ -224,7 +224,7 @@ export default async function AdminPage() {
               <SetupAdminButton />
             </div>
             <div>
-              <div className="text-xs text-white/50 mb-2">Skicka ett enkelt testmail via Resend till adminadressen.</div>
+              <div className="text-xs text-white/50 mb-2">Skicka ett enkelt testmail via Gmail SMTP till adminadressen.</div>
               <TestEmailButton />
             </div>
             <div>

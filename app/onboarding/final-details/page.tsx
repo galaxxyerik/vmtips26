@@ -70,16 +70,21 @@ export default function FinalDetailsPage() {
         <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sista detaljer</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
         {/* Tournament scorer */}
         <div className="card">
           <label className="label">Skyttekung i hela VM</label>
           <input
+            id="tournament-scorer"
+            name="tournament-scorer"
             type="text"
             value={tournamentScorer}
             onChange={e => setTournamentScorer(e.target.value)}
             placeholder="Spelarens namn..."
             className="input"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
             onBlur={e => {
               const trimmed = e.target.value.trim()
               setTournamentScorer(trimmed)
@@ -97,12 +102,15 @@ export default function FinalDetailsPage() {
             Lösenord <span className="text-white/25 font-normal normal-case tracking-normal">(valfritt — för att följa ditt tips i realtid)</span>
           </label>
           <input
+            id="new-password"
+            name="new-password"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="Minst 8 tecken..."
             minLength={8}
             className="input"
+            autoComplete="new-password"
           />
           <p className="text-xs text-white/30 mt-2">Om du fyller i lösenord skapas ett konto automatiskt.</p>
         </div>

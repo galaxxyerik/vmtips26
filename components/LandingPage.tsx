@@ -131,15 +131,17 @@ export default function LandingPage() {
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-10 flex h-14 items-center justify-between px-6 border-b border-white/10">
-        <span className="font-display font-black text-white text-lg uppercase tracking-[0.06em]">
-          VM<span className="text-swe-yellow">-TIPS 26</span>
-        </span>
-        <div className="flex items-center gap-4 text-xs font-display font-black uppercase tracking-[0.1em] text-white/40">
-          <Link href="/dashboard" className="hover:text-white transition-colors">Tabell</Link>
-          <Link href="/worldcup-guide" className="hover:text-white transition-colors">VM-bibel</Link>
-          <Link href="/regler" className="hover:text-white transition-colors">Regler</Link>
-          <Link href={isAdmin ? '/admin' : '/login'} className="hover:text-white transition-colors">Admin</Link>
+      <nav className="relative z-10 border-b border-white/10">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 overflow-hidden px-4">
+          <span className="shrink-0 whitespace-nowrap font-display font-black text-white text-base uppercase tracking-[0.04em] sm:text-lg sm:tracking-[0.06em]">
+            VM<span className="text-swe-yellow">-TIPS 26</span>
+          </span>
+          <div className="ml-auto flex min-w-0 items-center gap-4 overflow-x-auto text-xs font-display font-black uppercase tracking-[0.1em] text-white/40 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Link href="/dashboard" className="shrink-0 hover:text-white transition-colors">Tabell</Link>
+            <Link href="/worldcup-guide" className="shrink-0 hover:text-white transition-colors">VM-bibel</Link>
+            <Link href="/regler" className="shrink-0 hover:text-white transition-colors">Regler</Link>
+            <Link href={isAdmin ? '/admin' : '/login'} className="shrink-0 hover:text-white transition-colors">Admin</Link>
+          </div>
         </div>
       </nav>
 

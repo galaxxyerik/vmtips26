@@ -11,6 +11,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Namn och e-post krävs.' }, { status: 400 })
     }
 
+    if (password && password.length < 8) {
+      return NextResponse.json({ error: 'Lösenordet måste vara minst 8 tecken.' }, { status: 400 })
+    }
+
     const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
     const scorerMap = groupScorers as Record<string, string>
     if (!ALL_GROUPS.every(g => scorerMap[g]?.trim())) {
@@ -122,8 +126,9 @@ export async function POST(req: NextRequest) {
         subject: 'Ditt VM-tips har skickats in',
         html: `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-            <h2 style="margin:0 0 12px">Tack ${name}!</h2>
+            <h2 style="margin:0 0 12px">Tack ${escapeHtml(name)}!</h2>
             <p>Ditt tips för VM-tips 26 har nu skickats in.</p>
+            <p>Glöm inte att swisha 100 kr till Erik Engstrand på 0768919007.</p>
             <p>Vi skickar ett nytt mail när tipset har bekräftats.</p>
           </div>
         `,
@@ -147,4 +152,13 @@ function getRound(matchNumber: number): string {
   if (matchNumber === 103) return 'bronze'
   if (matchNumber === 104) return 'final'
   return 'r32'
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
