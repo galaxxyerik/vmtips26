@@ -59,7 +59,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={user?.email ?? null} />
 
-      {/* Hero strip — NRG Stadium, Houston */}
+      {/* Hero strip — Friends Arena */}
       {!isOpen && (
         <div className="relative h-[35vh] min-h-[200px] overflow-hidden">
           <Image

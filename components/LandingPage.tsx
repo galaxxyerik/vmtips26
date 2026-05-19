@@ -15,13 +15,17 @@ const STEP_PATHS: Record<string, string> = {
   'final-details': '/onboarding/final-details',
 }
 
+interface LandingPageProps {
+  userName?: string | null
+}
+
 function getStoredField(field: 'name' | 'email'): string {
   if (typeof window === 'undefined') return ''
   try { return (JSON.parse(localStorage.getItem(ONBOARDING_KEY) || '{}') as Record<string, string>)[field] ?? '' }
   catch { return '' }
 }
 
-export default function LandingPage({ userName }: { userName?: string | null }) {
+export default function LandingPage({ userName }: LandingPageProps) {
   const router = useRouter()
   const [name, setName] = useState<string>(() => getStoredField('name'))
   const [email, setEmail] = useState<string>(() => getStoredField('email'))
@@ -113,7 +117,7 @@ export default function LandingPage({ userName }: { userName?: string | null }) 
       <NavBar userName={userName ?? null} />
 
       {/* Hero content */}
-      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-28 max-w-2xl">
+      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-24 sm:pb-32 max-w-2xl">
         {/* Eyebrow */}
         <div className="flex items-center gap-3 mb-5">
           <div className="h-px w-8 bg-swe-yellow" />
