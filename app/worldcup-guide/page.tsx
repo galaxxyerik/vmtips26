@@ -227,6 +227,32 @@ function playerPhotoUrl(name: string): string | null {
   return id ? `https://media.api-sports.io/football/players/${id}.png` : null
 }
 
+const COUNTRY_COLORS: Record<string, string> = {
+  'Sverige': '#FFCD00',
+  'Frankrike': '#0055A4',
+  'Brasilien': '#009B3A',
+  'England': '#CF081F',
+  'Spanien': '#C60B1E',
+  'Norge': '#EF2B2D',
+  'Argentina': '#75AADB',
+  'Portugal': '#006233',
+  'Uruguay': '#5EB6E4',
+  'Marocko': '#C1272D',
+  'Colombia': '#FCD116',
+  'Kroatien': '#FF4444',
+  'Skottland': '#0065BD',
+  'Turkiet': '#E30A17',
+  'Ecuador': '#FFD100',
+  'Belgien': '#EF3340',
+  'Egypten': '#CE1126',
+  'Nederländerna': '#FF6200',
+  'Japan': '#BC002D',
+  'Tunisien': '#E70013',
+  'Tyskland': '#888888',
+  'Mexiko': '#006847',
+  'USA': '#C8102E',
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 type Tab = 'grupper' | 'stjärnor' | 'talanger' | 'sverige' | 'favoriter' | 'mörkhästar' | 'fakta'
@@ -279,12 +305,12 @@ export default function WorldCupGuidePage() {
         />
         <div className="absolute inset-0 bg-navy-950/55" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-8 max-w-4xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-10">
           <div className="label text-swe-yellow/70 mb-2">VM-Bibel · 2026</div>
-          <h1 className="font-display font-black text-4xl sm:text-5xl uppercase tracking-wide text-white leading-tight">
+          <h1 className="font-display font-black text-5xl sm:text-7xl lg:text-[110px] uppercase tracking-tight text-white leading-none">
             VM 2026<br /><span className="text-swe-yellow">Guiden</span>
           </h1>
-          <p className="text-white/50 text-sm mt-2">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
+          <p className="text-white/50 text-sm mt-4">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
           <p className="mt-2 text-xs text-white/35">
             Senast uppdaterad: {lastUpdated ? new Date(lastUpdated).toLocaleString('sv-SE') : 'Data tillgänglig från 11 juni 2026'}
           </p>
@@ -293,7 +319,7 @@ export default function WorldCupGuidePage() {
 
       {/* Facts strip */}
       <div className="border-b border-white/10">
-        <div className="mx-auto max-w-4xl px-4 py-4">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-4">
           <div className="grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10">
             {[
               { label: 'Lag', value: '48' },
@@ -301,9 +327,9 @@ export default function WorldCupGuidePage() {
               { label: 'Matcher', value: '104' },
               { label: 'Final', value: '19 jul · MetLife' },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-navy-900 px-3 py-2.5 text-center">
-                <div className="font-display font-black text-lg text-swe-yellow">{value}</div>
-                <div className="text-[10px] text-white/30 uppercase tracking-wider">{label}</div>
+              <div key={label} className="bg-navy-900 px-4 py-4 text-center">
+                <div className="font-display font-black text-2xl sm:text-3xl text-swe-yellow">{value}</div>
+                <div className="text-[10px] text-white/30 uppercase tracking-wider mt-1">{label}</div>
               </div>
             ))}
           </div>
@@ -312,8 +338,8 @@ export default function WorldCupGuidePage() {
 
       {/* Tab bar */}
       <div className="sticky top-14 z-40 bg-navy-950 border-b border-white/10">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex overflow-x-auto scrollbar-hide">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex overflow-x-auto scrollbar-hide px-4 lg:px-8">
             {TABS.map(t => (
               <button
                 key={t.id}
@@ -332,7 +358,7 @@ export default function WorldCupGuidePage() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 lg:px-8 py-8">
         {tab === 'grupper' && <GroupsTab />}
         {tab === 'stjärnor' && <PlayersTab players={STARS} title="Världsstjärnor" subtitle="De 12 bästa spelarna i VM 2026" stats={playerStats} />}
         {tab === 'talanger' && <PlayersTab players={TALENTS} title="Talanger att bevaka" subtitle="Unga spelare som kan chockera världen" />}
@@ -369,10 +395,10 @@ function GroupsTab() {
     <div className="space-y-0">
       {/* Editorial header */}
       <div className="mb-8">
-        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+        <h2 className="font-display font-black text-5xl sm:text-7xl uppercase tracking-tight text-white leading-none mb-3">
           Gruppspel
         </h2>
-        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <div className="h-[3px] w-16 bg-swe-yellow" />
         <p className="text-white/40 text-sm mt-3">
           12 grupper · A–L · De 2 bästa + 8 bästa tredjeplacerade vidare ·{' '}
           <span className="text-swe-yellow font-display font-black">W</span> = etta ·{' '}
@@ -381,7 +407,7 @@ function GroupsTab() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-px sm:grid-cols-2 bg-white/5">
+      <div className="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3 bg-white/5">
         {GROUPS.map(g => (
           <div
             key={g.letter}
@@ -489,81 +515,103 @@ function PlayersTab({
 
   return (
     <div>
-      {/* Editorial section header */}
       <div className="mb-8">
-        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+        <h2 className="font-display font-black text-5xl sm:text-7xl uppercase tracking-tight text-white leading-none mb-3">
           {title}
         </h2>
-        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <div className="h-[3px] w-16 bg-swe-yellow" />
         <p className="text-white/40 text-sm mt-3">{subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
         {players.map(p => {
           const isExpanded = expanded === p.name
-          const photo = playerPhotoUrl(p.name)
           const stat = statFor(stats, p.name)
+          const accentColor = COUNTRY_COLORS[p.country] ?? '#FFCD00'
+          const nameParts = p.name.split(' ')
+          const lastName = nameParts.at(-1) ?? p.name
+          const firstNames = nameParts.slice(0, -1).join(' ')
           return (
             <div
               key={p.name}
-              className="relative overflow-hidden cursor-pointer bg-[#0d1d35] group"
-              style={isExpanded ? { minHeight: '420px' } : { aspectRatio: '3/4' }}
+              className="relative overflow-hidden cursor-pointer bg-[#070e1c] hover:bg-[#0a1525] transition-colors"
+              style={{ minHeight: '280px' }}
               onClick={() => setExpanded(isExpanded ? null : p.name)}
             >
-              {/* Photo */}
-              {photo && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photo}
-                  alt={p.name}
-                  className="absolute inset-0 w-full h-full object-cover object-top"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-              )}
-
-              {/* Gradient overlay — bottom heavy */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-              {/* Rating — top right */}
-              <div className="absolute top-4 right-4 text-right leading-none">
-                <div className="font-mono font-bold text-[72px] sm:text-[96px] text-swe-yellow leading-none">
-                  {p.rating}
-                </div>
-                <div className="text-white/30 text-sm font-mono -mt-2">/10</div>
-              </div>
-
-              {/* Country flag chip — top left */}
-              <div className="absolute top-4 left-4">
-                <span className="font-display font-black text-[10px] uppercase tracking-widest border border-white/20 bg-black/50 text-white/70 px-2 py-1">
-                  {p.country}
+              {/* Ghost surname watermark */}
+              <div className="absolute inset-0 flex items-end justify-end overflow-hidden pointer-events-none select-none">
+                <span
+                  className="font-display font-black text-white leading-none"
+                  style={{ fontSize: '140px', opacity: 0.055, letterSpacing: '-0.04em', paddingRight: '8px', paddingBottom: '4px' }}
+                >
+                  {lastName.toUpperCase()}
                 </span>
               </div>
 
-              {/* Bottom info */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 space-y-1">
-                <div className="font-display font-black text-2xl sm:text-3xl uppercase tracking-wide text-white leading-tight">
-                  {p.name}
+              {/* Left accent stripe */}
+              <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: accentColor }} />
+
+              {/* Top row: country badge + rating */}
+              <div className="relative z-10 flex items-start justify-between px-5 pt-5">
+                <div className="flex items-center gap-1.5">
+                  {p.flag && <span className="text-lg leading-none">{p.flag}</span>}
+                  <span
+                    className="text-[9px] font-display font-black uppercase tracking-widest border px-1.5 py-0.5"
+                    style={{ color: accentColor, borderColor: `${accentColor}50` }}
+                  >
+                    {p.country}
+                  </span>
                 </div>
-                <div className="text-white/40 text-[11px] uppercase tracking-wider">
+                <div className="text-right leading-none">
+                  <div className="font-mono font-bold text-[52px] leading-none" style={{ color: accentColor }}>
+                    {p.rating}
+                  </div>
+                  <div className="text-white/20 text-xs font-mono -mt-1 text-right">/10</div>
+                </div>
+              </div>
+
+              {/* Player name */}
+              <div className="relative z-10 px-5 mt-4">
+                {firstNames && (
+                  <div className="font-display font-black text-base uppercase text-white/45 leading-none tracking-wide">
+                    {firstNames}
+                  </div>
+                )}
+                <div
+                  className="font-display font-black uppercase leading-none mt-0.5"
+                  style={{ fontSize: 'clamp(28px, 3vw, 42px)', color: accentColor, letterSpacing: '-0.02em' }}
+                >
+                  {lastName}
+                </div>
+                <div className="text-white/30 text-[11px] uppercase tracking-wider mt-2">
                   {p.position} · {p.club} · {p.age} år
                 </div>
-                {stat && (
-                  <div className="text-white/30 text-[10px] font-mono pt-0.5">
+              </div>
+
+              {/* Season stat */}
+              {p.stat && (
+                <div className="relative z-10 px-5 mt-3">
+                  <span className="font-display font-black text-lg text-white">{p.stat}</span>
+                  <span className="text-white/30 text-[10px] ml-2">{p.statLabel}</span>
+                </div>
+              )}
+              {stat && (
+                <div className="relative z-10 px-5 mt-1">
+                  <span className="text-white/20 text-[10px] font-mono">
                     <PlayerStatsLine stat={stat} />
-                  </div>
-                )}
+                  </span>
+                </div>
+              )}
 
-                {isExpanded && (
-                  <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
-                    <p className="text-sm text-white/70 leading-relaxed">{p.why}</p>
-                    <div className="border-l-2 border-swe-yellow pl-3">
-                      <p className="text-xs text-white/45 leading-relaxed italic">{p.style}</p>
-                    </div>
+              {/* Why / Style */}
+              <div className="relative z-10 px-5 pt-3 pb-5">
+                <p className={`text-xs text-white/40 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                  {p.why}
+                </p>
+                {isExpanded && p.style && (
+                  <div className="border-l-2 mt-3 pl-3" style={{ borderColor: accentColor }}>
+                    <p className="text-xs text-white/35 italic leading-relaxed">{p.style}</p>
                   </div>
-                )}
-
-                {!isExpanded && (
-                  <p className="text-[11px] text-white/25 line-clamp-1 pt-0.5">{p.why}</p>
                 )}
               </div>
             </div>
@@ -691,15 +739,15 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
       </div>
 
       {/* ── Featured players ── */}
-      <div className="pt-8 pb-2">
-        <h2 className="font-display font-black text-4xl sm:text-5xl uppercase tracking-tight text-white leading-none mb-3">
+      <div className="pt-10 pb-2">
+        <h2 className="font-display font-black text-5xl sm:text-7xl uppercase tracking-tight text-white leading-none mb-3">
           Nyckelspelare
         </h2>
-        <div className="h-[2px] w-14 bg-swe-yellow mb-6" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
+        <div className="h-[3px] w-16 bg-swe-yellow mb-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
           {FEATURED_PLAYERS.map(p => {
             const isExpanded = expandedPlayer === p.name
-            const photo = playerPhotoUrl(p.name) ?? PLAYER_IMAGE_FALLBACKS[p.imageKey]
+            const photo = PLAYER_IMAGE_FALLBACKS[p.imageKey] ?? playerPhotoUrl(p.name)
             return (
               <div
                 key={p.name}

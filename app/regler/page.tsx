@@ -25,14 +25,14 @@ export default async function ReglerPage() {
         />
         <div className="absolute inset-0 bg-navy-950/65" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 max-w-2xl mx-auto">
-          <div className="label text-swe-yellow/60 mb-1">VM-TIPS 26</div>
-          <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Regler &amp; Poängsystem</h1>
+        <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-10">
+          <div className="label text-swe-yellow/60 mb-2">VM-TIPS 26</div>
+          <h1 className="font-display font-black text-5xl sm:text-7xl uppercase tracking-tight text-white leading-none">Regler &amp; Poängsystem</h1>
         </div>
       </div>
 
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <div className="space-y-6 text-sm">
+      <main className="mx-auto max-w-5xl px-4 lg:px-8 py-12">
+        <div className="space-y-14">
           <Section title="Deadline">
             <p className="text-white/60 leading-relaxed">
               Alla tips måste vara inlämnade och betalda senast{' '}
@@ -42,11 +42,12 @@ export default async function ReglerPage() {
           </Section>
 
           <Section title="Deltagande &amp; Betalning">
-            <p className="text-white/60 leading-relaxed mb-3">
+            <p className="text-white/60 leading-relaxed mb-4">
               Insatsen är <strong className="text-white">100 kr per person</strong>, betalas via Swish till:
             </p>
-            <div className="border border-swe-yellow/30 bg-swe-yellow/5 p-4 text-center">
-              <span className="font-display font-black text-swe-yellow tracking-wider">ERIK ENGSTRAND · 0768919007</span>
+            <div className="border border-swe-yellow/30 bg-swe-yellow/5 px-6 py-5">
+              <div className="font-display font-black text-3xl sm:text-4xl text-swe-yellow tracking-wider leading-none">100 KR</div>
+              <div className="font-display font-black text-lg text-white/60 mt-2 uppercase tracking-wider">Erik Engstrand · 0768919007</div>
             </div>
             <p className="text-white/40 text-xs mt-3 leading-relaxed">
               Du är officiellt med i spelet när Erik bekräftat din betalning. Bekräftelse syns på din profilsida.
@@ -78,7 +79,7 @@ export default async function ReglerPage() {
             <p className="text-white/60 leading-relaxed mb-3">
               Poäng ges för varje match i slutspelet där du gissar rätt vinnare.
             </p>
-            <div className="border border-white/10 divide-y divide-white/5">
+            <div>
               <ScoreRow label="Sextondelsfinal — rätt lag, rätt plats" points="2 poäng" />
               <ScoreRow label="Sextondelsfinal — rätt lag, annan väg" points="1 poäng" />
               <ScoreRow label="Åttondelsfinaler — rätt/annan väg" points="3 / 1,5 poäng" />
@@ -114,20 +115,23 @@ export default async function ReglerPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border border-white/10">
-      <div className="px-4 py-3 bg-navy-900 border-b border-white/10">
-        <h2 className="font-display font-black uppercase text-sm tracking-wider text-white">{title}</h2>
-      </div>
-      <div className="px-4 py-4">{children}</div>
+    <div>
+      <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl uppercase tracking-tight text-white leading-none mb-2">
+        {title}
+      </h2>
+      <div className="h-[2px] w-10 bg-swe-yellow mb-6" />
+      <div>{children}</div>
     </div>
   )
 }
 
 function ScoreRow({ label, points }: { label: string; points: string }) {
   return (
-    <div className="flex justify-between items-center py-2 text-xs">
-      <span className="text-white/55">{label}</span>
-      <span className="font-display font-black text-swe-yellow ml-4 whitespace-nowrap">{points}</span>
+    <div className="flex items-center gap-5 py-3.5 border-b border-white/8 last:border-0">
+      <div className="w-44 shrink-0">
+        <span className="font-display font-black text-xl lg:text-2xl text-swe-yellow leading-none whitespace-nowrap">{points}</span>
+      </div>
+      <span className="text-white/55 text-sm leading-relaxed">{label}</span>
     </div>
   )
 }

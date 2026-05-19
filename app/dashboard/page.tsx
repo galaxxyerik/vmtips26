@@ -73,9 +73,9 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={user?.email ?? null} />
 
-      {/* Hero strip — Friends Arena */}
+      {/* Hero — full-bleed countdown */}
       {!isOpen && (
-        <div className="relative h-[35vh] min-h-[200px] overflow-hidden">
+        <div className="relative overflow-hidden" style={{ minHeight: '62vh' }}>
           <Image
             src="/images/friends-arena-stockholm.jpg"
             alt="Friends Arena i Stockholm — Sveriges hemmaplan"
@@ -84,22 +84,29 @@ export default async function DashboardPage() {
             className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-navy-950/70" />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 max-w-3xl mx-auto">
-            <div className="label text-swe-yellow/60 mb-1">Nästa nyckelMatch · Grupp F</div>
-            <div className="font-display font-black text-2xl uppercase tracking-wide text-white">Sverige vs Nederländerna</div>
-            <div className="text-white/50 text-sm">20 juni · 19:00 CEST · NRG Stadium, Houston</div>
+          <div className="absolute inset-0 bg-navy-950/60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/25 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-12">
+            <div className="label text-swe-yellow/60 mb-3">VM-TIPS 26 · Poängtavlan öppnar om</div>
+            <div
+              className="font-display font-black leading-none text-white"
+              style={{ fontSize: 'clamp(72px, 14vw, 190px)' }}
+            >
+              {daysLeft}<span className="text-swe-yellow">d</span>
+              {' '}
+              {hoursLeft}<span className="text-swe-yellow">h</span>
+            </div>
+            <div className="text-white/40 text-base mt-4">11 juni 2026 · kl 21:00 (CEST)</div>
           </div>
         </div>
       )}
 
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main className="mx-auto max-w-5xl px-4 lg:px-8 py-8">
         <LiveMatches initialMatches={liveCandidateMatches ?? []} userPicks={userPicks} />
 
         <div className="mb-6">
           <div className="label">Poängtabell</div>
-          <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Ledartavla</h1>
+          <h1 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none">Ledartavla</h1>
           {isOpen && (
             <p className="text-white/35 text-sm mt-1">
               Visar bekräftade deltagare. Uppdateras efter varje matchdag.
@@ -108,31 +115,28 @@ export default async function DashboardPage() {
         </div>
 
         {!isOpen ? (
-          <div className="space-y-4">
-            {/* Countdown */}
-            <div className="border border-white/10 bg-navy-900 px-6 py-8 text-center">
-              <div className="label mb-3">Ledartavlan öppnar om</div>
-              <div className="font-display font-black text-5xl uppercase text-swe-yellow tracking-wider">
-                {daysLeft}d {hoursLeft}h
-              </div>
-              <div className="text-white/40 text-sm mt-2">11 juni · kl 21:00 (CEST)</div>
-            </div>
-
-            {/* Stats */}
+          <div className="space-y-6">
+            {/* Stats — big numbers */}
             <div className="grid grid-cols-2 border border-white/10">
-              <div className="px-5 py-5 border-r border-white/10">
-                <div className="label mb-1">Anmälda</div>
-                <div className="font-display font-black text-3xl text-white">
+              <div className="px-6 lg:px-10 py-8 border-r border-white/10">
+                <div className="label mb-3">Anmälda deltagare</div>
+                <div
+                  className="font-display font-black leading-none text-white"
+                  style={{ fontSize: 'clamp(56px, 9vw, 100px)' }}
+                >
                   {totalParticipants ?? 0}
-                  <span className="text-base text-white/40 ml-1">deltagare</span>
                 </div>
+                <div className="text-white/25 text-xs uppercase tracking-wider mt-2">st</div>
               </div>
-              <div className="px-5 py-5">
-                <div className="label mb-1">Bekräftad pott</div>
-                <div className="font-display font-black text-3xl text-swe-yellow">
+              <div className="px-6 lg:px-10 py-8">
+                <div className="label mb-3">Bekräftad pott</div>
+                <div
+                  className="font-display font-black leading-none text-swe-yellow"
+                  style={{ fontSize: 'clamp(56px, 9vw, 100px)' }}
+                >
                   {pot.toLocaleString('sv-SE')}
-                  <span className="text-base text-swe-yellow/60 ml-1">kr</span>
                 </div>
+                <div className="text-swe-yellow/30 text-xs uppercase tracking-wider mt-2">kronor</div>
               </div>
             </div>
 
@@ -176,7 +180,7 @@ export default async function DashboardPage() {
             {mySubmission && (
               <div className={`mb-6 border px-4 py-3 text-sm ${
                 mySubmission.confirmed
-                  ? 'border-pitch-500/30 bg-pitch-900/20 text-pitch-400'
+                  ? 'border-swe-yellow/30 bg-swe-yellow/5 text-swe-yellow'
                   : 'border-white/10 text-white/40'
               }`}>
                 {mySubmission.confirmed

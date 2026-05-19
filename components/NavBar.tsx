@@ -67,16 +67,16 @@ export default function NavBar({ userName }: NavBarProps) {
       >
         {label}
         {active && (
-          <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-swe-yellow" />
+          <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-swe-yellow" />
         )}
       </Link>
     )
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-navy-950">
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 overflow-hidden px-4">
-        <Link href="/" className="shrink-0 whitespace-nowrap font-display font-black text-white text-base uppercase tracking-[0.04em] sm:text-lg sm:tracking-[0.06em]">
+    <nav className="sticky top-0 z-50 bg-navy-950" style={{ borderTop: '2px solid #FFCD00', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 overflow-hidden px-4 lg:px-8">
+        <Link href="/" className="shrink-0 whitespace-nowrap font-display font-black text-white text-base uppercase tracking-[0.04em] sm:text-xl sm:tracking-[0.06em]">
           VM<span className="text-swe-yellow">-TIPS 26</span>
         </Link>
 
