@@ -29,6 +29,9 @@ export async function GET(req: NextRequest) {
     const result = await syncPlayerStats()
     const message = `${result.synced} spelare synkade, ${result.skipped} hoppades över`
     console.log(`[${new Date().toISOString()}] players sync klar: ${message}`)
+    if (result.synced === 0) {
+      return NextResponse.json({ ok: false, error: `Alla ${result.skipped} spelare hoppades över – kontrollera API_FOOTBALL_KEY och Vercel-loggar`, ...result })
+    }
     return NextResponse.json({ ok: true, message, ...result })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

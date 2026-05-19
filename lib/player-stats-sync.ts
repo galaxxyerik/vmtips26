@@ -30,6 +30,12 @@ interface ApiSquadResponse {
   }[]
 }
 
+interface ApiPlayerSearchResponse {
+  response?: {
+    player: { id: number; name: string; nationality?: string }
+  }[]
+}
+
 function intValue(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
@@ -91,6 +97,36 @@ async function squadForNationality(player: PlayerRegistryEntry): Promise<{ id: n
   return squad
 }
 
+async function searchPlayerDirectly(player: PlayerRegistryEntry): Promise<number | null> {
+  const query = encodeURIComponent(surname(player.name))
+  const json = await apiFootballFetch<ApiPlayerSearchResponse>(
+    `/players?search=${query}&season=${CLUB_SEASON}`
+  )
+  const candidates = json?.response ?? []
+  const normalizedTarget = normalizeName(player.name)
+  const targetSurname = surname(player.name)
+  const targetInitial = firstInitial(player.name)
+
+  const match = candidates.find(row => {
+    const candidate = normalizeName(row.player.name)
+    const natMatch = !row.player.nationality ||
+      normalizeName(row.player.nationality).includes(normalizeName(player.nationality)) ||
+      normalizeName(player.nationality).includes(normalizeName(row.player.nationality))
+    return natMatch && (
+      candidate === normalizedTarget ||
+      (surname(row.player.name) === targetSurname && firstInitial(row.player.name) === targetInitial) ||
+      candidate.includes(normalizedTarget) ||
+      normalizedTarget.includes(candidate)
+    )
+  })
+
+  if (match?.player.id) {
+    syncLog(`Direkt sökning hittade ${player.name} → id ${match.player.id}`)
+    return match.player.id
+  }
+  return null
+}
+
 async function resolvePlayerId(player: PlayerRegistryEntry): Promise<number | null> {
   if (player.apiFootballId) return player.apiFootballId
 
@@ -109,12 +145,10 @@ async function resolvePlayerId(player: PlayerRegistryEntry): Promise<number | nu
     )
   })
 
-  if (!match?.id) {
-    syncLog(`Varning: spelare hittades inte i API-Football: ${player.name}`)
-    return null
-  }
+  if (match?.id) return match.id
 
-  return match.id
+  syncLog(`Squad-uppslag misslyckades för ${player.name}, försöker direkt sökning...`)
+  return searchPlayerDirectly(player)
 }
 
 async function resolveNationalTeamId(player: PlayerRegistryEntry): Promise<number | null> {
