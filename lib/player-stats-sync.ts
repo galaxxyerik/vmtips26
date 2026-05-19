@@ -4,6 +4,7 @@ import { PLAYER_REGISTRY, type PlayerRegistryEntry } from '@/lib/player-registry
 
 const CLUB_SEASON = 2024
 const nationalTeamCache = new Map<string, number | null>()
+const squadCache = new Map<string, { id: number; name: string }[]>()
 
 interface ApiPlayerResponse {
   response?: {
@@ -22,12 +23,41 @@ interface ApiTeamResponse {
   response?: { team: { id: number; name: string; national?: boolean } }[]
 }
 
+interface ApiSquadResponse {
+  response?: {
+    team?: { id: number; name: string }
+    players?: { id: number; name: string }[]
+  }[]
+}
+
 function intValue(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
-function pickLeagueStats(rows: NonNullable<ApiPlayerResponse['response']>[number]['statistics'] = []) {
-  const leagueRows = rows.filter(row => row.league?.type === 'League')
+function normalizeName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+function firstInitial(value: string) {
+  return normalizeName(value).split(' ')[0]?.[0] ?? ''
+}
+
+function surname(value: string) {
+  const parts = normalizeName(value).split(' ')
+  return parts[parts.length - 1] ?? ''
+}
+
+function pickLeagueStats(
+  rows: NonNullable<ApiPlayerResponse['response']>[number]['statistics'] = [],
+  nationalTeamId: number | null
+) {
+  const leagueRows = rows.filter(row => row.league?.type === 'League' && row.team?.id !== nationalTeamId)
   const selected = leagueRows[0] ?? rows[0]
   return {
     club: selected?.team?.name ?? null,
@@ -39,23 +69,52 @@ function pickLeagueStats(rows: NonNullable<ApiPlayerResponse['response']>[number
   }
 }
 
+function pickNationalStats(
+  rows: NonNullable<ApiPlayerResponse['response']>[number]['statistics'] = [],
+  nationalTeamId: number | null
+) {
+  const nationalRows = rows.filter(row => row.team?.id === nationalTeamId)
+  return {
+    caps: nationalRows.reduce((sum, row) => sum + intValue(row.games?.appearences), 0),
+    goals: nationalRows.reduce((sum, row) => sum + intValue(row.goals?.total), 0),
+  }
+}
+
+async function squadForNationality(player: PlayerRegistryEntry): Promise<{ id: number; name: string }[]> {
+  if (squadCache.has(player.nationality)) return squadCache.get(player.nationality) ?? []
+  const nationalTeamId = await resolveNationalTeamId(player)
+  if (!nationalTeamId) return []
+
+  const json = await apiFootballFetch<ApiSquadResponse>(`/players/squads?team=${nationalTeamId}`)
+  const squad = json?.response?.[0]?.players ?? []
+  squadCache.set(player.nationality, squad)
+  return squad
+}
+
 async function resolvePlayerId(player: PlayerRegistryEntry): Promise<number | null> {
   if (player.apiFootballId) return player.apiFootballId
 
-  const json = await apiFootballFetch<ApiPlayerResponse>(
-    `/players?search=${encodeURIComponent(player.name)}&season=${CLUB_SEASON}`
-  )
-  const match = json?.response?.find(row =>
-    row.player.name.toLowerCase() === player.name.toLowerCase() ||
-    row.player.name.toLowerCase().includes(player.name.toLowerCase().split(' ')[0])
-  ) ?? json?.response?.[0]
+  const squad = await squadForNationality(player)
+  const normalizedTarget = normalizeName(player.name)
+  const targetSurname = surname(player.name)
+  const targetInitial = firstInitial(player.name)
 
-  if (!match?.player.id) {
+  const match = squad.find(row => {
+    const candidate = normalizeName(row.name)
+    return (
+      candidate === normalizedTarget ||
+      (surname(row.name) === targetSurname && firstInitial(row.name) === targetInitial) ||
+      candidate.includes(normalizedTarget) ||
+      normalizedTarget.includes(candidate)
+    )
+  })
+
+  if (!match?.id) {
     syncLog(`Varning: spelare hittades inte i API-Football: ${player.name}`)
     return null
   }
 
-  return match.player.id
+  return match.id
 }
 
 async function resolveNationalTeamId(player: PlayerRegistryEntry): Promise<number | null> {
@@ -77,22 +136,16 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
   const service = createServiceClient()
   const playerId = await resolvePlayerId(player)
   if (!playerId) return { skipped: true }
+  const nationalTeamId = await resolveNationalTeamId(player)
 
   const clubJson = await apiFootballFetch<ApiPlayerResponse>(`/players?id=${playerId}&season=${CLUB_SEASON}`)
-  const clubRow = clubJson?.response?.[0]
-  const clubStats = pickLeagueStats(clubRow?.statistics)
-
-  let caps = 0
-  let goals = 0
-  const nationalTeamId = await resolveNationalTeamId(player)
-  if (nationalTeamId) {
-    const nationalJson = await apiFootballFetch<ApiPlayerResponse>(
-      `/players?id=${playerId}&season=${CLUB_SEASON}&team=${nationalTeamId}`
-    )
-    const nationalRows = nationalJson?.response?.[0]?.statistics ?? []
-    caps = nationalRows.reduce((sum, row) => sum + intValue(row.games?.appearences), 0)
-    goals = nationalRows.reduce((sum, row) => sum + intValue(row.goals?.total), 0)
+  if (!clubJson?.response?.length) {
+    syncLog(`Varning: ingen spelardata hämtades för ${player.name}`)
+    return { skipped: true }
   }
+  const clubRow = clubJson?.response?.[0]
+  const clubStats = pickLeagueStats(clubRow?.statistics, nationalTeamId)
+  const nationalStats = pickNationalStats(clubRow?.statistics, nationalTeamId)
 
   const { error } = await service.from('player_stats').upsert({
     player_id: playerId,
@@ -105,8 +158,8 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
     assists_club: clubStats.assists,
     minutes_club: clubStats.minutes,
     clean_sheets: player.isGoalkeeper ? clubStats.cleanSheets : null,
-    goals_national: goals,
-    caps_national: caps,
+    goals_national: nationalStats.goals,
+    caps_national: nationalStats.caps,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'player_id,season' })
 
