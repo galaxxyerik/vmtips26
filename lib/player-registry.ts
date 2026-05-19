@@ -11,7 +11,7 @@ export const PLAYER_REGISTRY: PlayerRegistryEntry[] = [
   { name: 'Viktor Johansson',          nationality: 'Sweden',      category: 'sweden',  isGoalkeeper: true,  apiFootballId: 158700, nationalTeamId: 5 },
   { name: 'Kristoffer Nordfeldt',      nationality: 'Sweden',      category: 'sweden',  isGoalkeeper: true,  apiFootballId: 2851,   nationalTeamId: 5 },
   { name: 'Jacob Widell Zetterström',  nationality: 'Sweden',      category: 'sweden',  isGoalkeeper: true,  apiFootballId: 48033,  nationalTeamId: 5 },
-  { name: 'Hjalmar Ekdal',             nationality: 'Sweden',      category: 'sweden',                                             nationalTeamId: 5 },
+  { name: 'Hjalmar Ekdal',             nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 47903,  nationalTeamId: 5 },
   { name: 'Gabriel Gudmundsson',       nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 47969,  nationalTeamId: 5 },
   { name: 'Isak Hien',                 nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 137976, nationalTeamId: 5 },
   { name: 'Emil Holm',                 nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 47985,  nationalTeamId: 5 },
@@ -31,11 +31,11 @@ export const PLAYER_REGISTRY: PlayerRegistryEntry[] = [
   { name: 'Jesper Karlström',          nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 48047,  nationalTeamId: 5 },
   { name: 'Gustaf Nilsson',            nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 15683,  nationalTeamId: 5 },
   { name: 'Benjamin Nygren',           nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 48002,  nationalTeamId: 5 },
-  { name: 'Ken Sema',                  nationality: 'Sweden',      category: 'sweden',                                             nationalTeamId: 5 },
+  { name: 'Ken Sema',                  nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 2860,   nationalTeamId: 5 },
   { name: 'Mattias Svanberg',          nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 30484,  nationalTeamId: 5 },
   { name: 'Besfort Zeneli',            nationality: 'Sweden',      category: 'sweden',                       apiFootballId: 350850, nationalTeamId: 5 },
   { name: 'Kylian Mbappé',             nationality: 'France',      category: 'world',                        apiFootballId: 278,    nationalTeamId: 2 },
-  { name: 'Vinicius Jr',               nationality: 'Brazil',      category: 'world',                                             nationalTeamId: 6 },
+  { name: 'Vinicius Jr',               nationality: 'Brazil',      category: 'world',                        apiFootballId: 762,    nationalTeamId: 6 },
   { name: 'Jude Bellingham',           nationality: 'England',     category: 'world',                        apiFootballId: 129718, nationalTeamId: 10 },
   { name: 'Pedri',                     nationality: 'Spain',       category: 'world',                        apiFootballId: 133609, nationalTeamId: 9 },
   { name: 'Erling Haaland',            nationality: 'Norway',      category: 'world',                        apiFootballId: 1100,   nationalTeamId: 1090 },
@@ -56,7 +56,7 @@ export const PLAYER_REGISTRY: PlayerRegistryEntry[] = [
   { name: 'Kaoru Mitoma',              nationality: 'Japan',       category: 'group-f',                      apiFootballId: 106835, nationalTeamId: 12 },
   { name: 'Daichi Kamada',             nationality: 'Japan',       category: 'group-f',                      apiFootballId: 2601,   nationalTeamId: 12 },
   { name: 'Youssef Msakni',            nationality: 'Tunisia',     category: 'group-f',                                             nationalTeamId: 28 },
-  { name: 'Wahbi Khazri',              nationality: 'Tunisia',     category: 'group-f',                                             nationalTeamId: 28 },
+  { name: 'Wahbi Khazri',              nationality: 'Tunisia',     category: 'group-f',                      apiFootballId: 22102,  nationalTeamId: 28 },
 ]
 
 export const PLAYER_NAME_ALIASES: Record<string, string> = {
