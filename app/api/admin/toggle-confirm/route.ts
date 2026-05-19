@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendMail } from '@/lib/server-mail'
 
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+const SITE_URL = 'https://vmtips26.vercel.app'
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   const service = createServiceClient()
   const { data: submission } = await service
     .from('vmt_submissions')
-    .select('name, email')
+    .select('id, name, email, user_id')
     .eq('id', submissionId)
     .maybeSingle()
 
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
     const [
       { data: championPick },
       { data: scorerPick },
+      { data: groupWinners },
     ] = await Promise.all([
       service
         .from('vmt_bracket_picks')
@@ -44,11 +46,22 @@ export async function POST(req: NextRequest) {
         .select('player_name')
         .eq('submission_id', submissionId)
         .maybeSingle(),
+      service
+        .from('vmt_group_table_picks')
+        .select('group_label, team')
+        .eq('submission_id', submissionId)
+        .eq('position', 1)
+        .order('group_label')
+        .limit(3),
     ])
 
     const firstName = getFirstName(submission.name)
     const champion = championPick?.pick_team ?? 'ditt vinnarlag'
     const tournamentScorer = scorerPick?.player_name ?? 'din skyttekung'
+    const myTipUrl = submission.user_id ? `${SITE_URL}/dashboard/${submission.id}` : null
+    const groupWinnerRows = (groupWinners ?? [])
+      .map(row => `<tr><td style="padding:6px 0;color:#6b7280">Grupp ${escapeHtml(row.group_label)}</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(row.team)}</td></tr>`)
+      .join('')
 
     try {
       await sendMail({
@@ -58,8 +71,20 @@ export async function POST(req: NextRequest) {
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;line-height:1.5">
             <p>Hej igen ${escapeHtml(firstName)}!</p>
             <p>Ditt tips till VM-tipset 2026 har nu registrerats i systemet. Vi håller tummarna för att ${escapeHtml(champion)} går långt och att ${escapeHtml(tournamentScorer)} gör riktigt många mål.</p>
+            <div style="border:1px solid #e5e7eb;padding:14px;margin:18px 0">
+              <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Dina picks</div>
+              <table style="width:100%;border-collapse:collapse;font-size:14px">
+                <tr><td style="padding:6px 0;color:#6b7280">Vinnare</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(champion)}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280">Skyttekung</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(tournamentScorer)}</td></tr>
+                ${groupWinnerRows}
+              </table>
+            </div>
             <p>Under VM kommer du att kunna följa både din och andras poängutveckling i en spännande livetabell. Så länge kan du passa på att läsa lite på VM-bibeln.</p>
-            <p><a href="https://vmtips26.vercel.app/" style="display:inline-block;background:#ffd84d;color:#07111f;text-decoration:none;font-weight:700;padding:10px 14px">Tryck här för att komma till hemsidan</a></p>
+            <p>
+              ${myTipUrl ? `<a href="${myTipUrl}" style="display:inline-block;background:#ffd84d;color:#07111f;text-decoration:none;font-weight:700;padding:10px 14px;margin:0 8px 8px 0">Mitt tips</a>` : ''}
+              <a href="${SITE_URL}/worldcup-guide" style="display:inline-block;border:1px solid #07111f;color:#07111f;text-decoration:none;font-weight:700;padding:9px 13px;margin:0 8px 8px 0">VM-bibeln väntar</a>
+              <a href="${SITE_URL}/" style="display:inline-block;color:#07111f;text-decoration:underline;font-weight:700;padding:10px 0">Till hemsidan</a>
+            </p>
             <p>Lycka till i tipset!</p>
             <p>Hälsar<br/>Erik Engstrand</p>
             <p style="font-size:12px;color:#6b7280">OBS! Detta mail är automatiserat och genererat av AI.</p>
