@@ -7,6 +7,7 @@ function emptyDraft(): OnboardingDraft {
   return {
     step: 'group-stage',
     updatedAt: new Date().toISOString(),
+    submissionId: undefined,
     matchPicks: {},
     groupTableOrder: {},
     thirdPlaceSelected: [],
@@ -27,6 +28,7 @@ export function loadDraft(): OnboardingDraft {
     return {
       step: p.step ?? 'group-stage',
       updatedAt: p.updatedAt ?? new Date().toISOString(),
+      submissionId: p.submissionId,
       matchPicks: p.matchPicks ?? {},
       groupTableOrder: p.groupTableOrder ?? {},
       thirdPlaceSelected: p.thirdPlaceSelected ?? [],

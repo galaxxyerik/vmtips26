@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendMail } from '@/lib/server-mail'
+import { canEditPicks } from '@/lib/deadlines'
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await createClient()
+    const { data: { user } } = await auth.auth.getUser()
     const body = await req.json()
-    const { name, email, password, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks } = body
+    const { name, email, password, submissionId, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks } = body
 
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json({ error: 'Namn och e-post krävs.' }, { status: 400 })
@@ -38,10 +41,13 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient()
+    const canUpdateExisting = !!submissionId && !!user && canEditPicks()
 
     // Create auth user if password provided
     let userId: string | null = null
-    if (password && password.length >= 8) {
+    if (user) {
+      userId = user.id
+    } else if (password && password.length >= 8) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
@@ -55,19 +61,57 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create submission
-    const { data: submission, error: subError } = await supabase
-      .from('vmt_submissions')
-      .insert({ name, email, user_id: userId })
-      .select('id')
-      .single()
+    let sid: string
+    let isUpdate = false
 
-    if (subError || !submission) {
-      console.error('Submission error:', subError)
-      return NextResponse.json({ error: 'Kunde inte spara tips.' }, { status: 500 })
+    if (canUpdateExisting) {
+      const { data: existing } = await supabase
+        .from('vmt_submissions')
+        .select('id, user_id')
+        .eq('id', submissionId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!existing) {
+        return NextResponse.json({ error: 'Kunde inte hitta ditt befintliga tips.' }, { status: 404 })
+      }
+
+      isUpdate = true
+      sid = existing.id
+
+      const { error: updateError } = await supabase
+        .from('vmt_submissions')
+        .update({ name, email, submitted_at: new Date().toISOString(), total_points: 0 })
+        .eq('id', sid)
+
+      if (updateError) {
+        console.error('Submission update error:', updateError)
+        return NextResponse.json({ error: 'Kunde inte uppdatera ditt tips.' }, { status: 500 })
+      }
+
+      await Promise.all([
+        supabase.from('vmt_group_picks').delete().eq('submission_id', sid),
+        supabase.from('vmt_group_table_picks').delete().eq('submission_id', sid),
+        supabase.from('vmt_third_place_picks').delete().eq('submission_id', sid),
+        supabase.from('vmt_group_scorer_picks').delete().eq('submission_id', sid),
+        supabase.from('vmt_tournament_scorer_pick').delete().eq('submission_id', sid),
+        supabase.from('vmt_bracket_picks').delete().eq('submission_id', sid),
+      ])
+    } else {
+      // Create submission
+      const { data: submission, error: subError } = await supabase
+        .from('vmt_submissions')
+        .insert({ name, email, user_id: userId })
+        .select('id')
+        .single()
+
+      if (subError || !submission) {
+        console.error('Submission error:', subError)
+        return NextResponse.json({ error: 'Kunde inte spara tips.' }, { status: 500 })
+      }
+
+      sid = submission.id
     }
-
-    const sid = submission.id
 
     // Write group picks (1/X/2)
     const groupPickRows = Object.entries(matchPicks as Record<string, string>).map(([matchId, pick]) => ({
@@ -114,11 +158,13 @@ export async function POST(req: NextRequest) {
     }))
     if (bracketRows.length > 0) await supabase.from('vmt_bracket_picks').insert(bracketRows)
 
-    // Insert notification
-    await supabase.from('vmt_notifications').insert({
-      type: 'new_submission',
-      payload: { name, email, submission_id: sid, submitted_at: new Date().toISOString() },
-    })
+    // Insert notification only for new submissions
+    if (!isUpdate) {
+      await supabase.from('vmt_notifications').insert({
+        type: 'new_submission',
+        payload: { name, email, submission_id: sid, submitted_at: new Date().toISOString() },
+      })
+    }
 
     try {
       await sendMail({
@@ -127,9 +173,8 @@ export async function POST(req: NextRequest) {
         html: `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
             <h2 style="margin:0 0 12px">Tack ${escapeHtml(name)}!</h2>
-            <p>Ditt tips för VM-tips 26 har nu skickats in.</p>
-            <p>Glöm inte att swisha 100 kr till Erik Engstrand på 0768919007.</p>
-            <p>Vi skickar ett nytt mail när tipset har bekräftats.</p>
+            <p>${isUpdate ? 'Ditt tips för VM-tips 26 har nu uppdaterats.' : 'Ditt tips för VM-tips 26 har nu skickats in.'}</p>
+            ${isUpdate ? '<p>Din tidigare inlämning har ersatts med den nya versionen.</p>' : '<p>Glöm inte att swisha 100 kr till Erik Engstrand på 0768919007.</p><p>Vi skickar ett nytt mail när tipset har bekräftats.</p>'}
           </div>
         `,
       })

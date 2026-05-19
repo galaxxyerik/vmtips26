@@ -41,6 +41,7 @@ export default function FinalDetailsPage() {
         name: draft.name,
         email: draft.email,
         password: password || null,
+        submissionId: draft.submissionId ?? null,
         tournamentScorer: tournamentScorer.trim(),
         matchPicks: draft.matchPicks,
         groupTableOrder: draft.groupTableOrder,

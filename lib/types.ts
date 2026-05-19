@@ -22,6 +22,7 @@ export interface VmtMatch {
 export interface OnboardingDraft {
   step: 'group-stage' | 'bracket' | 'final-details'
   updatedAt: string
+  submissionId?: string
   // Step 1
   matchPicks: Record<number, Pick>           // matchId -> '1'|'X'|'2'
   groupTableOrder: Record<string, string[]>  // groupLabel -> [1st,2nd,3rd,4th]

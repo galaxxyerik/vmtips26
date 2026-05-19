@@ -15,18 +15,20 @@ export default function NavBar({ userName }: NavBarProps) {
   const pathname = usePathname()
   const supabase = useMemo(() => createClient(), [])
   const { isAdmin } = useContent()
+  const [resolvedUserName, setResolvedUserName] = useState<string | null>(userName ?? null)
   const [mySubmissionId, setMySubmissionId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadMySubmission() {
-      if (!userName) {
-        setMySubmissionId(null)
-        return
-      }
-
+    async function resolveUser() {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!cancelled) setResolvedUserName(user?.email ?? userName ?? null)
+      return user
+    }
+
+    async function loadMySubmission() {
+      const user = await resolveUser()
       if (!user) {
         if (!cancelled) setMySubmissionId(null)
         return
@@ -84,9 +86,9 @@ export default function NavBar({ userName }: NavBarProps) {
           {navLink('/worldcup-guide', 'VM-bibel')}
           {navLink('/regler', 'Regler')}
           {isAdmin && navLink('/admin', 'Admin')}
-          {!userName && navLink('/login', 'Logga in')}
+          {!resolvedUserName && navLink('/login', 'Logga in')}
 
-          {userName && (
+          {resolvedUserName && (
             <div className="ml-3 shrink-0">
               <button
                 onClick={handleSignOut}

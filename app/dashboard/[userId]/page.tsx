@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
+import { canEditPicks } from '@/lib/deadlines'
+import MyTipDetails from './MyTipDetails'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +25,7 @@ export default async function UserProfilePage({ params }: Props) {
   if (!submission) notFound()
 
   const isOwn = !!user && user.id === submission.user_id
+  const editable = isOwn && canEditPicks()
 
   return (
     <div className="min-h-screen bg-navy-950">
@@ -43,13 +46,20 @@ export default async function UserProfilePage({ params }: Props) {
           ) : (
             <p className="text-white/40 text-sm mt-2">⏳ Väntar på betalningsbekräftelse</p>
           )}
+          {editable && (
+            <p className="text-white/35 text-sm mt-2">
+              Ditt tips är fortfarande öppet för ändringar fram till 11 juni kl 17:00.
+            </p>
+          )}
         </div>
 
-        {!submission.confirmed && (
+        {isOwn ? (
+          <MyTipDetails />
+        ) : !submission.confirmed ? (
           <div className="border border-white/10 px-4 py-8 text-center text-white/30 text-sm">
             Tips och poäng visas när betalningen är bekräftad.
           </div>
-        )}
+        ) : null}
       </main>
 
       <Footer />
