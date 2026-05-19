@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#001B5E"/>
+      <stop offset="100%" stop-color="#003999"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFCD00" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFCD00" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="card"><rect width="360" height="480" rx="0"/></clipPath>
+  </defs>
+  <!-- Background -->
+  <rect width="360" height="480" fill="url(#bg)"/>
+  <!-- Diagonal accent stripe -->
+  <polygon points="0,280 360,180 360,480 0,480" fill="#001240" opacity="0.6"/>
+  <!-- Yellow top bar -->
+  <rect width="360" height="6" fill="#FFCD00"/>
+  <!-- Yellow shine overlay -->
+  <rect width="360" height="240" fill="url(#shine)"/>
+  <!-- Jersey number - huge -->
+  <text x="200" y="230" font-family="Arial Black, sans-serif" font-size="220" font-weight="900" fill="#FFCD00" opacity="0.08" text-anchor="middle" dominant-baseline="auto">9</text>
+  <!-- Player silhouette - action running pose -->
+  <g transform="translate(60,30)" opacity="0.9">
+    <!-- head -->
+    <ellipse cx="150" cy="55" rx="32" ry="36" fill="#1a3a6b"/>
+    <!-- neck -->
+    <rect x="140" y="85" width="20" height="18" fill="#1a3a6b"/>
+    <!-- body / torso -->
+    <path d="M95,103 Q110,98 150,100 Q190,98 205,103 L215,195 L85,195 Z" fill="#1a3a6b"/>
+    <!-- left arm raised -->
+    <path d="M95,110 Q60,95 42,65" stroke="#1a3a6b" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <!-- right arm down -->
+    <path d="M205,110 Q230,140 245,175" stroke="#1a3a6b" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <!-- left leg stride forward -->
+    <path d="M110,193 Q90,250 60,300" stroke="#1a3a6b" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <path d="M60,300 Q45,325 30,330" stroke="#1a3a6b" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <!-- right leg back -->
+    <path d="M170,193 Q185,250 210,300" stroke="#1a3a6b" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <path d="M210,300 Q228,325 240,335" stroke="#1a3a6b" stroke-width="22" stroke-linecap="round" fill="none"/>
+  </g>
+  <!-- Yellow jersey number overlay on silhouette -->
+  <text x="182" y="220" font-family="Arial Black, sans-serif" font-size="52" font-weight="900" fill="#FFCD00" text-anchor="middle" opacity="0.5">9</text>
+  <!-- Bottom info bar -->
+  <rect y="390" width="360" height="90" fill="#FFCD00"/>
+  <!-- Player name -->
+  <text x="180" y="428" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" fill="#001B5E" text-anchor="middle" letter-spacing="2">GYÖKERES</text>
+  <text x="180" y="455" font-family="Arial, sans-serif" font-size="13" fill="#001B5E" text-anchor="middle" letter-spacing="3" opacity="0.7">ANFALL · SVERIGE</text>
+  <text x="180" y="472" font-family="Arial, sans-serif" font-size="11" fill="#001B5E" text-anchor="middle" opacity="0.5">SPORTING CP</text>
+  <!-- SE flag small -->
+  <rect x="14" y="396" width="36" height="24" fill="#005EB8" rx="2"/>
+  <rect x="14" y="406" width="36" height="4" fill="#FFCD00"/>
+  <rect x="26" y="396" width="4" height="24" fill="#FFCD00"/>
+</svg>

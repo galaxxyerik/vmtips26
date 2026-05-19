@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <linearGradient id="navyBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#001240"/>
+      <stop offset="100%" stop-color="#001B5E"/>
+    </linearGradient>
+    <linearGradient id="yellowFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFCD00" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#CC9900" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#navyBg)"/>
+  
+  <!-- Decorative diagonal lines -->
+  <line x1="0" y1="50" x2="800" y2="350" stroke="#FFCD00" stroke-width="0.5" opacity="0.08"/>
+  <line x1="0" y1="100" x2="800" y2="400" stroke="#FFCD00" stroke-width="0.5" opacity="0.06"/>
+  <line x1="0" y1="0" x2="800" y2="300" stroke="#FFCD00" stroke-width="0.5" opacity="0.06"/>
+  
+  <!-- "FIFA" small text top -->
+  <text x="400" y="70" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#FFCD00" text-anchor="middle" letter-spacing="8" opacity="0.8">FIFA</text>
+  
+  <!-- "WORLD CUP" big -->
+  <text x="400" y="160" font-family="Arial Black, sans-serif" font-size="72" font-weight="900" fill="white" text-anchor="middle" letter-spacing="8">WORLD CUP</text>
+  
+  <!-- "2026" number - huge yellow -->
+  <text x="400" y="300" font-family="Arial Black, sans-serif" font-size="140" font-weight="900" fill="url(#yellowFade)" text-anchor="middle" letter-spacing="4">2026</text>
+  
+  <!-- Three flag colors bar -->
+  <rect x="260" y="318" width="93" height="5" fill="#BF0A30" rx="2"/>
+  <rect x="356" y="318" width="88" height="5" fill="white" rx="2"/>
+  <rect x="447" y="318" width="93" height="5" fill="#006847" rx="2"/>
+  
+  <!-- USA · CANADA · MEXICO -->
+  <text x="400" y="348" font-family="Arial, sans-serif" font-size="13" fill="white" text-anchor="middle" letter-spacing="4" opacity="0.6">USA · CANADA · MEXICO</text>
+  
+  <!-- Corner stars -->
+  <text x="60" y="80" font-family="serif" font-size="32" fill="#FFCD00" opacity="0.2">★</text>
+  <text x="712" y="80" font-family="serif" font-size="32" fill="#FFCD00" opacity="0.2">★</text>
+  <text x="60" y="360" font-family="serif" font-size="32" fill="#FFCD00" opacity="0.2">★</text>
+  <text x="712" y="360" font-family="serif" font-size="32" fill="#FFCD00" opacity="0.2">★</text>
+</svg>

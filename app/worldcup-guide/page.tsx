@@ -121,6 +121,14 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
   { name: 'Anthony Elanga', club: 'Newcastle United', position: 'Ytterforward', age: 23, desc: 'Newcastles raketssnabba ytter som kan avgöra matcher på ett ögonblick. Elanga är Sveriges vapen i kontringar — hans sprintkapacitet och direkthet gör backs desperata.', keyStrength: 'Explosiv hastighet i djupled, direkthet i 1-mot-1 och outhållig press som tvingar fram misstag.', rating: 7, imageKey: 'img.player.elanga' },
 ]
 
+const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
+  'img.player.gyokeres': '/images/gyokeres-thumb.svg',
+  'img.player.isak': '/images/isak-thumb.svg',
+  'img.player.lindelof': '/images/lindelof-thumb.svg',
+  'img.player.bergvall': '/images/bergvall-thumb.svg',
+  'img.player.elanga': '/images/elanga-thumb.svg',
+}
+
 interface SquadPlayer { name: string; club: string; pos: string }
 const SQUAD: Record<string, SquadPlayer[]> = {
   'Målvakter': [
@@ -198,12 +206,18 @@ export default function WorldCupGuidePage() {
         <div className="mx-auto max-w-4xl px-4 py-8">
           <div className="mb-1 label">VM-Bibel</div>
           <div className="flex items-center gap-4">
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">VM 2026 — Guiden</h1>
               <p className="text-white/40 text-sm mt-1">
                 11 juni – 19 juli 2026 · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher
               </p>
             </div>
+            {/* WC2026 branding image */}
+            <img
+              src="/images/wc2026-branding.svg"
+              alt="FIFA World Cup 2026"
+              className="hidden sm:block h-16 w-auto object-contain flex-shrink-0 opacity-80"
+            />
           </div>
 
           {/* Tournament facts strip */}
@@ -259,6 +273,21 @@ export default function WorldCupGuidePage() {
   )
 }
 
+const FLAG_MAP: Record<string, string> = {
+  'Sverige': '/images/flag-se.svg',
+  'Nederländerna': '/images/flag-nl.svg',
+  'Japan': '/images/flag-jp.svg',
+  'Tunisien': '/images/flag-tn.svg',
+  'Brasilien': '/images/flag-br.svg',
+  'Frankrike': '/images/flag-fr.svg',
+  'Spanien': '/images/flag-es.svg',
+  'Argentina': '/images/flag-ar.svg',
+  'Portugal': '/images/flag-pt.svg',
+  'Tyskland': '/images/flag-de.svg',
+  'USA': '/images/flag-us.svg',
+  'England': '/images/flag-gb.svg',
+}
+
 // ── Tab: Groups ────────────────────────────────────────────────────────────────
 
 function GroupsTab() {
@@ -304,6 +333,15 @@ function GroupsTab() {
             <div className="divide-y divide-white/5">
               {g.teams.map(team => (
                 <div key={team.name} className="flex items-center gap-2 px-4 py-2">
+                  {FLAG_MAP[team.name] ? (
+                    <img
+                      src={FLAG_MAP[team.name]}
+                      alt={team.name}
+                      className="w-5 h-3.5 object-cover flex-shrink-0 opacity-80"
+                    />
+                  ) : (
+                    <span className="w-5 h-3.5 flex-shrink-0" />
+                  )}
                   <span className={`flex-1 text-sm font-medium ${
                     team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/80'
                   }`}>{team.name}</span>
@@ -404,8 +442,9 @@ function SwedenTab() {
       {/* ── Hero image ── */}
       <EditableImage
         contentKey="image.sweden.hero"
-        alt="Det svenska landslaget"
-        className="w-full object-cover object-top"
+        fallback="/images/sweden-hero.svg"
+        alt="Sverige i VM 2026 — blågult mot världen"
+        className="w-full object-cover object-center"
         containerClassName="w-full"
         placeholderHeight="h-56"
       />
@@ -430,6 +469,24 @@ function SwedenTab() {
         </p>
       </div>
 
+      {/* ── NRG Stadium visual ── */}
+      <div className="relative overflow-hidden border border-white/10 border-t-0 h-28">
+        <img
+          src="/images/nrg-stadium.svg"
+          alt="NRG Stadium i Houston, Texas — Sveriges arenor i VM 2026"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-950/90 via-navy-950/60 to-navy-950/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 to-transparent" />
+        <div className="relative h-full flex items-center px-4 gap-3">
+          <div>
+            <div className="label text-[9px] text-swe-yellow/60 mb-0.5">Arenor — VM 2026</div>
+            <div className="font-display font-black text-white uppercase tracking-wide text-sm">Estadio BBVA · NRG Stadium · AT&T Stadium</div>
+            <div className="text-[11px] text-white/40 mt-0.5">Monterrey · Houston · Dallas</div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Match schedule ── */}
       <div className="border border-white/10 border-t-0">
         <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
@@ -443,6 +500,17 @@ function SwedenTab() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
+                  <img
+                    src="/images/flag-se.svg"
+                    alt="Sverige"
+                    className="w-5 h-3.5 object-cover flex-shrink-0"
+                  />
+                  <span className="text-white/30 text-xs">vs</span>
+                  <img
+                    src={`/images/flag-${m.opponent === 'Tunisien' ? 'tn' : m.opponent === 'Nederländerna' ? 'nl' : 'jp'}.svg`}
+                    alt={m.opponent}
+                    className="w-5 h-3.5 object-cover flex-shrink-0"
+                  />
                   <span className="font-display font-black uppercase tracking-wide text-white text-sm">
                     Sverige vs {m.opponent}
                   </span>
@@ -488,7 +556,8 @@ function SwedenTab() {
                 <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-navy-900 border-r border-white/5">
                   <EditableImage
                     contentKey={p.imageKey}
-                    alt={p.name}
+                    fallback={PLAYER_IMAGE_FALLBACKS[p.imageKey]}
+                    alt={`${p.name}, ${p.position}, Sverige`}
                     className="w-full h-full object-cover object-top"
                     placeholderHeight="h-20"
                     containerClassName="w-full h-full"

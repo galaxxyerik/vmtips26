@@ -164,20 +164,44 @@ export default function BracketPage() {
   const canProceed = allMatches.every(m => !!picks[m.matchNumber])
 
   const rounds: KnockoutMatch['round'][] = ['r32', 'r16', 'qf', 'sf', 'bronze', 'final']
+  const nonBronzeMatches = allMatches.filter(m => m.round !== 'bronze')
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
-      <div className="mb-4">
-        <div className="label">Steg 2 av 3 · Slutspel</div>
-        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tippa slutspelet</h1>
-        <div className="flex items-center gap-2 text-xs">
-          <span className={`tnum ${canProceed ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
-            {pickedKnockout}/{allMatches.length} matcher
-          </span>
-          <div className="flex-1 h-0.5 bg-white/10">
-            <div className="h-full bg-swe-yellow transition-all"
-              style={{ width: `${nonBronzeMatches.length ? pickedKnockout/nonBronzeMatches.length*100 : 0}%` }} />
+      {/* Trophy header with stadium background */}
+      <div className="relative overflow-hidden mb-5 border border-white/10">
+        <img
+          src="/images/stadium-background.svg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ zIndex: 0 }}
+        />
+        <div className="absolute inset-0 bg-navy-950/80" style={{ zIndex: 1 }} />
+        <div className="relative flex items-center gap-4 px-4 py-4" style={{ zIndex: 10 }}>
+          <img
+            src="/images/trophy-wc2026.svg"
+            alt="VM-pokalen FIFA World Cup 2026"
+            className="w-12 h-16 object-contain flex-shrink-0 drop-shadow-lg"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="label">Steg 2 av 3 · Slutspel</div>
+            <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white leading-tight">Tippa slutspelet</h1>
+            <p className="text-[11px] text-swe-yellow/60 mt-0.5 italic">Det här är målet.</p>
           </div>
+          <div className="text-right flex-shrink-0">
+            <div className={`font-display font-black text-xl tnum ${canProceed ? 'text-swe-yellow' : 'text-white/30'}`}>
+              {pickedKnockout}<span className="text-white/20 text-sm">/{allMatches.length}</span>
+            </div>
+            <div className="text-[9px] text-white/30 uppercase tracking-wider">matcher</div>
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="relative h-0.5 bg-white/10" style={{ zIndex: 10 }}>
+          <div
+            className="h-full bg-swe-yellow transition-all"
+            style={{ width: `${nonBronzeMatches.length ? (pickedKnockout / nonBronzeMatches.length) * 100 : 0}%` }}
+          />
         </div>
       </div>
 

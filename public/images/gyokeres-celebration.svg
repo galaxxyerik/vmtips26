@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <radialGradient id="celebGlow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#FFCD00" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#005EB8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#001240" stop-opacity="1"/>
+    </radialGradient>
+    <radialGradient id="playerLight" cx="50%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="#FFCD00" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFCD00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="500" fill="#001240"/>
+  <rect width="800" height="500" fill="url(#celebGlow)"/>
+  
+  <!-- Confetti/celebration particles -->
+  <g opacity="0.7">
+    <rect x="120" y="40" width="8" height="20" fill="#FFCD00" transform="rotate(30 124 50)"/>
+    <rect x="200" y="80" width="6" height="16" fill="#005EB8" transform="rotate(-20 203 88)"/>
+    <rect x="350" y="30" width="8" height="20" fill="#FFCD00" transform="rotate(45 354 40)"/>
+    <rect x="500" y="60" width="6" height="16" fill="white" transform="rotate(-35 503 68)"/>
+    <rect x="650" y="40" width="8" height="20" fill="#FFCD00" transform="rotate(15 654 50)"/>
+    <rect x="720" y="90" width="6" height="16" fill="#005EB8" transform="rotate(-50 723 98)"/>
+    <rect x="80" y="120" width="6" height="16" fill="white" transform="rotate(60 83 128)"/>
+    <rect x="750" y="140" width="8" height="20" fill="#FFCD00" transform="rotate(-25 754 150)"/>
+    <circle cx="160" cy="60" r="6" fill="#FFCD00" opacity="0.8"/>
+    <circle cx="420" cy="45" r="5" fill="white" opacity="0.8"/>
+    <circle cx="620" cy="70" r="6" fill="#005EB8" opacity="0.8"/>
+    <circle cx="280" cy="35" r="4" fill="#FFCD00" opacity="0.8"/>
+    <circle cx="700" cy="55" r="5" fill="white" opacity="0.8"/>
+  </g>
+  
+  <!-- Main player celebration silhouette (arms wide, celebrating) -->
+  <rect width="800" height="500" fill="url(#playerLight)"/>
+  <g transform="translate(280,40) scale(1.2)" opacity="0.92" fill="#002080">
+    <!-- Head -->
+    <ellipse cx="120" cy="52" rx="32" ry="36"/>
+    <!-- Neck -->
+    <rect x="111" y="84" width="18" height="16"/>
+    <!-- Body -->
+    <path d="M70,98 Q95,92 120,94 Q148,92 170,98 L175,185 L65,185 Z"/>
+    <!-- Left arm raised and wide -->
+    <path d="M70,108 Q30,80 8,45" stroke="#002080" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- Right arm raised and wide -->  
+    <path d="M170,108 Q210,80 232,45" stroke="#002080" stroke-width="28" stroke-linecap="round" fill="none"/>
+    <!-- Legs - stride jump -->
+    <path d="M88,183 Q72,235 55,280" stroke="#002080" stroke-width="27" stroke-linecap="round" fill="none"/>
+    <path d="M55,280 Q38,308 20,318" stroke="#002080" stroke-width="21" stroke-linecap="round" fill="none"/>
+    <path d="M152,183 Q168,235 185,280" stroke="#002080" stroke-width="27" stroke-linecap="round" fill="none"/>
+    <path d="M185,280 Q202,308 220,318" stroke="#002080" stroke-width="21" stroke-linecap="round" fill="none"/>
+  </g>
+  
+  <!-- "88'" minute marker -->
+  <text x="680" y="90" font-family="Arial Black, sans-serif" font-size="64" font-weight="900" fill="#FFCD00" text-anchor="middle" opacity="0.15">88'</text>
+  
+  <!-- Jersey number -->
+  <text x="400" y="230" font-family="Arial Black, sans-serif" font-size="180" font-weight="900" fill="#FFCD00" text-anchor="middle" opacity="0.06">9</text>
+  
+  <!-- Bottom text -->
+  <rect x="0" y="420" width="800" height="80" fill="rgba(0,0,0,0.5)"/>
+  <text x="400" y="458" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#FFCD00" text-anchor="middle" letter-spacing="3">GYÖKERES 88'</text>
+  <text x="400" y="484" font-family="Arial, sans-serif" font-size="13" fill="white" text-anchor="middle" opacity="0.7" letter-spacing="2">SVERIGE 2-1 POLEN · VM-KVAL 2025</text>
+</svg>

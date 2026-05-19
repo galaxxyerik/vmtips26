@@ -108,6 +108,28 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* Player cards — decorative right side, lg+ screens only */}
+      <div className="absolute right-0 top-0 bottom-20 hidden lg:flex items-end gap-3 pr-8 pb-24" style={{ zIndex: 5 }}>
+        {/* Left-to-right fade mask so cards don't overlap content */}
+        <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-transparent to-transparent" style={{ zIndex: 6 }} />
+        <img
+          src="/images/isak-card.svg"
+          alt="Alexander Isak, anfallare, Sverige"
+          width={150}
+          height={200}
+          className="block opacity-50 hover:opacity-70 transition-opacity duration-300"
+          style={{ transform: 'rotate(-3deg)', marginBottom: '16px' }}
+        />
+        <img
+          src="/images/gyokeres-card.svg"
+          alt="Viktor Gyökeres, anfallare, Sverige"
+          width={170}
+          height={227}
+          className="block opacity-65 hover:opacity-85 transition-opacity duration-300"
+          style={{ transform: 'rotate(2deg)' }}
+        />
+      </div>
+
       {/* Navbar */}
       <nav className="relative z-10 flex h-14 items-center justify-between px-6 border-b border-white/10">
         <span className="font-display font-black text-white text-lg uppercase tracking-[0.06em]">
@@ -187,9 +209,15 @@ export default function LandingPage() {
         <div className="bg-navy-950/90 border-t border-white/10">
           <div className="px-6 h-14 flex items-center gap-6 text-xs">
             <div className="flex items-center gap-2 shrink-0">
+              <img src="/images/flag-se.svg" alt="Sveriges flagga" className="w-6 h-4 object-cover" />
               <span className="font-display font-black text-swe-yellow uppercase tracking-wider text-sm">SVERIGE</span>
               <span className="text-white/30">·</span>
-              <span className="font-mono tnum text-white/50">Grupp F · premiär 15 jun 21:00</span>
+              <span className="font-mono tnum text-white/50">Grupp F</span>
+              <span className="text-white/20">·</span>
+              {/* Group F opponent flags */}
+              <img src="/images/flag-nl.svg" alt="Nederländernas flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Nederländerna" />
+              <img src="/images/flag-jp.svg" alt="Japans flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Japan" />
+              <img src="/images/flag-tn.svg" alt="Tunisiens flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Tunisien" />
             </div>
             <div className="h-4 w-px bg-white/10 hidden sm:block" />
             <div className="hidden sm:flex items-center gap-5 text-white/35 font-display font-black uppercase tracking-wider text-xs">

@@ -108,10 +108,32 @@ export default function GroupStagePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
-      {/* Header */}
+      {/* Header with stadium background */}
+      <div className="relative overflow-hidden mb-4 border border-white/10">
+        <img
+          src="/images/stadium-background.svg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ zIndex: 0 }}
+        />
+        <div className="absolute inset-0 bg-navy-950/85" style={{ zIndex: 1 }} />
+        <div className="relative px-4 py-3 flex items-center gap-4" style={{ zIndex: 10 }}>
+          <div className="flex-1 min-w-0">
+            <div className="label">Steg 1 av 3 · Gruppspel</div>
+            <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white leading-tight">Tippa gruppspelet</h1>
+          </div>
+          {/* Group F flags */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <img src="/images/flag-se.svg" alt="Sverige" className="w-6 h-4 object-cover opacity-90" />
+            <img src="/images/flag-nl.svg" alt="Nederländerna" className="w-6 h-4 object-cover opacity-60" />
+            <img src="/images/flag-jp.svg" alt="Japan" className="w-6 h-4 object-cover opacity-60" />
+            <img src="/images/flag-tn.svg" alt="Tunisien" className="w-6 h-4 object-cover opacity-60" />
+          </div>
+        </div>
+      </div>
+      {/* Progress */}
       <div className="mb-4">
-        <div className="label">Steg 1 av 3 · Gruppspel</div>
-        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tippa gruppspelet</h1>
         <div className="flex items-center gap-2 text-xs">
           <span className={`tnum ${pickedCount === totalMatches && totalMatches > 0 ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
             {pickedCount}/{totalMatches} matcher

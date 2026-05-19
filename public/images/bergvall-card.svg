@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#001B5E"/>
+      <stop offset="60%" stop-color="#002855"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="480" fill="url(#bg4)"/>
+  <polygon points="0,300 360,200 360,480 0,480" fill="#000a20" opacity="0.6"/>
+  <rect width="360" height="6" fill="#FFCD00"/>
+  <text x="200" y="230" font-family="Arial Black, sans-serif" font-size="220" font-weight="900" fill="#FFCD00" opacity="0.07" text-anchor="middle">8</text>
+  <g transform="translate(60,30)" opacity="0.9">
+    <ellipse cx="150" cy="53" rx="28" ry="32" fill="#1a3a6b"/>
+    <rect x="140" y="81" width="20" height="16" fill="#1a3a6b"/>
+    <path d="M98,97 Q118,92 150,94 Q183,92 198,97 L205,188 L88,188 Z" fill="#1a3a6b"/>
+    <path d="M98,104 Q72,88 58,62" stroke="#1a3a6b" stroke-width="23" stroke-linecap="round" fill="none"/>
+    <path d="M198,104 Q224,130 238,162" stroke="#1a3a6b" stroke-width="23" stroke-linecap="round" fill="none"/>
+    <path d="M115,186 Q98,244 80,294" stroke="#1a3a6b" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <path d="M80,294 Q64,318 46,325" stroke="#1a3a6b" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <path d="M172,186 Q189,244 208,294" stroke="#1a3a6b" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <path d="M208,294 Q226,318 240,326" stroke="#1a3a6b" stroke-width="20" stroke-linecap="round" fill="none"/>
+  </g>
+  <rect y="390" width="360" height="90" fill="#FFCD00"/>
+  <text x="180" y="428" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" fill="#001B5E" text-anchor="middle" letter-spacing="2">BERGVALL</text>
+  <text x="180" y="455" font-family="Arial, sans-serif" font-size="13" fill="#001B5E" text-anchor="middle" letter-spacing="3" opacity="0.7">MITTFÄLT · SVERIGE</text>
+  <text x="180" y="472" font-family="Arial, sans-serif" font-size="11" fill="#001B5E" text-anchor="middle" opacity="0.5">TOTTENHAM HOTSPUR</text>
+  <rect x="14" y="396" width="36" height="24" fill="#005EB8" rx="2"/>
+  <rect x="14" y="406" width="36" height="4" fill="#FFCD00"/>
+  <rect x="26" y="396" width="4" height="24" fill="#FFCD00"/>
+</svg>

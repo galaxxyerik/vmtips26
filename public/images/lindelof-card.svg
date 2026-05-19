@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1a0a"/>
+      <stop offset="50%" stop-color="#003300"/>
+      <stop offset="100%" stop-color="#001B5E"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="480" fill="url(#bg3)"/>
+  <polygon points="0,320 360,220 360,480 0,480" fill="#050f05" opacity="0.7"/>
+  <rect width="360" height="6" fill="#FFCD00"/>
+  <text x="200" y="230" font-family="Arial Black, sans-serif" font-size="220" font-weight="900" fill="#FFCD00" opacity="0.07" text-anchor="middle">2</text>
+  <g transform="translate(60,30)" opacity="0.9">
+    <ellipse cx="148" cy="55" rx="30" ry="34" fill="#1a3a6b"/>
+    <rect x="138" y="85" width="20" height="16" fill="#1a3a6b"/>
+    <path d="M95,101 Q115,96 148,98 Q185,96 200,101 L208,192 L85,192 Z" fill="#1a3a6b"/>
+    <path d="M95,108 Q65,125 48,158" stroke="#1a3a6b" stroke-width="25" stroke-linecap="round" fill="none"/>
+    <path d="M200,108 Q230,125 246,158" stroke="#1a3a6b" stroke-width="25" stroke-linecap="round" fill="none"/>
+    <path d="M112,190 Q96,248 78,298" stroke="#1a3a6b" stroke-width="27" stroke-linecap="round" fill="none"/>
+    <path d="M78,298 Q62,322 44,328" stroke="#1a3a6b" stroke-width="21" stroke-linecap="round" fill="none"/>
+    <path d="M172,190 Q188,248 208,298" stroke="#1a3a6b" stroke-width="27" stroke-linecap="round" fill="none"/>
+    <path d="M208,298 Q226,322 240,330" stroke="#1a3a6b" stroke-width="21" stroke-linecap="round" fill="none"/>
+  </g>
+  <rect y="390" width="360" height="90" fill="#FFCD00"/>
+  <text x="180" y="428" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#001B5E" text-anchor="middle" letter-spacing="1">NILSSON LINDELÖF</text>
+  <text x="180" y="455" font-family="Arial, sans-serif" font-size="13" fill="#001B5E" text-anchor="middle" letter-spacing="3" opacity="0.7">FÖRSVAR · SVERIGE</text>
+  <text x="180" y="472" font-family="Arial, sans-serif" font-size="11" fill="#001B5E" text-anchor="middle" opacity="0.5">MAN UNITED</text>
+  <rect x="14" y="396" width="36" height="24" fill="#005EB8" rx="2"/>
+  <rect x="14" y="406" width="36" height="4" fill="#FFCD00"/>
+  <rect x="26" y="396" width="4" height="24" fill="#FFCD00"/>
+</svg>
