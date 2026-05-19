@@ -117,7 +117,7 @@ export default function LandingPage() {
           style={{ width: 150, height: 220, transform: 'rotate(-3deg)', marginBottom: '16px', flexShrink: 0 }}
         >
           <img
-            src="/images/isak-portrait.jpg"
+            src="/images/isak-body-lfc.webp"
             alt="Alexander Isak, anfallare, Sverige"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -132,7 +132,7 @@ export default function LandingPage() {
           style={{ width: 170, height: 250, transform: 'rotate(2deg)', flexShrink: 0 }}
         >
           <img
-            src="/images/gyokeres-portrait.jpg"
+            src="/images/gyokeres-arsenal-portrait.jpg"
             alt="Viktor Gyökeres, anfallare, Sverige"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

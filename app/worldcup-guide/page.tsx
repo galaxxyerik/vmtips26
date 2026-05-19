@@ -122,11 +122,11 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
 ]
 
 const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
-  'img.player.gyokeres': '/images/gyokeres-portrait.jpg',
-  'img.player.isak': '/images/isak-portrait.jpg',
-  'img.player.lindelof': '/images/lindelof-action.jpg',
-  'img.player.bergvall': '/images/bergvall-action.jpg',
-  'img.player.elanga': '/images/elanga-action.jpg',
+  'img.player.gyokeres': '/images/gyokeres-fotmob.png',
+  'img.player.isak': '/images/isak-fotmob.png',
+  'img.player.lindelof': '/images/lindelof-fotmob.png',
+  'img.player.bergvall': '/images/bergvall-fotmob.png',
+  'img.player.elanga': '/images/elanga-fotmob.png',
 }
 
 interface SquadPlayer { name: string; club: string; pos: string }
@@ -442,8 +442,8 @@ function SwedenTab() {
       {/* ── Hero image ── */}
       <EditableImage
         contentKey="image.sweden.hero"
-        fallback="/images/sweden-fans.jpg"
-        alt="Svenska VM-fans — blågult mot världen"
+        fallback="/images/sweden-poland-wc-qual-1.jpg"
+        alt="Sverige vs Polen — VM-kvalfinalens avgörande ögonblick, mars 2026"
         className="w-full object-cover object-center"
         containerClassName="w-full"
         placeholderHeight="h-56"

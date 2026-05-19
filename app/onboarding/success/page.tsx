@@ -5,7 +5,7 @@ export default function SuccessPage() {
     <main className="relative min-h-screen bg-navy-950 overflow-hidden flex items-center justify-center px-4">
       {/* Celebration background */}
       <img
-        src="/images/gyokeres-action.jpg"
+        src="/images/gyokeres-arsenal-celebration.jpg"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover object-center"
