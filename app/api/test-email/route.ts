@@ -1,41 +1,28 @@
 import { NextResponse } from 'next/server'
-
-const RESEND_API_URL = 'https://api.resend.com/emails'
+import { sendMail } from '@/lib/server-mail'
 
 export async function POST() {
-  const apiKey = process.env.RESEND_API_KEY
   const to = process.env.ADMIN_EMAIL ?? 'eeengstrand@gmail.com'
-  const from = 'Resend Test <onboarding@resend.dev>'
+  const from = process.env.SMTP_FROM_EMAIL ?? process.env.SMTP_USER ?? 'okänd avsändare'
 
-  if (!apiKey) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     return NextResponse.json({
-      error: 'Missing RESEND_API_KEY. Lägg in RESEND_API_KEY i Vercels Environment Variables för den deployade appen.',
+      error: 'Missing SMTP_USER or SMTP_PASS. Lägg in Gmail SMTP-uppgifterna i Environment Variables för den deployade appen.',
     }, { status: 500 })
   }
 
-  const res = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
+  try {
+    await sendMail({
+      to,
       subject: 'VM-tips 26 testmail',
-      html: '<p>Det här är ett tillfälligt <strong>Resend-testmail</strong> från VM-tips 26.</p>',
-    }),
-  })
-
-  if (!res.ok) {
-    const errorText = await res.text()
-    return NextResponse.json({ error: errorText }, { status: 500 })
+      html: '<p>Det här är ett <strong>testmail från VM-tips 26 via Gmail</strong>.</p>',
+    })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 
-  const data = await res.json()
   return NextResponse.json({
     ok: true,
-    message: `Testmail skickat till ${to} från ${from}. Obs: detta är Resends testavsändare och är bara tänkt som tillfällig lösning tills du har en egen domän för utskick.`,
-    data,
+    message: `Testmail skickat till ${to} från ${from}.`,
   })
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendMail } from '@/lib/server-mail'
 
 export async function POST(req: NextRequest) {
   try {
@@ -114,6 +115,22 @@ export async function POST(req: NextRequest) {
       type: 'new_submission',
       payload: { name, email, submission_id: sid, submitted_at: new Date().toISOString() },
     })
+
+    try {
+      await sendMail({
+        to: email,
+        subject: 'Ditt VM-tips har skickats in',
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+            <h2 style="margin:0 0 12px">Tack ${name}!</h2>
+            <p>Ditt tips för VM-tips 26 har nu skickats in.</p>
+            <p>Vi skickar ett nytt mail när tipset har bekräftats.</p>
+          </div>
+        `,
+      })
+    } catch (error) {
+      console.error('Submission email error:', error)
+    }
 
     return NextResponse.json({ ok: true, submissionId: sid })
   } catch (err) {
