@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
-import { EditableImage } from '@/components/Editable'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,21 +13,25 @@ export default async function ReglerPage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={user?.email ?? null} />
 
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <div className="mb-6">
-          <div className="label mb-1">Spelregler</div>
+      {/* Hero — AT&T Stadium, Dallas */}
+      <div className="relative h-[40vh] min-h-[220px] overflow-hidden">
+        <Image
+          src="/images/att-stadium.jpg"
+          alt="AT&T Stadium i Dallas, Texas — VM-arena 2026"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
+          priority
+        />
+        <div className="absolute inset-0 bg-navy-950/65" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 max-w-2xl mx-auto">
+          <div className="label text-swe-yellow/60 mb-1">VM-TIPS 26</div>
           <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Regler &amp; Poängsystem</h1>
         </div>
+      </div>
 
-        {/* Admin-redigerbar bannerbild */}
-        <EditableImage
-          contentKey="image.regler.banner"
-          alt="Regelsbild"
-          className="w-full object-cover max-h-48"
-          containerClassName="mb-6"
-          placeholderHeight="h-32"
-        />
-
+      <main className="mx-auto max-w-2xl px-4 py-10">
         <div className="space-y-6 text-sm">
           <Section title="Deadline">
             <p className="text-white/60 leading-relaxed">

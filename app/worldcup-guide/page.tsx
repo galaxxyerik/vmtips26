@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
-import { EditableImage } from '@/components/Editable'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -121,14 +121,6 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
   { name: 'Anthony Elanga', club: 'Newcastle United', position: 'Ytterforward', age: 23, desc: 'Newcastles raketssnabba ytter som kan avgöra matcher på ett ögonblick. Elanga är Sveriges vapen i kontringar — hans sprintkapacitet och direkthet gör backs desperata.', keyStrength: 'Explosiv hastighet i djupled, direkthet i 1-mot-1 och outhållig press som tvingar fram misstag.', rating: 7, imageKey: 'img.player.elanga' },
 ]
 
-const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
-  'img.player.gyokeres': '/images/gyokeres-fotmob.png',
-  'img.player.isak': '/images/isak-fotmob.png',
-  'img.player.lindelof': '/images/lindelof-fotmob.png',
-  'img.player.bergvall': '/images/bergvall-fotmob.png',
-  'img.player.elanga': '/images/elanga-fotmob.png',
-}
-
 interface SquadPlayer { name: string; club: string; pos: string }
 const SQUAD: Record<string, SquadPlayer[]> = {
   'Målvakter': [
@@ -201,27 +193,31 @@ export default function WorldCupGuidePage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={null} />
 
-      {/* Page header */}
-      <div className="border-b border-white/10">
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          <div className="mb-1 label">VM-Bibel</div>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">VM 2026 — Guiden</h1>
-              <p className="text-white/40 text-sm mt-1">
-                11 juni – 19 juli 2026 · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher
-              </p>
-            </div>
-            {/* WC2026 trophy image */}
-            <img
-              src="/images/wc-trophy.jpg"
-              alt="FIFA World Cup-trofén"
-              className="hidden sm:block h-16 w-16 object-cover object-center flex-shrink-0 opacity-90 rounded-sm"
-            />
-          </div>
+      {/* Full-bleed hero — SoFi Stadium, Los Angeles */}
+      <div className="relative h-[55vh] min-h-[300px] overflow-hidden">
+        <Image
+          src="/images/sofi-stadium-aerial.jpg"
+          alt="SoFi Stadium i Los Angeles, USA — VM 2026"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
+          priority
+        />
+        <div className="absolute inset-0 bg-navy-950/55" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-8 max-w-4xl mx-auto">
+          <div className="label text-swe-yellow/70 mb-2">VM-Bibel · 2026</div>
+          <h1 className="font-display font-black text-4xl sm:text-5xl uppercase tracking-wide text-white leading-tight">
+            VM 2026<br /><span className="text-swe-yellow">Guiden</span>
+          </h1>
+          <p className="text-white/50 text-sm mt-2">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
+        </div>
+      </div>
 
-          {/* Tournament facts strip */}
-          <div className="mt-5 grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10">
+      {/* Facts strip */}
+      <div className="border-b border-white/10">
+        <div className="mx-auto max-w-4xl px-4 py-4">
+          <div className="grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10">
             {[
               { label: 'Lag', value: '48' },
               { label: 'Grupper', value: '12 (A–L)' },
@@ -439,23 +435,29 @@ function SwedenTab() {
   return (
     <div className="space-y-0">
 
-      {/* ── Hero image ── */}
-      <EditableImage
-        contentKey="image.sweden.hero"
-        fallback="/images/sweden-poland-wc-qual-1.jpg"
-        alt="Sverige vs Polen — VM-kvalfinalens avgörande ögonblick, mars 2026"
-        className="w-full object-cover object-center"
-        containerClassName="w-full"
-        placeholderHeight="h-56"
-      />
+      {/* ── Hero image — Sverige vs Polen VM-kval ── */}
+      <div className="relative h-[40vh] min-h-[240px] overflow-hidden">
+        <Image
+          src="/images/sweden-poland-wc-qual-1.jpg"
+          alt="Sverige i VM-kvalet 2025 — blågult mot världen"
+          fill
+          sizes="100vw"
+          className="object-cover object-top"
+          priority
+        />
+        <div className="absolute inset-0 bg-navy-950/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-5">
+          <div className="label text-swe-yellow/60 mb-1">Grupp F · VM 2026</div>
+          <h2 className="font-display font-black text-3xl uppercase tracking-wide text-white">Sverige</h2>
+        </div>
+      </div>
 
       {/* ── Title block ── */}
       <div className="border border-white/10 border-t-0 px-5 py-5 bg-navy-900">
         <div className="flex items-center gap-4">
           <div>
-            <div className="label text-swe-yellow/70 mb-0.5">Grupp F · VM 2026</div>
-            <h2 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sverige</h2>
-            <p className="text-white/40 text-xs mt-0.5">Coach: Graham Potter · 26 spelare uttagna</p>
+            <p className="text-white/40 text-xs">Coach: Graham Potter · 26 spelare uttagna</p>
           </div>
           <div className="ml-auto text-right">
             <div className="font-display font-black text-4xl text-swe-yellow">65%</div>
@@ -471,10 +473,12 @@ function SwedenTab() {
 
       {/* ── NRG Stadium visual ── */}
       <div className="relative overflow-hidden border border-white/10 border-t-0 h-28">
-        <img
+        <Image
           src="/images/nrg-stadium.jpg"
-          alt="NRG Stadium i Houston, Texas — Sveriges arenor i VM 2026"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          alt="NRG Stadium i Houston, Texas — Sverige möter Nederländerna här 20 juni"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-navy-950/90 via-navy-950/60 to-navy-950/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 to-transparent" />
@@ -549,34 +553,18 @@ function SwedenTab() {
             <div key={p.name}>
               {/* Player row */}
               <button
-                className="w-full flex items-stretch text-left hover:bg-navy-900/40 transition-colors"
+                className="w-full flex items-center text-left hover:bg-navy-900/40 transition-colors px-4 py-3"
                 onClick={() => setExpandedPlayer(expandedPlayer === p.name ? null : p.name)}
               >
-                {/* Photo slot */}
-                <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-navy-900 border-r border-white/5">
-                  <EditableImage
-                    contentKey={p.imageKey}
-                    fallback={PLAYER_IMAGE_FALLBACKS[p.imageKey]}
-                    alt={`${p.name}, ${p.position}, Sverige`}
-                    className="w-full h-full object-cover object-top"
-                    placeholderHeight="h-20"
-                    containerClassName="w-full h-full"
-                  />
-                </div>
-                {/* Info */}
-                <div className="flex-1 px-4 py-3 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
-                        {p.name}
-                      </div>
-                      <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
-                      <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
-                    </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
+                    {p.name}
                   </div>
+                  <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
+                </div>
+                <div className="text-right flex-shrink-0 ml-4">
+                  <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
+                  <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
                 </div>
               </button>
               {/* Expanded */}
