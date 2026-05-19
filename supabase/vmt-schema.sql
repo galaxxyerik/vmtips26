@@ -11,8 +11,37 @@ create table if not exists vmt_matches (
   venue text,
   home_score int,
   away_score int,
+  home_goal_scorers jsonb default '[]'::jsonb,
+  away_goal_scorers jsonb default '[]'::jsonb,
   result text check (result in ('1','X','2')),
   status text default 'scheduled' check (status in ('scheduled','live','finished'))
+);
+
+alter table vmt_matches add column if not exists home_goal_scorers jsonb default '[]'::jsonb;
+alter table vmt_matches add column if not exists away_goal_scorers jsonb default '[]'::jsonb;
+
+create table if not exists player_stats (
+  player_id int not null,
+  player_name text not null,
+  nationality text,
+  club text,
+  league text,
+  season int not null,
+  goals_club int,
+  assists_club int,
+  minutes_club int,
+  clean_sheets int,
+  goals_national int,
+  caps_national int,
+  updated_at timestamptz default now(),
+  primary key (player_id, season)
+);
+
+create table if not exists vmt_sync_log (
+  sync_key text primary key,
+  synced_at timestamptz default now(),
+  status text,
+  message text
 );
 
 create table if not exists vmt_submissions (
@@ -83,6 +112,8 @@ create table if not exists vmt_notifications (
 
 -- Enable RLS
 alter table vmt_matches enable row level security;
+alter table player_stats enable row level security;
+alter table vmt_sync_log enable row level security;
 alter table vmt_submissions enable row level security;
 alter table vmt_group_picks enable row level security;
 alter table vmt_group_table_picks enable row level security;
@@ -94,6 +125,8 @@ alter table vmt_notifications enable row level security;
 
 -- Matches: public read
 create policy "public read matches" on vmt_matches for select using (true);
+create policy "public read player stats" on player_stats for select using (true);
+create policy "public read sync log" on vmt_sync_log for select using (true);
 
 -- Submissions: confirmed ones public, own always
 create policy "public read confirmed submissions" on vmt_submissions

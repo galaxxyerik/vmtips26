@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { syncMatches } from '@/lib/match-sync'
+import { syncPlayerStats } from '@/lib/player-stats-sync'
 
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
@@ -19,11 +19,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const result = await syncMatches({ includePlayers: true })
+    const result = await syncPlayerStats()
     return NextResponse.json({ ok: true, ...result })
   } catch (err) {
-    console.error(`[${new Date().toISOString()}] sync-matches error:`, err)
-    return NextResponse.json({ ok: false, error: 'Kunde inte synka matchdata' }, { status: 500 })
+    console.error(`[${new Date().toISOString()}] players sync error:`, err)
+    return NextResponse.json({ ok: false, error: 'Kunde inte synka spelarstatistik' }, { status: 500 })
   }
 }
 

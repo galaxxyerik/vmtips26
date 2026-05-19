@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
+import { createClient } from '@/lib/supabase/client'
+import { PLAYER_NAME_ALIASES } from '@/lib/player-registry'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,6 +20,18 @@ interface Group { letter: string; teams: GroupTeam[]; analysis: string; hotMatch
 interface SwedenPlayer {
   name: string; club: string; position: string; age: number; caps: number
   season: string; role: string; keyStrength: string; rating: number
+}
+interface PlayerStatRow {
+  player_name: string
+  club: string | null
+  league: string | null
+  goals_club: number | null
+  assists_club: number | null
+  minutes_club: number | null
+  clean_sheets: number | null
+  goals_national: number | null
+  caps_national: number | null
+  updated_at: string | null
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -169,6 +183,18 @@ const SQUAD: Record<string, SquadPlayer[]> = {
 
 const SWEDEN_PLAYERS: SwedenPlayer[] = []
 
+const GROUP_F_NOTABLES: Player[] = [
+  { name: 'Virgil van Dijk', country: 'Nederländerna', flag: '🇳🇱', club: 'Liverpool', position: 'Mittback', age: 34, why: 'Ledaren i Nederländernas backlinje och fortfarande en av turneringens mest respekterade mittbackar.', style: 'Positionssäker, dominant i luftrummet och lugn i uppspelen.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Xavi Simons', country: 'Nederländerna', flag: '🇳🇱', club: 'RB Leipzig', position: 'Offensiv mittfältare', age: 23, why: 'Kreativ motor mellan lagdelarna, med förmågan att öppna matcher Sverige helst vill hålla låsta.', style: 'Snabb riktningsförändring, sista pass och mod i trånga ytor.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Cody Gakpo', country: 'Nederländerna', flag: '🇳🇱', club: 'Liverpool', position: 'Vänsterytter', age: 26, why: 'Direkt hot från kanten och en av Grupp F:s tydligaste målspelare.', style: 'Stark i omställning, bra skott och smarta löpningar in centralt.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Tijjani Reijnders', country: 'Nederländerna', flag: '🇳🇱', club: 'Manchester City', position: 'Mittfältare', age: 27, why: 'Tempoväxlare på mitten som kan styra rytmen om Sverige blir passivt.', style: 'Bolltrygg, löpstark och vass i ytan framför backlinjen.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Takumi Minamino', country: 'Japan', flag: '🇯🇵', club: 'Monaco', position: 'Offensiv mittfältare', age: 31, why: 'Rutinerad japansk nyckelspelare med näsa för ytor runt straffområdet.', style: 'Intelligent rörelse, snabb kombinationsfotboll och klinisk tajming.', stat: '', statLabel: '', rating: 7 },
+  { name: 'Kaoru Mitoma', country: 'Japan', flag: '🇯🇵', club: 'Brighton', position: 'Vänsterytter', age: 29, why: 'Japans farligaste 1-mot-1-hot och en spelare som kan förändra en match på en dribbling.', style: 'Explosiv första touch, låg tyngdpunkt och precisa inspel.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Daichi Kamada', country: 'Japan', flag: '🇯🇵', club: 'Crystal Palace', position: 'Mittfältare', age: 29, why: 'Teknisk mittfältare med internationell rutin och smart positionering.', style: 'Lugn med boll, bra blick och hot från andra våg.', stat: '', statLabel: '', rating: 7 },
+  { name: 'Youssef Msakni', country: 'Tunisien', flag: '🇹🇳', club: 'Al Arabi', position: 'Anfallare', age: 35, why: 'Tunisiens stora profil, erfaren nog att straffa varje misstag.', style: 'Fin teknik, bra avslut och naturlig känsla för avgörande lägen.', stat: '', statLabel: '', rating: 7 },
+  { name: 'Wahbi Khazri', country: 'Tunisien', flag: '🇹🇳', club: 'Montpellier', position: 'Anfallare', age: 35, why: 'Rutinerad avslutare med fast situationer och distansskott som specialitet.', style: 'Smart, cynisk och farlig så fort han får vända upp.', stat: '', statLabel: '', rating: 7 },
+]
+
 const FAVORITES = [
   { country: 'Frankrike', flag: '🇫🇷', pct: 19 },
   { country: 'Brasilien', flag: '🇧🇷', pct: 16 },
@@ -196,6 +222,25 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function WorldCupGuidePage() {
   const [tab, setTab] = useState<Tab>('grupper')
+  const [playerStats, setPlayerStats] = useState<Record<string, PlayerStatRow>>({})
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('player_stats')
+      .select('player_name, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
+      .then(({ data }) => {
+        const rows = (data ?? []) as PlayerStatRow[]
+        setPlayerStats(Object.fromEntries(rows.map(row => [row.player_name, row])))
+        const newest = rows
+          .map(row => row.updated_at)
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? null
+        setLastUpdated(newest)
+      })
+  }, [])
 
   return (
     <div className="min-h-screen bg-navy-950">
@@ -219,6 +264,9 @@ export default function WorldCupGuidePage() {
             VM 2026<br /><span className="text-swe-yellow">Guiden</span>
           </h1>
           <p className="text-white/50 text-sm mt-2">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
+          <p className="mt-2 text-xs text-white/35">
+            Senast uppdaterad: {lastUpdated ? new Date(lastUpdated).toLocaleString('sv-SE') : 'Data tillgänglig från 11 juni 2026'}
+          </p>
         </div>
       </div>
 
@@ -264,9 +312,9 @@ export default function WorldCupGuidePage() {
 
       <main className="mx-auto max-w-4xl px-4 py-8">
         {tab === 'grupper' && <GroupsTab />}
-        {tab === 'stjärnor' && <PlayersTab players={STARS} title="Världsstjärnor" subtitle="De 12 bästa spelarna i VM 2026" />}
+        {tab === 'stjärnor' && <PlayersTab players={STARS} title="Världsstjärnor" subtitle="De 12 bästa spelarna i VM 2026" stats={playerStats} />}
         {tab === 'talanger' && <PlayersTab players={TALENTS} title="Talanger att bevaka" subtitle="Unga spelare som kan chockera världen" />}
-        {tab === 'sverige' && <SwedenTab />}
+        {tab === 'sverige' && <SwedenTab stats={playerStats} />}
         {tab === 'favoriter' && <FavoritesTab />}
         {tab === 'mörkhästar' && <DarkHorsesTab />}
         {tab === 'fakta' && <FactsTab />}
@@ -373,7 +421,33 @@ function GroupsTab() {
 
 // ── Tab: Players ───────────────────────────────────────────────────────────────
 
-function PlayersTab({ players, title, subtitle }: { players: Player[]; title: string; subtitle: string }) {
+function statFor(stats: Record<string, PlayerStatRow>, name: string) {
+  return stats[PLAYER_NAME_ALIASES[name] ?? name] ?? stats[name]
+}
+
+function PlayerStatsLine({ stat, isGoalkeeper = false }: { stat?: PlayerStatRow; isGoalkeeper?: boolean }) {
+  if (!stat) return <span>Klubb: – · Landslag: –</span>
+  const clubPart = isGoalkeeper
+    ? `${stat.clean_sheets ?? '–'} hållna nollor · ${stat.minutes_club ?? '–'} min`
+    : `${stat.goals_club ?? '–'} mål · ${stat.assists_club ?? '–'} assist · ${stat.minutes_club ?? '–'} min`
+  return (
+    <span>
+      {clubPart} · Landslag: {stat.caps_national ?? '–'} matcher / {stat.goals_national ?? '–'} mål
+    </span>
+  )
+}
+
+function PlayersTab({
+  players,
+  title,
+  subtitle,
+  stats = {},
+}: {
+  players: Player[]
+  title: string
+  subtitle: string
+  stats?: Record<string, PlayerStatRow>
+}) {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   return (
@@ -400,9 +474,9 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
                   <span className="text-[10px] font-display font-black border border-pitch-500/30 text-pitch-400 px-1.5 py-0.5">
-                    {p.stat}
+                    <PlayerStatsLine stat={statFor(stats, p.name)} />
                   </span>
-                  <span className="text-[10px] text-white/25">{p.statLabel}</span>
+                  <span className="text-[10px] text-white/25">API-Football</span>
                 </div>
               </div>
 
@@ -437,7 +511,7 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
 
 // ── Tab: Sweden ────────────────────────────────────────────────────────────────
 
-function SwedenTab() {
+function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null)
 
   return (
@@ -582,6 +656,9 @@ function SwedenTab() {
                         {p.name}
                       </div>
                       <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
+                      <div className="text-[10px] text-white/35 mt-1">
+                        <PlayerStatsLine stat={statFor(stats, p.name)} />
+                      </div>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
@@ -619,14 +696,26 @@ function SwedenTab() {
               {players.map(p => (
                 <div key={p.name} className="flex items-center gap-3 px-4 py-2 hover:bg-navy-900/30 transition-colors">
                   <span className="w-7 text-center text-[10px] font-display font-black text-white/20 border border-white/10 py-0.5">{p.pos}</span>
-                  <span className="flex-1 text-sm text-white/80 font-medium">{p.name}</span>
-                  <span className="text-xs text-white/30">{p.club}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-white/80 font-medium">{p.name}</div>
+                    <div className="text-[10px] text-white/35">
+                      <PlayerStatsLine stat={statFor(stats, p.name)} isGoalkeeper={pos === 'Målvakter'} />
+                    </div>
+                  </div>
+                  <span className="text-xs text-white/30">{statFor(stats, p.name)?.club ?? p.club}</span>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      <PlayersTab
+        players={GROUP_F_NOTABLES}
+        title="Grupp F · motståndarprofiler"
+        subtitle="Notabla spelare från Nederländerna, Japan och Tunisien"
+        stats={stats}
+      />
 
     </div>
   )

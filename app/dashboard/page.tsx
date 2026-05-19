@@ -3,6 +3,7 @@ import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
 import Link from 'next/link'
+import LiveMatches from './LiveMatches'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
     .eq('confirmed', true)
 
   let submissions: { id: string; name: string; total_points: number; confirmed: boolean; user_id: string | null }[] = []
-  let mySubmission = null
+  let mySubmission: { id: string; name: string; total_points: number; confirmed: boolean } | null = null
 
   if (isOpen) {
     const { data } = await supabase
@@ -49,6 +50,19 @@ export default async function DashboardPage() {
 
   const ranked = submissions.map((s, i) => ({ ...s, rank: i + 1 }))
   const pot = (confirmedParticipants ?? 0) * 100
+  const { data: liveCandidateMatches } = await service
+    .from('vmt_matches')
+    .select('id, match_number, home_team, away_team, kickoff, home_score, away_score, home_goal_scorers, away_goal_scorers, status')
+    .gte('kickoff', new Date(now.getTime() - 130 * 60 * 1000).toISOString())
+    .lte('kickoff', new Date(now.getTime() + 5 * 60 * 1000).toISOString())
+    .order('kickoff')
+  const { data: myGroupPicks } = mySubmission
+    ? await service
+        .from('vmt_group_picks')
+        .select('match_id, pick')
+        .eq('submission_id', mySubmission.id)
+    : { data: [] }
+  const userPicks = Object.fromEntries((myGroupPicks ?? []).map(row => [row.match_id, row.pick]))
 
   // Countdown
   const msLeft = OPENS_AT.getTime() - now.getTime()
@@ -81,6 +95,8 @@ export default async function DashboardPage() {
       )}
 
       <main className="mx-auto max-w-3xl px-4 py-8">
+        <LiveMatches initialMatches={liveCandidateMatches ?? []} userPicks={userPicks} />
+
         <div className="mb-6">
           <div className="label">Poängtabell</div>
           <h1 className="font-display font-black text-3xl uppercase tracking-wide text-white">Ledartavla</h1>

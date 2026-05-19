@@ -5,6 +5,7 @@ import Link from 'next/link'
 import SetupAdminButton from './SetupAdminButton'
 import TestEmailButton from './TestEmailButton'
 import { AdminSubmissionRow } from './AdminSubmissionRow'
+import AdminSyncButtons from './AdminSyncButtons'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,7 @@ export default async function AdminPage() {
     { data: submissions },
     { data: scorerPicks },
     { data: finalPicks },
+    { data: syncLogs },
   ] = await Promise.all([
     service
       .from('vmt_submissions')
@@ -34,6 +36,9 @@ export default async function AdminPage() {
       .from('vmt_bracket_picks')
       .select('submission_id, pick_team')
       .eq('match_number', 104),
+    service
+      .from('vmt_sync_log')
+      .select('sync_key, synced_at'),
   ])
 
   const scorerMap = Object.fromEntries((scorerPicks ?? []).map(p => [p.submission_id, p.player_name]))
@@ -61,6 +66,8 @@ export default async function AdminPage() {
 
   const confirmed = (submissions ?? []).filter(s => s.confirmed)
   const unconfirmed = (submissions ?? []).filter(s => !s.confirmed)
+  const lastMatchSync = syncLogs?.find(row => row.sync_key === 'match_results')?.synced_at ?? null
+  const lastPlayerSync = syncLogs?.find(row => row.sync_key === 'player_stats')?.synced_at ?? null
 
   return (
     <div className="min-h-screen bg-navy-950">
@@ -214,6 +221,8 @@ export default async function AdminPage() {
         </div>
 
         {/* ── Admin utilities ── */}
+        <AdminSyncButtons lastMatchSync={lastMatchSync} lastPlayerSync={lastPlayerSync} />
+
         <div className="border border-white/10">
           <div className="px-4 py-3 border-b border-white/10 bg-navy-900">
             <div className="label">Verktyg</div>
