@@ -2,12 +2,15 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) return NextResponse.next()
+
   let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
@@ -18,20 +21,19 @@ export async function middleware(request: NextRequest) {
           )
         },
       },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+    const { pathname } = request.nextUrl
+
+    if (pathname.startsWith('/admin') && !user) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  const { pathname } = request.nextUrl
-
-  // Only admin requires auth
-  if (pathname.startsWith('/admin') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Login: redirect if already logged in
-  if (pathname.startsWith('/login') && user) {
-    return NextResponse.redirect(new URL('/', request.url))
+    if (pathname.startsWith('/login') && user) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  } catch {
+    return NextResponse.next()
   }
 
   return supabaseResponse
