@@ -15,19 +15,23 @@ export default function AdminSyncButtons({
   lastPlayerSync: string | null
 }) {
   const [loading, setLoading] = useState<'matches' | 'players' | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
 
   async function runSync(kind: 'matches' | 'players') {
     setLoading(kind)
-    setMessage(null)
+    setResult(null)
     try {
       const res = await fetch(kind === 'matches' ? '/api/cron/sync-matches' : '/api/players/sync', {
         method: 'POST',
       })
       const json = await res.json()
-      setMessage(json.ok ? 'Synken är klar.' : (json.error ?? 'Synken misslyckades.'))
-    } catch {
-      setMessage('Synken misslyckades.')
+      if (json.ok) {
+        setResult({ ok: true, message: json.message ?? 'Synken är klar.' })
+      } else {
+        setResult({ ok: false, message: json.error ?? 'Synken misslyckades.' })
+      }
+    } catch (err) {
+      setResult({ ok: false, message: err instanceof Error ? err.message : 'Nätverksfel – kontrollera att du är inloggad.' })
     } finally {
       setLoading(null)
     }
@@ -65,9 +69,9 @@ export default function AdminSyncButtons({
             {loading === 'players' ? 'Synkar...' : 'Synka spelarstatistik'}
           </button>
         </div>
-        {message && (
-          <div className="sm:col-span-2 border border-white/10 bg-navy-900 px-3 py-2 text-xs text-white/60">
-            {message}
+        {result && (
+          <div className={`sm:col-span-2 border px-3 py-2 text-sm font-medium ${result.ok ? 'border-green-500/40 bg-green-900/20 text-green-300' : 'border-red-500/40 bg-red-900/20 text-red-300'}`}>
+            {result.message}
           </div>
         )}
       </div>

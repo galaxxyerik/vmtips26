@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { syncPlayerStats } from '@/lib/player-stats-sync'
 
+export const maxDuration = 300
+
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 async function isAllowed(req: NextRequest) {
@@ -15,15 +17,23 @@ async function isAllowed(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   if (!(await isAllowed(req))) {
-    return NextResponse.json({ error: 'Obehörig' }, { status: 401 })
+    return NextResponse.json({ ok: false, error: 'Obehörig' }, { status: 401 })
+  }
+
+  if (!process.env.API_FOOTBALL_KEY) {
+    console.error(`[${new Date().toISOString()}] players sync: API_FOOTBALL_KEY saknas`)
+    return NextResponse.json({ ok: false, error: 'API_FOOTBALL_KEY är inte satt i miljövariablerna' }, { status: 500 })
   }
 
   try {
     const result = await syncPlayerStats()
-    return NextResponse.json({ ok: true, ...result })
+    const message = `${result.synced} spelare synkade, ${result.skipped} hoppades över`
+    console.log(`[${new Date().toISOString()}] players sync klar: ${message}`)
+    return NextResponse.json({ ok: true, message, ...result })
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
     console.error(`[${new Date().toISOString()}] players sync error:`, err)
-    return NextResponse.json({ ok: false, error: 'Kunde inte synka spelarstatistik' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
 
