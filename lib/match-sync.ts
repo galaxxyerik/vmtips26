@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
 import { GROUP_PICK_POINTS, PHASE_POINTS } from '@/lib/scoring'
 import { syncPlayerStats } from '@/lib/player-stats-sync'
+import { teamNameSv } from '@/lib/team-names'
 
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
@@ -117,8 +118,8 @@ async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
         match_number: f.fixture.id,
         phase,
         group_label: roundToGroup(f.league.round),
-        home_team: f.teams.home.name,
-        away_team: f.teams.away.name,
+        home_team: teamNameSv(f.teams.home.name),
+        away_team: teamNameSv(f.teams.away.name),
         kickoff: f.fixture.date,
         venue: venueName(f),
         home_score: homeScore,
@@ -151,8 +152,10 @@ export async function fetchAndStoreLiveMatches() {
   const { upserted } = await upsertFixtures(fixtures, true)
   return fixtures.map(f => ({
     fixtureId: f.fixture.id,
-    homeTeam: f.teams.home.name,
-    awayTeam: f.teams.away.name,
+    homeTeam: teamNameSv(f.teams.home.name),
+    awayTeam: teamNameSv(f.teams.away.name),
+    homeTeamApi: f.teams.home.name,
+    awayTeamApi: f.teams.away.name,
     homeScore: f.goals?.home ?? null,
     awayScore: f.goals?.away ?? null,
     elapsed: f.fixture.status.elapsed ?? null,

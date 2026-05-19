@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
     const [
       { data: championPick },
       { data: scorerPick },
-      { data: groupWinners },
     ] = await Promise.all([
       service
         .from('vmt_bracket_picks')
@@ -46,22 +45,12 @@ export async function POST(req: NextRequest) {
         .select('player_name')
         .eq('submission_id', submissionId)
         .maybeSingle(),
-      service
-        .from('vmt_group_table_picks')
-        .select('group_label, team')
-        .eq('submission_id', submissionId)
-        .eq('position', 1)
-        .order('group_label')
-        .limit(3),
     ])
 
     const firstName = getFirstName(submission.name)
     const champion = championPick?.pick_team ?? 'ditt vinnarlag'
     const tournamentScorer = scorerPick?.player_name ?? 'din skyttekung'
     const myTipUrl = submission.user_id ? `${SITE_URL}/dashboard/${submission.id}` : null
-    const groupWinnerRows = (groupWinners ?? [])
-      .map(row => `<tr><td style="padding:6px 0;color:#6b7280">Grupp ${escapeHtml(row.group_label)}</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(row.team)}</td></tr>`)
-      .join('')
 
     try {
       await sendMail({
@@ -76,7 +65,6 @@ export async function POST(req: NextRequest) {
               <table style="width:100%;border-collapse:collapse;font-size:14px">
                 <tr><td style="padding:6px 0;color:#6b7280">Vinnare</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(champion)}</td></tr>
                 <tr><td style="padding:6px 0;color:#6b7280">Skyttekung</td><td style="padding:6px 0;text-align:right;font-weight:700">${escapeHtml(tournamentScorer)}</td></tr>
-                ${groupWinnerRows}
               </table>
             </div>
             <p>Under VM kommer du att kunna följa både din och andras poängutveckling i en spännande livetabell. Så länge kan du passa på att läsa lite på VM-bibeln.</p>

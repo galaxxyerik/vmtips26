@@ -24,6 +24,8 @@ interface LiveApiMatch {
   fixtureId: number
   homeTeam: string
   awayTeam: string
+  homeTeamApi?: string
+  awayTeamApi?: string
   homeScore: number | null
   awayScore: number | null
   elapsed: number | null
@@ -94,8 +96,8 @@ export default function LiveMatches({
             ...match,
             home_score: live.homeScore,
             away_score: live.awayScore,
-            home_goal_scorers: scorersFromEvents(live, live.homeTeam),
-            away_goal_scorers: scorersFromEvents(live, live.awayTeam),
+            home_goal_scorers: scorersFromEvents(live, live.homeTeamApi ?? live.homeTeam),
+            away_goal_scorers: scorersFromEvents(live, live.awayTeamApi ?? live.awayTeam),
             status: 'live',
           }
         }))
