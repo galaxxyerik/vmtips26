@@ -13,7 +13,7 @@ export default function TestEmailButton() {
     try {
       const res = await fetch('/api/test-email', { method: 'POST' })
       const json = await res.json()
-      setResult(json.ok ? 'Testmail skickat.' : (json.error ?? 'Något gick fel.'))
+      setResult(json.ok ? (json.message ?? 'Testmail skickat.') : (json.error ?? 'Något gick fel.'))
     } catch {
       setResult('Kunde inte skicka testmail.')
     } finally {

@@ -5,6 +5,7 @@ const RESEND_API_URL = 'https://api.resend.com/emails'
 export async function POST() {
   const apiKey = process.env.RESEND_API_KEY
   const to = process.env.ADMIN_EMAIL ?? 'eeengstrand@gmail.com'
+  const from = process.env.RESEND_FROM_EMAIL ?? 'VM-tips 26 <noreply@vmtips26.se>'
 
   if (!apiKey) {
     return NextResponse.json({
@@ -19,10 +20,10 @@ export async function POST() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'onboarding@resend.dev',
+      from,
       to: [to],
-      subject: 'Hello World',
-      html: '<p>Congrats on sending your <strong>first email</strong>!</p>',
+      subject: 'VM-tips 26 testmail',
+      html: '<p>Det här är ett testmail från <strong>VM-tips 26</strong>.</p>',
     }),
   })
 
@@ -32,5 +33,9 @@ export async function POST() {
   }
 
   const data = await res.json()
-  return NextResponse.json({ ok: true, data })
+  return NextResponse.json({
+    ok: true,
+    message: `Testmail skickat till ${to} från ${from}.`,
+    data,
+  })
 }
