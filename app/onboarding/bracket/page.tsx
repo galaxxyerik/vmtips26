@@ -108,9 +108,22 @@ export default function BracketPage() {
     ]
 
     const sfw = sfm.map(m => picks[m.matchNumber] ?? `Vinnare ${m.label}`)
+    const loserOf = (match: KnockoutMatch) => {
+      const winner = picks[match.matchNumber]
+      if (winner === match.team1) return match.team2
+      if (winner === match.team2) return match.team1
+      return `Förlorare ${match.label}`
+    }
+    const resolveBronzePick = () => {
+      const bronzePick = picks[103]
+      if (bronzePick === `Förlorare ${sfm[0].label}`) return loserOf(sfm[0])
+      if (bronzePick === `Förlorare ${sfm[1].label}`) return loserOf(sfm[1])
+      return bronzePick
+    }
+
     const bronzeM: KnockoutMatch = {
       matchNumber: 103, label: 'Bronsmatch',
-      team1: `Förlorare ${sfm[0].label}`, team2: `Förlorare ${sfm[1].label}`,
+      team1: loserOf(sfm[0]), team2: loserOf(sfm[1]),
       round: 'bronze',
     }
     const finalM: KnockoutMatch = {
@@ -245,7 +258,12 @@ export default function BracketPage() {
 }
 
 function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: string | null; onPick: (t: string) => void }) {
-  const isPlaceholder = (t: string) => t.startsWith('Vinnare') || t.startsWith('Etta') || t.startsWith('Tvåa')
+  const isPlaceholder = (t: string) =>
+    t.startsWith('Vinnare') || t.startsWith('Etta') || t.startsWith('Tvåa') || t.startsWith('Förlorare')
+  const effectivePick =
+    match.round === 'bronze' && pick === 'Förlorare SF1' ? match.team1
+    : match.round === 'bronze' && pick === 'Förlorare SF2' ? match.team2
+    : pick
 
   return (
     <div className="flex items-center px-2 py-1.5 gap-1 bg-navy-900/30 hover:bg-navy-900/60 transition-colors">
@@ -254,11 +272,11 @@ function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: 
         {[match.team1, match.team2].map(team => (
           <button key={team} onClick={() => !isPlaceholder(team) && onPick(team)}
             disabled={isPlaceholder(team)}
-            title={pick === team ? 'Klicka för att avmarkera' : undefined}
+            title={effectivePick === team ? 'Klicka för att avmarkera' : undefined}
             className={`flex-1 py-1.5 px-1 text-xs font-medium border text-center transition-colors ${
               isPlaceholder(team)
                 ? 'border-white/5 text-white/15 bg-navy-900/30 cursor-not-allowed'
-                : pick === team
+                : effectivePick === team
                 ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow hover:bg-loss-900/20 hover:border-loss-500/40'
                 : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
             }`}>

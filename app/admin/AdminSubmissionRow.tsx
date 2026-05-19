@@ -368,13 +368,22 @@ function buildKnockoutMatches(
     { matchNumber: 102, label: 'SF2', team1: winnerOf(99, 'Vinnare QF3'), team2: winnerOf(100, 'Vinnare QF4'), round: 'sf', winner: pickByMatch[102] ?? null },
   ]
 
+  const loserOf = (match: KnockoutMatchView) => {
+    if (match.winner === match.team1) return match.team2
+    if (match.winner === match.team2) return match.team1
+    return `Förlorare ${match.label}`
+  }
+
   const bronzeM: KnockoutMatchView = {
     matchNumber: 103,
     label: 'BR',
-    team1: 'Förlorare SF1',
-    team2: 'Förlorare SF2',
+    team1: loserOf(sfm[0]),
+    team2: loserOf(sfm[1]),
     round: 'bronze',
-    winner: pickByMatch[103] ?? null,
+    winner:
+      pickByMatch[103] === 'Förlorare SF1' ? loserOf(sfm[0])
+      : pickByMatch[103] === 'Förlorare SF2' ? loserOf(sfm[1])
+      : pickByMatch[103] ?? null,
   }
 
   const finalM: KnockoutMatchView = {
