@@ -75,14 +75,14 @@ export default function LandingPage({ userName }: LandingPageProps) {
 
   return (
     <main className="relative min-h-screen bg-navy-950 text-white overflow-hidden">
-      {/* Stadium background */}
+      {/* Sweden celebration background */}
       <Image
-        src="/images/potm.avif"
+        src="/images/sweden-poland-wc-qual-2.jpg"
         alt=""
         aria-hidden="true"
         fill
         sizes="100vw"
-        className="object-cover object-center z-0"
+        className="object-cover object-[62%_center] z-0"
         priority
       />
       {/* Overlays — left-heavy gradient to darken bg behind content */}
