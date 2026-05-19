@@ -122,11 +122,11 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
 ]
 
 const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
-  'img.player.gyokeres': '/images/gyokeres-thumb.svg',
-  'img.player.isak': '/images/isak-thumb.svg',
-  'img.player.lindelof': '/images/lindelof-thumb.svg',
-  'img.player.bergvall': '/images/bergvall-thumb.svg',
-  'img.player.elanga': '/images/elanga-thumb.svg',
+  'img.player.gyokeres': '/images/gyokeres-portrait.jpg',
+  'img.player.isak': '/images/isak-portrait.jpg',
+  'img.player.lindelof': '/images/lindelof-action.jpg',
+  'img.player.bergvall': '/images/bergvall-action.jpg',
+  'img.player.elanga': '/images/elanga-action.jpg',
 }
 
 interface SquadPlayer { name: string; club: string; pos: string }
@@ -212,11 +212,11 @@ export default function WorldCupGuidePage() {
                 11 juni – 19 juli 2026 · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher
               </p>
             </div>
-            {/* WC2026 branding image */}
+            {/* WC2026 trophy image */}
             <img
-              src="/images/wc2026-branding.svg"
-              alt="FIFA World Cup 2026"
-              className="hidden sm:block h-16 w-auto object-contain flex-shrink-0 opacity-80"
+              src="/images/wc-trophy.jpg"
+              alt="FIFA World Cup-trofén"
+              className="hidden sm:block h-16 w-16 object-cover object-center flex-shrink-0 opacity-90 rounded-sm"
             />
           </div>
 
@@ -442,8 +442,8 @@ function SwedenTab() {
       {/* ── Hero image ── */}
       <EditableImage
         contentKey="image.sweden.hero"
-        fallback="/images/sweden-hero.svg"
-        alt="Sverige i VM 2026 — blågult mot världen"
+        fallback="/images/sweden-fans.jpg"
+        alt="Svenska VM-fans — blågult mot världen"
         className="w-full object-cover object-center"
         containerClassName="w-full"
         placeholderHeight="h-56"
@@ -472,7 +472,7 @@ function SwedenTab() {
       {/* ── NRG Stadium visual ── */}
       <div className="relative overflow-hidden border border-white/10 border-t-0 h-28">
         <img
-          src="/images/nrg-stadium.svg"
+          src="/images/nrg-stadium.jpg"
           alt="NRG Stadium i Houston, Texas — Sveriges arenor i VM 2026"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />

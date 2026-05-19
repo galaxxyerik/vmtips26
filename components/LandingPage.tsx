@@ -112,22 +112,36 @@ export default function LandingPage() {
       <div className="absolute right-0 top-0 bottom-20 hidden lg:flex items-end gap-3 pr-8 pb-24" style={{ zIndex: 5 }}>
         {/* Left-to-right fade mask so cards don't overlap content */}
         <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-transparent to-transparent" style={{ zIndex: 6 }} />
-        <img
-          src="/images/isak-card.svg"
-          alt="Alexander Isak, anfallare, Sverige"
-          width={150}
-          height={200}
-          className="block opacity-50 hover:opacity-70 transition-opacity duration-300"
-          style={{ transform: 'rotate(-3deg)', marginBottom: '16px' }}
-        />
-        <img
-          src="/images/gyokeres-card.svg"
-          alt="Viktor Gyökeres, anfallare, Sverige"
-          width={170}
-          height={227}
-          className="block opacity-65 hover:opacity-85 transition-opacity duration-300"
-          style={{ transform: 'rotate(2deg)' }}
-        />
+        <div
+          className="relative overflow-hidden opacity-50 hover:opacity-70 transition-opacity duration-300"
+          style={{ width: 150, height: 220, transform: 'rotate(-3deg)', marginBottom: '16px', flexShrink: 0 }}
+        >
+          <img
+            src="/images/isak-portrait.jpg"
+            alt="Alexander Isak, anfallare, Sverige"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent" />
+          <div className="absolute bottom-2 left-0 right-0 text-center">
+            <div className="font-display font-black text-[10px] uppercase tracking-widest text-white/80">Isak</div>
+            <div className="text-[8px] text-white/40 uppercase tracking-wider">Liverpool</div>
+          </div>
+        </div>
+        <div
+          className="relative overflow-hidden opacity-65 hover:opacity-85 transition-opacity duration-300"
+          style={{ width: 170, height: 250, transform: 'rotate(2deg)', flexShrink: 0 }}
+        >
+          <img
+            src="/images/gyokeres-portrait.jpg"
+            alt="Viktor Gyökeres, anfallare, Sverige"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent" />
+          <div className="absolute bottom-2 left-0 right-0 text-center">
+            <div className="font-display font-black text-[10px] uppercase tracking-widest text-swe-yellow/90">Gyökeres</div>
+            <div className="text-[8px] text-white/40 uppercase tracking-wider">Arsenal</div>
+          </div>
+        </div>
       </div>
 
       {/* Navbar */}

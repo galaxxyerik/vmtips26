@@ -184,7 +184,7 @@ export default function BracketPage() {
       {/* Trophy header with stadium background */}
       <div className="relative overflow-hidden mb-5 border border-white/10">
         <img
-          src="/images/stadium-background.svg"
+          src="/images/metlife-stadium.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover object-center"
@@ -193,9 +193,9 @@ export default function BracketPage() {
         <div className="absolute inset-0 bg-navy-950/80" style={{ zIndex: 1 }} />
         <div className="relative flex items-center gap-4 px-4 py-4" style={{ zIndex: 10 }}>
           <img
-            src="/images/trophy-wc2026.svg"
+            src="/images/wc-trophy.jpg"
             alt="VM-pokalen FIFA World Cup 2026"
-            className="w-12 h-16 object-contain flex-shrink-0 drop-shadow-lg"
+            className="w-12 h-16 object-cover object-center flex-shrink-0 drop-shadow-lg rounded-sm"
           />
           <div className="flex-1 min-w-0">
             <div className="label">Steg 2 av 3 · Slutspel</div>

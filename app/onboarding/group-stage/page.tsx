@@ -111,7 +111,7 @@ export default function GroupStagePage() {
       {/* Header with stadium background */}
       <div className="relative overflow-hidden mb-4 border border-white/10">
         <img
-          src="/images/stadium-background.svg"
+          src="/images/nrg-stadium-interior.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover object-center"
