@@ -1,0 +1,3 @@
+-- Remote baseline migration already recorded in Supabase before this repo
+-- started managing database migrations. Keep this file so `supabase db push`
+-- can reconcile the remote migration history without replaying anything.
