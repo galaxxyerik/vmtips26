@@ -227,6 +227,31 @@ function playerPhotoUrl(name: string): string | null {
   return id ? `https://media.api-sports.io/football/players/${id}.png` : null
 }
 
+const PLAYER_PHOTOS: Record<string, string> = {
+  'Viktor Gyökeres':   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Viktor_Gy%C3%B6keres_2018.jpg/800px-Viktor_Gy%C3%B6keres_2018.jpg',
+  'Kylian Mbappé':     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg/800px-Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg',
+  'Vinicius Jr':       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg/800px-2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg',
+  'Jude Bellingham':   'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg/800px-25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg',
+  'Lamine Yamal':      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Lamine_Yamal_in_2025.jpg/800px-Lamine_Yamal_in_2025.jpg',
+  'Erling Haaland':    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Erling_Haaland_June_2025.jpg/800px-Erling_Haaland_June_2025.jpg',
+  'Pedri':             'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Pedri.jpg/800px-Pedri.jpg',
+  'Jamal Musiala':     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_2022_%28cropped%29.jpg/800px-Jamal_Musiala_2022_%28cropped%29.jpg',
+  'Bukayo Saka':       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg/800px-1_bukayo_saka_arsenal_2025_%28cropped%29.jpg',
+  'Achraf Hakimi':     'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Achraf_Hakimi_%28cropped%29.jpg/800px-Achraf_Hakimi_%28cropped%29.jpg',
+  'Cody Gakpo':        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg/800px-Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg',
+  'Julián Álvarez':    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg/800px-Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg',
+  'Endrick':           'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Endrick-Palmeiras-Liverpool-abr24.jpg/800px-Endrick-Palmeiras-Liverpool-abr24.jpg',
+  'Arda Güler':        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg/800px-Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg',
+  'Takefusa Kubo':     'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Takefusa_Kubo_2019.png/800px-Takefusa_Kubo_2019.png',
+  'Estêvão Willian':   'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg/800px-Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg',
+  'Sverre Nypan':      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg/800px-Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg',
+  'Warren Zaïre-Emery':'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Zaire_asse_psg_2425.png/800px-Zaire_asse_psg_2425.png',
+  'Virgil van Dijk':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/800px-20160604_AUT_NED_8876_%28cropped%29.jpg',
+  'Xavi Simons':       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Xavi_Simons%2C_Nick_Verhagen_in_duel_met_Xavi_Simons.jpg/800px-Xavi_Simons%2C_Nick_Verhagen_in_duel_met_Xavi_Simons.jpg',
+  'Kaoru Mitoma':      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Kaoru_Mitoma_%282022%29.jpg/800px-Kaoru_Mitoma_%282022%29.jpg',
+  'Tijjani Reijnders': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Reijnders_arriva_in_albergo_%28cropped%29.jpg/800px-Reijnders_arriva_in_albergo_%28cropped%29.jpg',
+}
+
 const COUNTRY_COLORS: Record<string, string> = {
   'Sverige': '#FFCD00',
   'Frankrike': '#0055A4',
@@ -307,29 +332,32 @@ export default function WorldCupGuidePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-10">
           <div className="label text-swe-yellow/70 mb-2">VM-Bibel · 2026</div>
-          <h1 className="font-display font-black text-5xl sm:text-7xl lg:text-[110px] uppercase tracking-tight text-white leading-none">
-            VM 2026<br /><span className="text-swe-yellow">Guiden</span>
+          <h1 className="font-display font-black uppercase tracking-tight leading-none">
+            <span className="block text-white" style={{ fontSize: 'clamp(28px, 4.5vw, 56px)' }}>VM 2026</span>
+            <span className="block text-swe-yellow" style={{ fontSize: 'clamp(72px, 14vw, 160px)' }}>GUIDEN</span>
           </h1>
-          <p className="text-white/50 text-sm mt-4">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
-          <p className="mt-2 text-xs text-white/35">
-            Senast uppdaterad: {lastUpdated ? new Date(lastUpdated).toLocaleString('sv-SE') : 'Data tillgänglig från 11 juni 2026'}
-          </p>
+          <p className="text-white/45 text-sm mt-3">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
         </div>
       </div>
 
-      {/* Facts strip */}
+      {/* Stat strip — open editorial, no boxes */}
       <div className="border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-4">
-          <div className="grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex divide-x divide-white/[0.12]">
             {[
               { label: 'Lag', value: '48' },
-              { label: 'Grupper', value: '12 (A–L)' },
+              { label: 'Grupper', value: '12 · A–L' },
               { label: 'Matcher', value: '104' },
-              { label: 'Final', value: '19 jul · MetLife' },
+              { label: 'Final', value: '19 jul' },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-navy-900 px-4 py-4 text-center">
-                <div className="font-display font-black text-2xl sm:text-3xl text-swe-yellow">{value}</div>
-                <div className="text-[10px] text-white/30 uppercase tracking-wider mt-1">{label}</div>
+              <div key={label} className="flex-1 px-5 lg:px-10 py-6 lg:py-8">
+                <div
+                  className="font-mono font-bold leading-none text-swe-yellow"
+                  style={{ fontSize: 'clamp(30px, 4.5vw, 64px)' }}
+                >
+                  {value}
+                </div>
+                <div className="text-[11px] text-white/40 uppercase tracking-widest mt-2">{label}</div>
               </div>
             ))}
           </div>
@@ -531,87 +559,98 @@ function PlayersTab({
           const nameParts = p.name.split(' ')
           const lastName = nameParts.at(-1) ?? p.name
           const firstNames = nameParts.slice(0, -1).join(' ')
+          const photo = PLAYER_PHOTOS[p.name]
           return (
             <div
               key={p.name}
-              className="relative overflow-hidden cursor-pointer bg-[#070e1c] hover:bg-[#0a1525] transition-colors"
-              style={{ minHeight: '280px' }}
+              className="relative overflow-hidden cursor-pointer bg-[#070e1c]"
+              style={isExpanded ? { minHeight: '520px' } : { aspectRatio: '2/3' }}
               onClick={() => setExpanded(isExpanded ? null : p.name)}
             >
-              {/* Ghost surname watermark */}
-              <div className="absolute inset-0 flex items-end justify-end overflow-hidden pointer-events-none select-none">
-                <span
-                  className="font-display font-black text-white leading-none"
-                  style={{ fontSize: '140px', opacity: 0.055, letterSpacing: '-0.04em', paddingRight: '8px', paddingBottom: '4px' }}
-                >
-                  {lastName.toUpperCase()}
-                </span>
-              </div>
+              {/* Photo */}
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photo}
+                  alt={p.name}
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-end justify-end overflow-hidden pointer-events-none select-none">
+                  <span
+                    className="font-display font-black text-white leading-none"
+                    style={{ fontSize: '140px', opacity: 0.06, letterSpacing: '-0.04em', paddingRight: '8px', paddingBottom: '4px' }}
+                  >
+                    {lastName.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
 
               {/* Left accent stripe */}
               <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: accentColor }} />
 
               {/* Top row: country badge + rating */}
-              <div className="relative z-10 flex items-start justify-between px-5 pt-5">
+              <div className="absolute top-0 left-0 right-0 z-10 flex items-start justify-between p-4">
                 <div className="flex items-center gap-1.5">
                   {p.flag && <span className="text-lg leading-none">{p.flag}</span>}
                   <span
-                    className="text-[9px] font-display font-black uppercase tracking-widest border px-1.5 py-0.5"
-                    style={{ color: accentColor, borderColor: `${accentColor}50` }}
+                    className="text-[9px] font-display font-black uppercase tracking-widest border px-1.5 py-0.5 bg-black/50"
+                    style={{ color: accentColor, borderColor: `${accentColor}55` }}
                   >
                     {p.country}
                   </span>
                 </div>
                 <div className="text-right leading-none">
-                  <div className="font-mono font-bold text-[52px] leading-none" style={{ color: accentColor }}>
+                  <div className="font-mono font-bold text-[44px] leading-none" style={{ color: accentColor }}>
                     {p.rating}
                   </div>
-                  <div className="text-white/20 text-xs font-mono -mt-1 text-right">/10</div>
+                  <div className="text-white/25 text-[10px] font-mono -mt-1">/10</div>
                 </div>
               </div>
 
-              {/* Player name */}
-              <div className="relative z-10 px-5 mt-4">
+              {/* Bottom: name + details */}
+              <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
                 {firstNames && (
-                  <div className="font-display font-black text-base uppercase text-white/45 leading-none tracking-wide">
+                  <div className="font-display font-black text-base uppercase text-white/55 leading-none tracking-wide">
                     {firstNames}
                   </div>
                 )}
                 <div
                   className="font-display font-black uppercase leading-none mt-0.5"
-                  style={{ fontSize: 'clamp(28px, 3vw, 42px)', color: accentColor, letterSpacing: '-0.02em' }}
+                  style={{ fontSize: 'clamp(26px, 3vw, 38px)', color: accentColor, letterSpacing: '-0.02em' }}
                 >
                   {lastName}
                 </div>
-                <div className="text-white/30 text-[11px] uppercase tracking-wider mt-2">
+                <div className="text-white/35 text-[11px] uppercase tracking-wider mt-1.5">
                   {p.position} · {p.club} · {p.age} år
                 </div>
-              </div>
-
-              {/* Season stat */}
-              {p.stat && (
-                <div className="relative z-10 px-5 mt-3">
-                  <span className="font-display font-black text-lg text-white">{p.stat}</span>
-                  <span className="text-white/30 text-[10px] ml-2">{p.statLabel}</span>
-                </div>
-              )}
-              {stat && (
-                <div className="relative z-10 px-5 mt-1">
-                  <span className="text-white/20 text-[10px] font-mono">
-                    <PlayerStatsLine stat={stat} />
-                  </span>
-                </div>
-              )}
-
-              {/* Why / Style */}
-              <div className="relative z-10 px-5 pt-3 pb-5">
-                <p className={`text-xs text-white/40 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                  {p.why}
-                </p>
-                {isExpanded && p.style && (
-                  <div className="border-l-2 mt-3 pl-3" style={{ borderColor: accentColor }}>
-                    <p className="text-xs text-white/35 italic leading-relaxed">{p.style}</p>
+                {p.stat && (
+                  <div className="mt-1.5">
+                    <span className="font-display font-black text-sm text-white">{p.stat}</span>
+                    <span className="text-white/30 text-[10px] ml-1.5">{p.statLabel}</span>
                   </div>
+                )}
+                {stat && !p.stat && (
+                  <div className="text-white/20 text-[10px] font-mono mt-1">
+                    <PlayerStatsLine stat={stat} />
+                  </div>
+                )}
+                {isExpanded && (
+                  <div className="border-t border-white/15 mt-3 pt-3 space-y-2">
+                    <p className="text-[15px] text-white/80 leading-relaxed">{p.why}</p>
+                    {p.style && (
+                      <div className="border-l-2 pl-3 mt-2" style={{ borderColor: accentColor }}>
+                        <p className="text-sm text-white/45 italic leading-relaxed">{p.style}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!isExpanded && (
+                  <p className="text-[11px] text-white/30 line-clamp-1 mt-1">{p.why}</p>
                 )}
               </div>
             </div>
