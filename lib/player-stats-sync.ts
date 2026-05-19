@@ -98,9 +98,12 @@ async function squadForNationality(player: PlayerRegistryEntry): Promise<{ id: n
 }
 
 async function searchPlayerDirectly(player: PlayerRegistryEntry): Promise<number | null> {
+  const nationalTeamId = await resolveNationalTeamId(player)
+  if (!nationalTeamId) return null
+
   const query = encodeURIComponent(surname(player.name))
   const json = await apiFootballFetch<ApiPlayerSearchResponse>(
-    `/players?search=${query}&season=${CLUB_SEASON}`
+    `/players?search=${query}&team=${nationalTeamId}&season=${CLUB_SEASON}`
   )
   const candidates = json?.response ?? []
   const normalizedTarget = normalizeName(player.name)
@@ -109,10 +112,7 @@ async function searchPlayerDirectly(player: PlayerRegistryEntry): Promise<number
 
   const match = candidates.find(row => {
     const candidate = normalizeName(row.player.name)
-    const natMatch = !row.player.nationality ||
-      normalizeName(row.player.nationality).includes(normalizeName(player.nationality)) ||
-      normalizeName(player.nationality).includes(normalizeName(row.player.nationality))
-    return natMatch && (
+    return (
       candidate === normalizedTarget ||
       (surname(row.player.name) === targetSurname && firstInitial(row.player.name) === targetInitial) ||
       candidate.includes(normalizedTarget) ||
