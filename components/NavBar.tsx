@@ -84,6 +84,7 @@ export default function NavBar({ userName }: NavBarProps) {
           {navLink('/worldcup-guide', 'VM-bibel')}
           {navLink('/regler', 'Regler')}
           {isAdmin && navLink('/admin', 'Admin')}
+          {!userName && navLink('/login', 'Logga in')}
 
           {userName && (
             <div className="ml-3 shrink-0">

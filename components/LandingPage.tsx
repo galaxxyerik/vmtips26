@@ -140,7 +140,7 @@ export default function LandingPage() {
             <Link href="/dashboard" className="shrink-0 hover:text-white transition-colors">Tabell</Link>
             <Link href="/worldcup-guide" className="shrink-0 hover:text-white transition-colors">VM-bibel</Link>
             <Link href="/regler" className="shrink-0 hover:text-white transition-colors">Regler</Link>
-            <Link href={isAdmin ? '/admin' : '/login'} className="shrink-0 hover:text-white transition-colors">Admin</Link>
+            <Link href={isAdmin ? '/admin' : '/login'} className="shrink-0 hover:text-white transition-colors">{isAdmin ? 'Admin' : 'Logga in'}</Link>
           </div>
         </div>
       </nav>

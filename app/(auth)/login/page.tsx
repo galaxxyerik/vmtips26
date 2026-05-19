@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError('Fel e-post eller lösenord.')
@@ -26,7 +26,22 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/')
+    const userId = data.user?.id
+    if (userId) {
+      const { data: submission } = await supabase
+        .from('vmt_submissions')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (submission?.id) {
+        router.push(`/dashboard/${submission.id}`)
+        router.refresh()
+        return
+      }
+    }
+
+    router.push('/dashboard')
     router.refresh()
   }
 
@@ -37,7 +52,7 @@ export default function LoginPage() {
           <Link href="/" className="font-display font-black text-2xl uppercase tracking-[0.06em] text-white">
             VM<span className="text-swe-yellow">-TIPS 26</span>
           </Link>
-          <p className="text-white/40 text-sm mt-2">Admin-inloggning</p>
+          <p className="text-white/40 text-sm mt-2">Logga in för att se ditt tips</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4">
@@ -79,6 +94,10 @@ export default function LoginPage() {
             {loading ? 'Loggar in...' : 'Logga in'}
           </button>
         </form>
+
+        <p className="text-center text-xs text-white/30 leading-relaxed">
+          Konto skapas automatiskt om du fyllde i lösenord när du skickade in tipset.
+        </p>
 
         <p className="text-center text-xs text-white/20">
           <Link href="/" className="hover:text-white transition-colors">← Tillbaka till startsidan</Link>
