@@ -19,7 +19,7 @@ interface GroupData {
   groupScorer: string | null
 }
 
-interface BracketPick {
+export interface BracketPick {
   match_number: number
   pick_team: string
   round: string
@@ -47,7 +47,7 @@ export interface SubmissionRowProps {
 
 const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
 
-const ROUND_ORDER = ['r32','r16','qf','sf','bronze','final'] as const
+const DISPLAY_ROUNDS = ['r32','r16','qf','sf','final'] as const
 
 const ROUND_LABELS: Record<string, string> = {
   r32: 'Sextondelsfinal',
@@ -301,11 +301,14 @@ function GruppspelSection({
 
 // ── Section: Slutspel ─────────────────────────────────────────────────────────
 
-function SlutspelSection({ bracketPicks }: { bracketPicks: BracketPick[] }) {
+export function SlutspelSection({ bracketPicks }: { bracketPicks: BracketPick[] }) {
   const byRound: Record<string, BracketPick[]> = {}
   for (const p of bracketPicks) {
     if (!byRound[p.round]) byRound[p.round] = []
     byRound[p.round].push(p)
+  }
+  for (const round of Object.keys(byRound)) {
+    byRound[round].sort((a, b) => a.match_number - b.match_number)
   }
 
   if (bracketPicks.length === 0) {
@@ -321,38 +324,42 @@ function SlutspelSection({ bracketPicks }: { bracketPicks: BracketPick[] }) {
     <div className="px-4 py-4 space-y-4">
       <div className="label text-swe-yellow/60">Sektion 2 — Slutspel</div>
 
-      {ROUND_ORDER.map(round => {
+      {DISPLAY_ROUNDS.map(round => {
         const picks = byRound[round]
         if (!picks?.length) return null
 
         const isR32 = round === 'r32'
         const isFinal = round === 'final'
-        const isSF = round === 'sf'
+        const subtitle = !isFinal ? `${picks.length} lag vidare` : null
 
         return (
           <div key={round}>
             <div className="flex items-center gap-2 mb-2">
               <span className="label text-[9px]">{ROUND_LABELS[round]}</span>
-              {!isFinal && !isSF && (
-                <span className="text-[9px] text-white/20">{picks.length} lag vidare</span>
+              {subtitle && (
+                <span className="text-[9px] text-white/20">{subtitle}</span>
               )}
             </div>
 
             {isFinal ? (
               // Final — show both finalists from SF picks + champion
               <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-3 py-2.5">
-                {(byRound['sf'] ?? []).map((p, i) => (
+                {(byRound['sf'] ?? []).length > 0 ? (byRound['sf'] ?? []).map((p, i) => (
                   <div key={p.match_number} className="text-xs text-white/60 mb-0.5">
                     Finalist {i + 1}: <span className="text-white/80 font-medium">{p.pick_team}</span>
                   </div>
-                ))}
-                {picks.map(p => (
+                )) : (
+                  <div className="text-xs text-white/30">Finalister saknas.</div>
+                )}
+                {picks.length > 0 ? picks.map(p => (
                   <div key={p.match_number} className="text-sm font-display font-black text-swe-yellow mt-1">
                     🏆 VM-vinnare: {p.pick_team}
                   </div>
-                ))}
+                )) : (
+                  <div className="text-xs text-white/30 mt-1">VM-vinnare saknas.</div>
+                )}
               </div>
-            ) : isSF ? null /* SF shown inside Final block */ : isR32 ? (
+            ) : isR32 ? (
               // R32 — compact 2-column tag cloud
               <div className="flex flex-wrap gap-1.5">
                 {picks.map(p => (

@@ -1,7 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import SetupAdminButton from './SetupAdminButton'
+import TestEmailButton from './TestEmailButton'
 import { AdminSubmissionRow } from './AdminSubmissionRow'
 
 export const dynamic = 'force-dynamic'
@@ -220,6 +222,19 @@ export default async function AdminPage() {
             <div>
               <div className="text-xs text-white/50 mb-2">Återskapa/återställ adminlösenordet i Supabase Auth.</div>
               <SetupAdminButton />
+            </div>
+            <div>
+              <div className="text-xs text-white/50 mb-2">Skicka ett enkelt testmail via Resend till adminadressen.</div>
+              <TestEmailButton />
+            </div>
+            <div>
+              <div className="text-xs text-white/50 mb-2">Öppna en fast preview av admin-vyns slutspel med komplett testdata.</div>
+              <Link
+                href="/admin/bracket-preview"
+                className="inline-flex h-9 items-center border border-white/15 px-4 text-sm font-display font-black text-white/70 transition-colors hover:border-white/30 hover:text-white"
+              >
+                Öppna bracket-preview
+              </Link>
             </div>
             <div>
               <div className="label mb-2">Skapa innehållstabell (kör en gång i Supabase SQL-editor)</div>
