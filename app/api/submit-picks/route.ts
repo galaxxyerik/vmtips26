@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, password, submissionId, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks } = body
 
-    if (!name?.trim() || !email?.trim()) {
+    const normalizedName = name?.trim()
+    const normalizedEmail = normalizeEmail(email)
+
+    if (!normalizedName || !normalizedEmail) {
       return NextResponse.json({ error: 'Namn och e-post krävs.' }, { status: 400 })
     }
 
@@ -41,7 +44,18 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient()
-    const canUpdateExisting = !!submissionId && !!user && canEditPicks()
+    const canEdit = canEditPicks()
+
+    const { data: existingByEmail } = await supabase
+      .from('vmt_submissions')
+      .select('id, user_id')
+      .ilike('email', normalizedEmail)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const canUpdateProvidedSubmission = !!submissionId && !!user && canEdit
+    const canUpdateOwnSubmissionByEmail = !!existingByEmail && !!user && existingByEmail.user_id === user.id && canEdit
 
     // Create auth user if password provided
     let userId: string | null = null
@@ -49,9 +63,9 @@ export async function POST(req: NextRequest) {
       userId = user.id
     } else if (password && password.length >= 8) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
+        email: normalizedEmail,
         password,
-        user_metadata: { name },
+        user_metadata: { name: normalizedName },
         email_confirm: true,
       })
       if (authError && !authError.message.includes('already registered')) {
@@ -64,13 +78,16 @@ export async function POST(req: NextRequest) {
     let sid: string
     let isUpdate = false
 
-    if (canUpdateExisting) {
-      const { data: existing } = await supabase
-        .from('vmt_submissions')
-        .select('id, user_id')
-        .eq('id', submissionId)
-        .eq('user_id', user.id)
-        .maybeSingle()
+    if (canUpdateProvidedSubmission || canUpdateOwnSubmissionByEmail) {
+      const existing = canUpdateOwnSubmissionByEmail
+        ? existingByEmail
+        : await supabase
+            .from('vmt_submissions')
+            .select('id, user_id')
+            .eq('id', submissionId)
+            .eq('user_id', user!.id)
+            .maybeSingle()
+            .then(({ data }) => data)
 
       if (!existing) {
         return NextResponse.json({ error: 'Kunde inte hitta ditt befintliga tips.' }, { status: 404 })
@@ -81,7 +98,7 @@ export async function POST(req: NextRequest) {
 
       const { error: updateError } = await supabase
         .from('vmt_submissions')
-        .update({ name, email, submitted_at: new Date().toISOString(), total_points: 0 })
+        .update({ name: normalizedName, email: normalizedEmail, submitted_at: new Date().toISOString(), total_points: 0 })
         .eq('id', sid)
 
       if (updateError) {
@@ -98,10 +115,16 @@ export async function POST(req: NextRequest) {
         supabase.from('vmt_bracket_picks').delete().eq('submission_id', sid),
       ])
     } else {
+      if (existingByEmail) {
+        return NextResponse.json({
+          error: 'Det finns redan ett tips registrerat på den här e-posten. Logga in för att uppdatera det befintliga tipset eller använd en annan e-postadress.',
+        }, { status: 409 })
+      }
+
       // Create submission
       const { data: submission, error: subError } = await supabase
         .from('vmt_submissions')
-        .insert({ name, email, user_id: userId })
+        .insert({ name: normalizedName, email: normalizedEmail, user_id: userId })
         .select('id')
         .single()
 
@@ -162,17 +185,17 @@ export async function POST(req: NextRequest) {
     if (!isUpdate) {
       await supabase.from('vmt_notifications').insert({
         type: 'new_submission',
-        payload: { name, email, submission_id: sid, submitted_at: new Date().toISOString() },
+        payload: { name: normalizedName, email: normalizedEmail, submission_id: sid, submitted_at: new Date().toISOString() },
       })
     }
 
     try {
       await sendMail({
-        to: email,
+        to: normalizedEmail,
         subject: 'Ditt VM-tips har skickats in',
         html: `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-            <h2 style="margin:0 0 12px">Tack ${escapeHtml(name)}!</h2>
+            <h2 style="margin:0 0 12px">Tack ${escapeHtml(normalizedName)}!</h2>
             <p>${isUpdate ? 'Ditt tips för VM-tips 26 har nu uppdaterats.' : 'Ditt tips för VM-tips 26 har nu skickats in.'}</p>
             ${isUpdate ? '<p>Din tidigare inlämning har ersatts med den nya versionen.</p>' : '<p>Glöm inte att swisha 100 kr till Erik Engstrand på 0768919007.</p><p>Vi skickar ett nytt mail när tipset har bekräftats.</p>'}
           </div>
@@ -206,4 +229,8 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
+}
+
+function normalizeEmail(value: unknown): string {
+  return typeof value === 'string' ? value.trim().toLowerCase() : ''
 }

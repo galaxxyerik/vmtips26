@@ -8,14 +8,17 @@ const AMOUNT = 100
 const MESSAGE = 'VM-tips 2026'
 
 function buildSwishLink(phoneNumber: string) {
-  const data = JSON.stringify({
-    version: 1,
-    payee: { value: SWISH_NUMBER, editable: false },
-    amount: { value: AMOUNT, editable: false },
-    message: { value: MESSAGE, editable: false },
-    payer: phoneNumber ? { value: phoneNumber.replace(/\D/g, ''), editable: false } : undefined,
+  const params = new URLSearchParams({
+    sw: SWISH_NUMBER.replace(/\D/g, ''),
+    amt: String(AMOUNT),
+    msg: MESSAGE,
+    src: 'app',
   })
-  return `swish://payment?data=${encodeURIComponent(data)}`
+
+  const cleanedPhone = phoneNumber.replace(/\D/g, '')
+  if (cleanedPhone) params.set('pnum', cleanedPhone)
+
+  return `https://app.swish.nu/1/p/sw/?${params.toString()}`
 }
 
 const QR_LINK = buildSwishLink('')
@@ -70,6 +73,8 @@ export default function SwishPayment() {
           </div>
           <a
             href={buildSwishLink(phone)}
+            target="_blank"
+            rel="noreferrer"
             className="btn-primary flex items-center justify-center gap-2 h-10 text-sm w-full"
           >
             Öppna Swish

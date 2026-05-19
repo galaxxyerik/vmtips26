@@ -133,6 +133,14 @@ export default function GroupStagePage() {
           </div>
         </div>
       </div>
+      <div className="mb-4 border border-white/10 bg-white/[0.03] px-4 py-3">
+        <div className="font-display font-black text-[11px] uppercase tracking-[0.18em] text-swe-yellow/70">
+          Sparas automatiskt
+        </div>
+        <p className="mt-1 text-sm leading-relaxed text-white/45">
+          Du behöver inte fylla i allt nu. Så länge du återkommer med samma mejl sparas det du redan tippat.
+        </p>
+      </div>
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center gap-2 text-xs">

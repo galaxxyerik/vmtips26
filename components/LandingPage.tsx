@@ -166,6 +166,9 @@ export default function LandingPage({ userName }: LandingPageProps) {
           <button type="submit" disabled={!canStart} className="btn-primary w-full text-base">
             Påbörja ditt tips →
           </button>
+          <p className="text-xs text-white/35 leading-relaxed">
+            Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
+          </p>
         </form>
 
         <Editable
@@ -174,6 +177,40 @@ export default function LandingPage({ userName }: LandingPageProps) {
           as="p"
           className="mt-4 text-xs text-white/20 tnum"
         />
+
+        <div className="mt-8 max-w-3xl border border-white/10 bg-navy-950/35 backdrop-blur-sm">
+          <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+            {[
+              {
+                step: '01',
+                title: 'Tippa hela VM',
+                body: 'Gruppspel, slutspel och skyttekung i ett sammanhållet tips.',
+              },
+              {
+                step: '02',
+                title: 'Lägg 100 kr via Swish',
+                body: 'Skicka in när du är klar. Samma mejl låter dig fortsätta där du slutade fram till deadline.',
+              },
+              {
+                step: '03',
+                title: 'Följ tabellen live',
+                body: 'Se poängen ticka in under VM och jämför ditt tips med kompisarnas i ledartavlan.',
+              },
+            ].map(item => (
+              <div key={item.step} className="px-4 py-4 sm:px-5 sm:py-5">
+                <div className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-swe-yellow/75">
+                  {item.step}
+                </div>
+                <div className="mt-2 font-display font-black uppercase tracking-wide text-sm text-white">
+                  {item.title}
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/45">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Bottom strap — Sverige info */}
