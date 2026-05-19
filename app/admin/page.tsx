@@ -236,20 +236,6 @@ export default async function AdminPage() {
                 Öppna bracket-preview
               </Link>
             </div>
-            <div>
-              <div className="label mb-2">Skapa innehållstabell (kör en gång i Supabase SQL-editor)</div>
-              <pre className="bg-navy-950 border border-white/10 text-[11px] text-white/60 p-3 overflow-x-auto leading-relaxed font-mono select-all">{`create table if not exists vmt_page_content (
-  key text primary key,
-  value text not null,
-  updated_at timestamptz default now()
-);
-alter table vmt_page_content enable row level security;
-create policy "Public read" on vmt_page_content
-  for select using (true);`}</pre>
-              <div className="text-[11px] text-white/30 mt-1">
-                När tabellen finns kan du trycka på &ldquo;✎ Redigera sida&rdquo;-knappen (nere till höger) för att redigera text och bilder direkt på sidan.
-              </div>
-            </div>
           </div>
         </div>
 
