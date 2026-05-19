@@ -206,6 +206,27 @@ const FAVORITES = [
   { country: 'Marocko', flag: '🇲🇦', pct: 6 },
 ]
 
+// ── Player photo IDs (api-sports.io) ──────────────────────────────────────────
+
+const PLAYER_API_IDS: Record<string, number> = {
+  'Viktor Gyökeres': 18979, 'Kylian Mbappé': 278, 'Vinicius Jr': 762,
+  'Jude Bellingham': 129718, 'Lamine Yamal': 386828, 'Erling Haaland': 1100,
+  'Pedri': 133609, 'Bukayo Saka': 1460, 'Cody Gakpo': 247,
+  'Endrick': 425733, 'Estêvão Willian': 340279, 'Lionel Messi': 154,
+  'Cristiano Ronaldo': 874, 'Mohamed Salah': 306, 'Harry Kane': 184,
+  'Phil Foden': 631, 'Federico Valverde': 756,
+  'Virgil van Dijk': 290, 'Xavi Simons': 162016, 'Tijjani Reijnders': 36902,
+  'Takumi Minamino': 1101, 'Kaoru Mitoma': 106835, 'Daichi Kamada': 2601,
+  'Wahbi Khazri': 22102, 'Alexander Isak': 2864,
+  'Victor Nilsson Lindelöf': 889, 'Lucas Bergvall': 347316,
+  'Anthony Elanga': 153430,
+}
+
+function playerPhotoUrl(name: string): string | null {
+  const id = PLAYER_API_IDS[name]
+  return id ? `https://media.api-sports.io/football/players/${id}.png` : null
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 type Tab = 'grupper' | 'stjärnor' | 'talanger' | 'sverige' | 'favoriter' | 'mörkhästar' | 'fakta'
@@ -290,20 +311,21 @@ export default function WorldCupGuidePage() {
       </div>
 
       {/* Tab bar */}
-      <div className="sticky top-14 z-40 bg-navy-950/95 backdrop-blur border-b border-white/10">
-        <div className="mx-auto max-w-4xl px-4">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
+      <div className="sticky top-14 z-40 bg-navy-950 border-b border-white/10">
+        <div className="mx-auto max-w-4xl">
+          <div className="flex overflow-x-auto scrollbar-hide">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-shrink-0 px-3 py-1.5 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap border ${
-                  tab === t.id
-                    ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
-                    : 'text-white/40 hover:text-white border-white/10 hover:border-white/30'
+                className={`relative flex-shrink-0 px-4 py-3.5 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap ${
+                  tab === t.id ? 'text-white' : 'text-white/35 hover:text-white/70'
                 }`}
               >
                 {t.label}
+                {tab === t.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-swe-yellow" />
+                )}
               </button>
             ))}
           </div>
@@ -345,72 +367,87 @@ const FLAG_MAP: Record<string, string> = {
 function GroupsTab() {
   return (
     <div className="space-y-0">
-      <div className="border border-white/10 px-4 py-3 bg-navy-900 mb-4">
-        <div className="label mb-1">VM 2026 · Gruppspel</div>
-        <p className="text-white/40 text-xs leading-relaxed">
-          12 grupper (A–L) · 4 lag vardera · De 2 bästa + 8 bästa tredjeplacerade går vidare
-          <span className="mx-2">·</span>
-          <span className="text-pitch-400 font-display font-black">W</span> = etta ·{' '}
-          <span className="text-swe-yellow font-display font-black">Q</span> = vidare ·{' '}
-          <span className="text-white/25 font-display font-black">E</span> = åker hem
+      {/* Editorial header */}
+      <div className="mb-8">
+        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+          Gruppspel
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <p className="text-white/40 text-sm mt-3">
+          12 grupper · A–L · De 2 bästa + 8 bästa tredjeplacerade vidare ·{' '}
+          <span className="text-swe-yellow font-display font-black">W</span> = etta ·{' '}
+          <span className="text-white/60 font-display font-black">Q</span> = vidare ·{' '}
+          <span className="text-white/20 font-display font-black">E</span> = åker hem
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-px sm:grid-cols-2 bg-white/5">
         {GROUPS.map(g => (
           <div
             key={g.letter}
-            className={`border ${g.letter === 'F' ? 'border-swe-yellow/30' : 'border-white/10'}`}
+            className={`relative overflow-hidden bg-navy-950 ${
+              g.letter === 'F' ? 'border border-swe-yellow/30' : ''
+            }`}
           >
-            {/* Group header */}
-            <div className={`px-4 py-2 flex items-center justify-between ${
-              g.letter === 'F' ? 'bg-swe-yellow/10' : 'bg-navy-900'
-            }`}>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-black text-base uppercase tracking-wider text-white">
-                  Grupp {g.letter}
-                </span>
-                {g.letter === 'F' && (
-                  <span className="text-[9px] font-display font-black uppercase tracking-wider border border-swe-yellow/40 text-swe-yellow px-1.5 py-0.5">
-                    Sverige
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-white/30 font-display font-black uppercase truncate ml-2">
-                {g.hotMatch}
+            {/* Giant background letter */}
+            <div className="absolute inset-0 flex items-center justify-end pr-4 pointer-events-none overflow-hidden">
+              <span
+                className="font-display font-black leading-none select-none text-swe-yellow"
+                style={{ fontSize: '180px', opacity: g.letter === 'F' ? 0.10 : 0.055 }}
+              >
+                {g.letter}
               </span>
             </div>
 
+            {/* Group header */}
+            <div className={`relative px-4 py-2.5 flex items-center justify-between border-b ${
+              g.letter === 'F' ? 'border-swe-yellow/20 bg-swe-yellow/5' : 'border-white/5 bg-navy-900/60'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <span className="font-display font-black text-xl uppercase tracking-widest text-white">
+                  {g.letter}
+                </span>
+                <span className="text-white/20 text-xs">·</span>
+                <span className="text-[10px] font-display font-black text-white/35 uppercase tracking-wider">
+                  {g.hotMatch}
+                </span>
+              </div>
+              {g.letter === 'F' && (
+                <span className="text-[9px] font-display font-black uppercase tracking-wider border border-swe-yellow/40 text-swe-yellow px-1.5 py-0.5">
+                  Sverige
+                </span>
+              )}
+            </div>
+
             {/* Teams */}
-            <div className="divide-y divide-white/5">
+            <div className="relative divide-y divide-white/5">
               {g.teams.map(team => (
-                <div key={team.name} className="flex items-center gap-2 px-4 py-2">
+                <div key={team.name} className={`flex items-center gap-2.5 px-4 py-2 ${
+                  team.name === 'Sverige' ? 'bg-swe-yellow/5' : ''
+                }`}>
                   {FLAG_MAP[team.name] ? (
-                    <img
-                      src={FLAG_MAP[team.name]}
-                      alt={team.name}
-                      className="w-5 h-3.5 object-cover flex-shrink-0 opacity-80"
-                    />
+                    <img src={FLAG_MAP[team.name]} alt={team.name}
+                      className="w-5 h-3.5 object-cover flex-shrink-0 opacity-80" />
                   ) : (
                     <span className="w-5 h-3.5 flex-shrink-0" />
                   )}
-                  <span className={`flex-1 text-sm font-medium ${
-                    team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/80'
+                  <span className={`flex-1 font-display font-black uppercase tracking-wide text-sm ${
+                    team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/75'
                   }`}>{team.name}</span>
                   <span className={`text-[10px] font-display font-black px-1.5 py-0.5 border ${
                     team.prediction === 'W'
-                      ? 'text-pitch-400 border-pitch-500/30 bg-pitch-900/20'
+                      ? 'text-swe-yellow border-swe-yellow/40'
                       : team.prediction === 'Q'
-                      ? 'text-swe-yellow border-swe-yellow/30'
-                      : 'text-white/20 border-white/10'
+                      ? 'text-white/50 border-white/15'
+                      : 'text-white/15 border-white/8'
                   }`}>{team.prediction}</span>
                 </div>
               ))}
             </div>
 
             {/* Analysis */}
-            <div className="px-4 py-2.5 border-t border-white/5">
-              <p className="text-[11px] text-white/40 leading-relaxed">{g.analysis}</p>
+            <div className="relative px-4 py-2.5 border-t border-white/5">
+              <p className="text-[11px] text-white/35 leading-relaxed">{g.analysis}</p>
             </div>
           </div>
         ))}
@@ -452,58 +489,86 @@ function PlayersTab({
 
   return (
     <div>
-      <div className="border border-white/10 px-4 py-3 bg-navy-900 mb-4">
-        <div className="label mb-0.5">{title}</div>
-        <p className="text-white/40 text-xs">{subtitle}</p>
+      {/* Editorial section header */}
+      <div className="mb-8">
+        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+          {title}
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <p className="text-white/40 text-sm mt-3">{subtitle}</p>
       </div>
 
-      <div className="border border-white/10 divide-y divide-white/5">
-        {players.map((p, i) => (
-          <div key={p.name}>
-            <button
-              className="w-full flex items-center gap-0 text-left hover:bg-navy-900/40 transition-colors"
-              onClick={() => setExpanded(expanded === p.name ? null : p.name)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
+        {players.map(p => {
+          const isExpanded = expanded === p.name
+          const photo = playerPhotoUrl(p.name)
+          const stat = statFor(stats, p.name)
+          return (
+            <div
+              key={p.name}
+              className="relative overflow-hidden cursor-pointer bg-[#0d1d35] group"
+              style={isExpanded ? { minHeight: '420px' } : { aspectRatio: '3/4' }}
+              onClick={() => setExpanded(isExpanded ? null : p.name)}
             >
-              {/* Main info */}
-              <div className="flex-1 px-4 py-3 min-w-0">
-                <div className="font-display font-black uppercase tracking-wide text-white text-base leading-tight">
+              {/* Photo */}
+              {photo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photo}
+                  alt={p.name}
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              )}
+
+              {/* Gradient overlay — bottom heavy */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+              {/* Rating — top right */}
+              <div className="absolute top-4 right-4 text-right leading-none">
+                <div className="font-mono font-bold text-[72px] sm:text-[96px] text-swe-yellow leading-none">
+                  {p.rating}
+                </div>
+                <div className="text-white/30 text-sm font-mono -mt-2">/10</div>
+              </div>
+
+              {/* Country flag chip — top left */}
+              <div className="absolute top-4 left-4">
+                <span className="font-display font-black text-[10px] uppercase tracking-widest border border-white/20 bg-black/50 text-white/70 px-2 py-1">
+                  {p.country}
+                </span>
+              </div>
+
+              {/* Bottom info */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 space-y-1">
+                <div className="font-display font-black text-2xl sm:text-3xl uppercase tracking-wide text-white leading-tight">
                   {p.name}
                 </div>
-                <div className="text-[11px] text-white/35 mt-0.5">
-                  {p.position} · {p.club} · {p.country} · {p.age} år
+                <div className="text-white/40 text-[11px] uppercase tracking-wider">
+                  {p.position} · {p.club} · {p.age} år
                 </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[10px] font-display font-black border border-pitch-500/30 text-pitch-400 px-1.5 py-0.5">
-                    <PlayerStatsLine stat={statFor(stats, p.name)} />
-                  </span>
-                  <span className="text-[10px] text-white/25">API-Football</span>
-                </div>
-              </div>
+                {stat && (
+                  <div className="text-white/30 text-[10px] font-mono pt-0.5">
+                    <PlayerStatsLine stat={stat} />
+                  </div>
+                )}
 
-              {/* Rating */}
-              <div className="px-4 text-right flex-shrink-0">
-                <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
-                <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
-              </div>
-            </button>
+                {isExpanded && (
+                  <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
+                    <p className="text-sm text-white/70 leading-relaxed">{p.why}</p>
+                    <div className="border-l-2 border-swe-yellow pl-3">
+                      <p className="text-xs text-white/45 leading-relaxed italic">{p.style}</p>
+                    </div>
+                  </div>
+                )}
 
-            {expanded === p.name && (
-              <div className="px-4 pb-4 pt-3 border-t border-white/5 bg-navy-900/30 space-y-3">
-                <p className="text-sm text-white/65 leading-relaxed">{p.why}</p>
-                <div className="border border-white/10 px-3 py-2.5">
-                  <div className="label text-[9px] mb-1">Spelstil</div>
-                  <p className="text-xs text-white/50 leading-relaxed">{p.style}</p>
-                </div>
+                {!isExpanded && (
+                  <p className="text-[11px] text-white/25 line-clamp-1 pt-0.5">{p.why}</p>
+                )}
               </div>
-            )}
-
-            {expanded !== p.name && (
-              <div className="px-4 pb-2.5 -mt-1">
-                <p className="text-[11px] text-white/30 line-clamp-1">{p.why}</p>
-              </div>
-            )}
-          </div>
-        ))}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -626,59 +691,67 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
       </div>
 
       {/* ── Featured players ── */}
-      <div className="border border-white/10 border-t-0">
-        <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
-          <div className="label">Nyckelspelare</div>
-        </div>
-        <div className="divide-y divide-white/5">
-          {FEATURED_PLAYERS.map(p => (
-            <div key={p.name}>
-              {/* Player row */}
-              <button
-                className="w-full flex items-stretch text-left hover:bg-navy-900/40 transition-colors"
-                onClick={() => setExpandedPlayer(expandedPlayer === p.name ? null : p.name)}
+      <div className="pt-8 pb-2">
+        <h2 className="font-display font-black text-4xl sm:text-5xl uppercase tracking-tight text-white leading-none mb-3">
+          Nyckelspelare
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow mb-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
+          {FEATURED_PLAYERS.map(p => {
+            const isExpanded = expandedPlayer === p.name
+            const photo = playerPhotoUrl(p.name) ?? PLAYER_IMAGE_FALLBACKS[p.imageKey]
+            return (
+              <div
+                key={p.name}
+                className="relative overflow-hidden cursor-pointer bg-[#0d1d35]"
+                style={isExpanded ? { minHeight: '380px' } : { aspectRatio: '3/4' }}
+                onClick={() => setExpandedPlayer(isExpanded ? null : p.name)}
               >
-                {/* Photo slot */}
-                <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-navy-900 border-r border-white/5">
-                  <Image
-                    src={PLAYER_IMAGE_FALLBACKS[p.imageKey]}
-                    alt={`${p.name}, ${p.position}, Sverige`}
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-cover object-top"
-                  />
+                {/* Photo */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo}
+                  alt={`${p.name}, Sverige`}
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                {/* Rating */}
+                <div className="absolute top-4 right-4 text-right leading-none">
+                  <div className="font-mono font-bold text-[72px] text-swe-yellow leading-none">{p.rating}</div>
+                  <div className="text-white/30 text-sm font-mono -mt-2">/10</div>
                 </div>
-                {/* Info */}
-                <div className="flex-1 px-4 py-3 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="font-display font-black uppercase tracking-wide text-white text-base leading-tight">
-                        {p.name}
-                      </div>
-                      <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
-                      <div className="text-[10px] text-white/35 mt-1">
-                        <PlayerStatsLine stat={statFor(stats, p.name)} />
+
+                {/* Sverige chip */}
+                <div className="absolute top-4 left-4">
+                  <span className="font-display font-black text-[10px] uppercase tracking-widest border border-swe-yellow/30 bg-black/50 text-swe-yellow px-2 py-1">
+                    Sverige
+                  </span>
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 p-4 space-y-1">
+                  <div className="font-display font-black text-2xl uppercase tracking-wide text-white leading-tight">
+                    {p.name}
+                  </div>
+                  <div className="text-white/40 text-[11px] uppercase tracking-wider">
+                    {p.position} · {p.club} · {p.age} år
+                  </div>
+                  <div className="text-white/25 text-[10px] font-mono">
+                    <PlayerStatsLine stat={statFor(stats, p.name)} />
+                  </div>
+                  {isExpanded && (
+                    <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
+                      <p className="text-sm text-white/70 leading-relaxed">{p.desc}</p>
+                      <div className="border-l-2 border-swe-yellow pl-3">
+                        <p className="text-xs text-white/45 leading-relaxed italic">{p.keyStrength}</p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
-                      <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </button>
-              {/* Expanded */}
-              {expandedPlayer === p.name && (
-                <div className="px-4 pb-4 border-t border-white/5 bg-navy-900/30 space-y-3 pt-3">
-                  <p className="text-sm text-white/65 leading-relaxed">{p.desc}</p>
-                  <div className="border border-white/10 px-3 py-2.5">
-                    <div className="label text-[9px] mb-1">Nyckestyrka</div>
-                    <p className="text-xs text-white/55 leading-relaxed">{p.keyStrength}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -725,25 +798,26 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
 
 function FavoritesTab() {
   return (
-    <div className="space-y-4">
-      <div className="border border-white/10 px-4 py-3 bg-navy-900">
-        <div className="label mb-0.5">Turneringsfavoriter</div>
-        <p className="text-white/40 text-xs">Oddsbaserade vinstchanser för de starkaste lagen.</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+          Favoriter
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <p className="text-white/40 text-sm mt-3">Oddsbaserade vinstchanser för de starkaste lagen.</p>
       </div>
 
-      <div className="border border-white/10 divide-y divide-white/5">
+      <div className="divide-y divide-white/5">
         {FAVORITES.map((f, i) => (
-          <div key={f.country} className="flex items-center gap-4 px-4 py-3">
+          <div key={f.country} className="flex items-center gap-4 py-4">
+            <div className="w-8 font-mono text-white/20 text-sm flex-shrink-0">{String(i + 1).padStart(2, '0')}</div>
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="font-display font-black uppercase tracking-wide text-sm text-white">{f.country}</span>
-                <span className="font-display font-black text-swe-yellow tnum">{f.pct}%</span>
+              <div className="flex justify-between items-baseline mb-2">
+                <span className="font-display font-black uppercase tracking-wide text-xl text-white">{f.country}</span>
+                <span className="font-mono font-bold text-4xl text-swe-yellow leading-none">{f.pct}<span className="text-white/25 text-lg">%</span></span>
               </div>
-              <div className="h-0.5 bg-white/10 overflow-hidden">
-                <div
-                  className="h-full bg-swe-yellow transition-all"
-                  style={{ width: `${(f.pct / 19) * 100}%` }}
-                />
+              <div className="h-[2px] bg-white/8 overflow-hidden">
+                <div className="h-full bg-swe-yellow" style={{ width: `${(f.pct / 19) * 100}%` }} />
               </div>
             </div>
           </div>
@@ -784,36 +858,39 @@ function FavoritesTab() {
 
 function DarkHorsesTab() {
   return (
-    <div className="space-y-4">
-      <div className="border border-white/10 px-4 py-3 bg-navy-900">
-        <div className="label mb-0.5">Skrällchanser</div>
-        <p className="text-white/40 text-xs">Lag som kan gå längre än de flesta tror.</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+          Skrällchanser
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <p className="text-white/40 text-sm mt-3">Lag som kan gå längre än de flesta tror.</p>
       </div>
 
-      <div className="border border-white/10 divide-y divide-white/5">
+      <div className="divide-y divide-white/8">
         {DARK_HORSES.map(d => (
-          <div key={d.country} className="px-4 py-4">
-            <div className="flex items-start gap-3 mb-3">
+          <div key={d.country} className="py-6">
+            <div className="flex items-start gap-4 mb-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span className="font-display font-black uppercase tracking-wide text-white text-base">{d.country}</span>
-                  <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow/80 px-1.5 py-0.5">
-                    Max: {d.maxFinish}
-                  </span>
+                <div className="font-display font-black uppercase tracking-wide text-white text-2xl leading-none mb-1">
+                  {d.country}
                 </div>
-                <div className="text-[11px] text-white/35">Nyckelspelare: {d.keyPlayer}</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow px-1.5 py-0.5">
+                    Max {d.maxFinish}
+                  </span>
+                  <span className="text-[11px] text-white/35 font-display font-black uppercase">{d.keyPlayer}</span>
+                </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <div className="font-display font-black text-xl text-swe-yellow tnum">{d.strength}</div>
-                <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
+              <div className="text-right flex-shrink-0 leading-none">
+                <div className="font-mono font-bold text-5xl text-swe-yellow">{d.strength}</div>
+                <div className="text-white/25 text-xs font-mono -mt-1">/10</div>
               </div>
             </div>
-
-            <div className="h-px bg-white/10 mb-3 overflow-hidden">
-              <div className="h-full bg-swe-yellow/60" style={{ width: `${(d.strength / 10) * 100}%` }} />
+            <div className="h-[2px] bg-white/8 mb-4 overflow-hidden">
+              <div className="h-full bg-swe-yellow" style={{ width: `${(d.strength / 10) * 100}%` }} />
             </div>
-
-            <p className="text-xs text-white/55 leading-relaxed">{d.why}</p>
+            <p className="text-sm text-white/50 leading-relaxed">{d.why}</p>
           </div>
         ))}
       </div>
@@ -825,21 +902,24 @@ function DarkHorsesTab() {
 
 function FactsTab() {
   return (
-    <div className="space-y-4">
-      <div className="border border-white/10 px-4 py-3 bg-navy-900">
-        <div className="label mb-0.5">VM-fakta</div>
-        <p className="text-white/40 text-xs">{FACTS.length} saker du bör veta inför VM 2026.</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none mb-3">
+          VM-fakta
+        </h2>
+        <div className="h-[2px] w-14 bg-swe-yellow" />
+        <p className="text-white/40 text-sm mt-3">{FACTS.length} saker du bör veta inför VM 2026.</p>
       </div>
 
-      <div className="border border-white/10 divide-y divide-white/5">
+      <div className="divide-y divide-white/5">
         {FACTS.map((fact, i) => (
           <div key={i} className="flex gap-0">
-            <div className="w-10 flex-shrink-0 flex items-start justify-center pt-3 border-r border-white/5 bg-navy-900/50">
-              <span className="font-display font-black text-[11px] text-white/20 tnum">
+            <div className="w-14 flex-shrink-0 flex items-start justify-center pt-4 border-r border-white/5">
+              <span className="font-mono text-sm text-white/15 font-bold">
                 {String(i + 1).padStart(2, '0')}
               </span>
             </div>
-            <p className="flex-1 px-4 py-3 text-sm text-white/60 leading-relaxed">{fact}</p>
+            <p className="flex-1 px-5 py-4 text-sm text-white/60 leading-relaxed">{fact}</p>
           </div>
         ))}
       </div>
