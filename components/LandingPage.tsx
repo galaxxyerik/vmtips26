@@ -6,8 +6,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { hasDraft, getDraftStep, getDraftTimestamp, clearDraft, loadDraft, saveDraft } from '@/lib/onboarding-storage'
 import { ONBOARDING_KEY } from '@/lib/types'
-import { useContent } from '@/contexts/AdminEditContext'
 import { Editable } from '@/components/Editable'
+import NavBar from '@/components/NavBar'
 
 const STEP_PATHS: Record<string, string> = {
   'group-stage': '/onboarding/group-stage',
@@ -21,9 +21,8 @@ function getStoredField(field: 'name' | 'email'): string {
   catch { return '' }
 }
 
-export default function LandingPage() {
+export default function LandingPage({ userName }: { userName?: string | null }) {
   const router = useRouter()
-  const { isAdmin } = useContent()
   const [name, setName] = useState<string>(() => getStoredField('name'))
   const [email, setEmail] = useState<string>(() => getStoredField('email'))
   const [error, setError] = useState('')
@@ -111,23 +110,10 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Navbar */}
-      <nav className="relative z-10 border-b border-white/10">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 overflow-hidden px-4">
-          <span className="shrink-0 whitespace-nowrap font-display font-black text-white text-base uppercase tracking-[0.04em] sm:text-lg sm:tracking-[0.06em]">
-            VM<span className="text-swe-yellow">-TIPS 26</span>
-          </span>
-          <div className="ml-auto flex min-w-0 items-center gap-4 overflow-x-auto text-xs font-display font-black uppercase tracking-[0.1em] text-white/40 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href="/dashboard" className="shrink-0 hover:text-white transition-colors">Tabell</Link>
-            <Link href="/worldcup-guide" className="shrink-0 hover:text-white transition-colors">VM-bibel</Link>
-            <Link href="/regler" className="shrink-0 hover:text-white transition-colors">Regler</Link>
-            <Link href={isAdmin ? '/admin' : '/login'} className="shrink-0 hover:text-white transition-colors">{isAdmin ? 'Admin' : 'Logga in'}</Link>
-          </div>
-        </div>
-      </nav>
+      <NavBar userName={userName ?? null} />
 
       {/* Hero content */}
-      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 max-w-2xl">
+      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-28 max-w-2xl">
         {/* Eyebrow */}
         <div className="flex items-center gap-3 mb-5">
           <div className="h-px w-8 bg-swe-yellow" />

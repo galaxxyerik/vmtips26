@@ -63,8 +63,8 @@ export default async function DashboardPage() {
       {!isOpen && (
         <div className="relative h-[35vh] min-h-[200px] overflow-hidden">
           <Image
-            src="/images/nrg-stadium.jpg"
-            alt="NRG Stadium i Houston, Texas — Sverige spelar här 20 juni"
+            src="/images/friends-arena-stockholm.jpg"
+            alt="Friends Arena i Stockholm — Sveriges hemmaplan"
             fill
             sizes="100vw"
             className="object-cover object-center"

@@ -121,6 +121,14 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
   { name: 'Anthony Elanga', club: 'Newcastle United', position: 'Ytterforward', age: 23, desc: 'Newcastles raketssnabba ytter som kan avgöra matcher på ett ögonblick. Elanga är Sveriges vapen i kontringar — hans sprintkapacitet och direkthet gör backs desperata.', keyStrength: 'Explosiv hastighet i djupled, direkthet i 1-mot-1 och outhållig press som tvingar fram misstag.', rating: 7, imageKey: 'img.player.elanga' },
 ]
 
+const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
+  'img.player.gyokeres': '/images/gyokeres-fotmob.png',
+  'img.player.isak': '/images/isak-fotmob.png',
+  'img.player.lindelof': '/images/lindelof-fotmob.png',
+  'img.player.bergvall': '/images/bergvall-fotmob.png',
+  'img.player.elanga': '/images/elanga-fotmob.png',
+}
+
 interface SquadPlayer { name: string; club: string; pos: string }
 const SQUAD: Record<string, SquadPlayer[]> = {
   'Målvakter': [
@@ -311,7 +319,7 @@ function GroupsTab() {
               g.letter === 'F' ? 'bg-swe-yellow/10' : 'bg-navy-900'
             }`}>
               <div className="flex items-center gap-2">
-                <span className="font-display font-black text-sm uppercase tracking-wider text-white">
+                <span className="font-display font-black text-base uppercase tracking-wider text-white">
                   Grupp {g.letter}
                 </span>
                 {g.letter === 'F' && (
@@ -384,7 +392,7 @@ function PlayersTab({ players, title, subtitle }: { players: Player[]; title: st
             >
               {/* Main info */}
               <div className="flex-1 px-4 py-3 min-w-0">
-                <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
+                <div className="font-display font-black uppercase tracking-wide text-white text-base leading-tight">
                   {p.name}
                 </div>
                 <div className="text-[11px] text-white/35 mt-0.5">
@@ -553,18 +561,33 @@ function SwedenTab() {
             <div key={p.name}>
               {/* Player row */}
               <button
-                className="w-full flex items-center text-left hover:bg-navy-900/40 transition-colors px-4 py-3"
+                className="w-full flex items-stretch text-left hover:bg-navy-900/40 transition-colors"
                 onClick={() => setExpandedPlayer(expandedPlayer === p.name ? null : p.name)}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
-                    {p.name}
-                  </div>
-                  <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
+                {/* Photo slot */}
+                <div className="w-20 h-20 flex-shrink-0 relative overflow-hidden bg-navy-900 border-r border-white/5">
+                  <Image
+                    src={PLAYER_IMAGE_FALLBACKS[p.imageKey]}
+                    alt={`${p.name}, ${p.position}, Sverige`}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
-                <div className="text-right flex-shrink-0 ml-4">
-                  <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
-                  <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
+                {/* Info */}
+                <div className="flex-1 px-4 py-3 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-display font-black uppercase tracking-wide text-white text-base leading-tight">
+                        {p.name}
+                      </div>
+                      <div className="text-[11px] text-white/40 mt-0.5">{p.position} · {p.club} · {p.age} år</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-display font-black text-2xl text-swe-yellow tnum">{p.rating}</div>
+                      <div className="text-[9px] text-white/25 uppercase tracking-wider">/ 10</div>
+                    </div>
+                  </div>
                 </div>
               </button>
               {/* Expanded */}
@@ -684,7 +707,7 @@ function DarkHorsesTab() {
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span className="font-display font-black uppercase tracking-wide text-white">{d.country}</span>
+                  <span className="font-display font-black uppercase tracking-wide text-white text-base">{d.country}</span>
                   <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow/80 px-1.5 py-0.5">
                     Max: {d.maxFinish}
                   </span>

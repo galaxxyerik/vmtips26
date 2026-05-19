@@ -21,5 +21,5 @@ export default async function Home() {
     }
   }
 
-  return <LandingPage />
+  return <LandingPage userName={user?.email ?? null} />
 }
