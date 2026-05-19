@@ -1,7 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
-import { EditableImage } from '@/components/Editable'
+import Image from 'next/image'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -59,6 +59,27 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={user?.email ?? null} />
 
+      {/* Hero strip — NRG Stadium, Houston */}
+      {!isOpen && (
+        <div className="relative h-[35vh] min-h-[200px] overflow-hidden">
+          <Image
+            src="/images/nrg-stadium.jpg"
+            alt="NRG Stadium i Houston, Texas — Sverige spelar här 20 juni"
+            fill
+            sizes="100vw"
+            className="object-cover object-center"
+            priority
+          />
+          <div className="absolute inset-0 bg-navy-950/70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 max-w-3xl mx-auto">
+            <div className="label text-swe-yellow/60 mb-1">Nästa nyckelMatch · Grupp F</div>
+            <div className="font-display font-black text-2xl uppercase tracking-wide text-white">Sverige vs Nederländerna</div>
+            <div className="text-white/50 text-sm">20 juni · 19:00 CEST · NRG Stadium, Houston</div>
+          </div>
+        </div>
+      )}
+
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="mb-6">
           <div className="label">Poängtabell</div>
@@ -72,14 +93,6 @@ export default async function DashboardPage() {
 
         {!isOpen ? (
           <div className="space-y-4">
-            {/* Admin-redigerbar bannerbild */}
-            <EditableImage
-              contentKey="image.dashboard.banner"
-              alt="Dashboard-banner"
-              className="w-full object-cover max-h-48"
-              placeholderHeight="h-32"
-            />
-
             {/* Countdown */}
             <div className="border border-white/10 bg-navy-900 px-6 py-8 text-center">
               <div className="label mb-3">Ledartavlan öppnar om</div>

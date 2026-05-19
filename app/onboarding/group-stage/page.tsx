@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { loadDraft, saveDraft, setStep, computeGroupStandings } from '@/lib/onboarding-storage'
 import type { VmtMatch, Pick, GroupLabel, OnboardingDraft } from '@/lib/types'
@@ -110,15 +111,15 @@ export default function GroupStagePage() {
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
       {/* Header with stadium background */}
       <div className="relative overflow-hidden mb-4 border border-white/10">
-        <img
-          src="/images/stadium-background.svg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          style={{ zIndex: 0 }}
+        <Image
+          src="/images/nrg-stadium-interior.jpg"
+          alt="NRG Stadium interiör, Houston Texas"
+          fill
+          sizes="100vw"
+          className="object-cover object-center z-0"
         />
-        <div className="absolute inset-0 bg-navy-950/85" style={{ zIndex: 1 }} />
-        <div className="relative px-4 py-3 flex items-center gap-4" style={{ zIndex: 10 }}>
+        <div className="absolute inset-0 bg-navy-950/85 z-[1]" />
+        <div className="relative z-10 px-4 py-3 flex items-center gap-4">
           <div className="flex-1 min-w-0">
             <div className="label">Steg 1 av 3 · Gruppspel</div>
             <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white leading-tight">Tippa gruppspelet</h1>

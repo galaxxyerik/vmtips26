@@ -1,19 +1,22 @@
+import Image from 'next/image'
+
 export const dynamic = 'force-dynamic'
 
 export default function SuccessPage() {
   return (
     <main className="relative min-h-screen bg-navy-950 overflow-hidden flex items-center justify-center px-4">
       {/* Celebration background */}
-      <img
-        src="/images/gyokeres-celebration.svg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-center"
-        style={{ zIndex: 0 }}
+      <Image
+        src="/images/gyokeres-arsenal-celebration.jpg"
+        alt="Viktor Gyökeres firar mål för Arsenal"
+        fill
+        sizes="100vw"
+        className="object-cover object-center z-0"
+        priority
       />
-      <div className="absolute inset-0 bg-navy-950/70" style={{ zIndex: 1 }} />
+      <div className="absolute inset-0 bg-navy-950/70 z-[1]" />
 
-      <div className="relative max-w-md w-full text-center space-y-6" style={{ zIndex: 10 }}>
+      <div className="relative z-10 max-w-md w-full text-center space-y-6">
         <div>
           <div className="font-display font-black text-5xl text-swe-yellow uppercase tracking-wide mb-2">Klart!</div>
           <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white mb-2">Tips inskickat</h1>

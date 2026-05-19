@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { loadDraft, saveDraft, setStep } from '@/lib/onboarding-storage'
 import { buildR32Bracket, type R32Match } from '@/lib/bracket-logic'
 import type { GroupLabel, OnboardingDraft } from '@/lib/types'
@@ -183,19 +184,21 @@ export default function BracketPage() {
     <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
       {/* Trophy header with stadium background */}
       <div className="relative overflow-hidden mb-5 border border-white/10">
-        <img
-          src="/images/stadium-background.svg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          style={{ zIndex: 0 }}
+        <Image
+          src="/images/metlife-stadium.jpg"
+          alt="MetLife Stadium i New Jersey — VM-finalens arena"
+          fill
+          sizes="100vw"
+          className="object-cover object-center z-0"
         />
-        <div className="absolute inset-0 bg-navy-950/80" style={{ zIndex: 1 }} />
-        <div className="relative flex items-center gap-4 px-4 py-4" style={{ zIndex: 10 }}>
-          <img
-            src="/images/trophy-wc2026.svg"
+        <div className="absolute inset-0 bg-navy-950/80 z-[1]" />
+        <div className="relative z-10 flex items-center gap-4 px-4 py-4">
+          <Image
+            src="/images/wc-trophy.jpg"
             alt="VM-pokalen FIFA World Cup 2026"
-            className="w-12 h-16 object-contain flex-shrink-0 drop-shadow-lg"
+            width={48}
+            height={64}
+            className="object-cover object-center flex-shrink-0 drop-shadow-lg rounded-sm"
           />
           <div className="flex-1 min-w-0">
             <div className="label">Steg 2 av 3 · Slutspel</div>
@@ -210,7 +213,7 @@ export default function BracketPage() {
           </div>
         </div>
         {/* Progress bar */}
-        <div className="relative h-0.5 bg-white/10" style={{ zIndex: 10 }}>
+        <div className="relative z-10 h-0.5 bg-white/10">
           <div
             className="h-full bg-swe-yellow transition-all"
             style={{ width: `${nonBronzeMatches.length ? (pickedKnockout / nonBronzeMatches.length) * 100 : 0}%` }}
