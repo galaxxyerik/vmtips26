@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { buildR32Bracket, type Group } from '@/lib/bracket-logic'
 import { ToggleConfirmButton, DeleteButton } from './AdminActions'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -12,7 +13,7 @@ interface GroupMatch {
   pick: string | null
 }
 
-interface GroupData {
+export interface GroupData {
   matches: GroupMatch[]
   tableOrder: string[]
   thirdPlaceSelected: boolean
@@ -56,6 +57,17 @@ const ROUND_LABELS: Record<string, string> = {
   sf: 'Semifinaler',
   bronze: 'Bronsmatch',
   final: 'Final',
+}
+
+type KnockoutRound = 'r32' | 'r16' | 'qf' | 'sf' | 'bronze' | 'final'
+
+interface KnockoutMatchView {
+  matchNumber: number
+  label: string
+  round: KnockoutRound
+  team1: string
+  team2: string
+  winner: string | null
 }
 
 // ── Main Row ───────────────────────────────────────────────────────────────────
@@ -173,7 +185,7 @@ export function AdminSubmissionRow({
                 activeGroup={activeGroup}
                 setActiveGroup={setActiveGroup}
               />
-              <SlutspelSection bracketPicks={picksData.bracketPicks} />
+              <SlutspelSection bracketPicks={picksData.bracketPicks} groups={picksData.groups} />
               <OvrigtSection tournamentScorer={picksData.tournamentScorer} />
             </div>
           )}
@@ -301,15 +313,116 @@ function GruppspelSection({
 
 // ── Section: Slutspel ─────────────────────────────────────────────────────────
 
-export function SlutspelSection({ bracketPicks }: { bracketPicks: BracketPick[] }) {
-  const byRound: Record<string, BracketPick[]> = {}
-  for (const p of bracketPicks) {
-    if (!byRound[p.round]) byRound[p.round] = []
-    byRound[p.round].push(p)
+function buildKnockoutMatches(
+  groups: Record<string, GroupData>,
+  bracketPicks: BracketPick[]
+): KnockoutMatchView[] | null {
+  const pickByMatch = Object.fromEntries(bracketPicks.map(p => [p.match_number, p.pick_team]))
+  const groupWinners = {} as Record<Group, string>
+  const groupRunnersUp = {} as Record<Group, string>
+  const thirdPlaceTeams: Partial<Record<Group, string>> = {}
+  const advancingThirdGroups: Group[] = []
+
+  for (const group of ALL_GROUPS as Group[]) {
+    const order = groups[group]?.tableOrder ?? []
+    groupWinners[group] = order[0] ?? `Etta ${group}`
+    groupRunnersUp[group] = order[1] ?? `Tvåa ${group}`
+    thirdPlaceTeams[group] = order[2] ?? `Trea ${group}`
+    if (groups[group]?.thirdPlaceSelected) advancingThirdGroups.push(group)
   }
-  for (const round of Object.keys(byRound)) {
-    byRound[round].sort((a, b) => a.match_number - b.match_number)
+
+  const r32Base = buildR32Bracket(groupWinners, groupRunnersUp, thirdPlaceTeams, advancingThirdGroups)
+  if (!r32Base) return null
+
+  const winnerOf = (matchNumber: number, fallbackLabel: string) => pickByMatch[matchNumber] ?? fallbackLabel
+
+  const r32m: KnockoutMatchView[] = r32Base.map(m => ({
+    matchNumber: m.matchNumber,
+    label: `M${m.matchNumber}`,
+    team1: m.team1,
+    team2: m.team2,
+    round: 'r32',
+    winner: pickByMatch[m.matchNumber] ?? null,
+  }))
+
+  const r16m: KnockoutMatchView[] = [
+    { matchNumber: 89, label: 'M89', team1: winnerOf(73, 'Vinnare M73'), team2: winnerOf(74, 'Vinnare M74'), round: 'r16', winner: pickByMatch[89] ?? null },
+    { matchNumber: 90, label: 'M90', team1: winnerOf(75, 'Vinnare M75'), team2: winnerOf(76, 'Vinnare M76'), round: 'r16', winner: pickByMatch[90] ?? null },
+    { matchNumber: 91, label: 'M91', team1: winnerOf(77, 'Vinnare M77'), team2: winnerOf(78, 'Vinnare M78'), round: 'r16', winner: pickByMatch[91] ?? null },
+    { matchNumber: 92, label: 'M92', team1: winnerOf(79, 'Vinnare M79'), team2: winnerOf(80, 'Vinnare M80'), round: 'r16', winner: pickByMatch[92] ?? null },
+    { matchNumber: 93, label: 'M93', team1: winnerOf(81, 'Vinnare M81'), team2: winnerOf(82, 'Vinnare M82'), round: 'r16', winner: pickByMatch[93] ?? null },
+    { matchNumber: 94, label: 'M94', team1: winnerOf(83, 'Vinnare M83'), team2: winnerOf(84, 'Vinnare M84'), round: 'r16', winner: pickByMatch[94] ?? null },
+    { matchNumber: 95, label: 'M95', team1: winnerOf(85, 'Vinnare M85'), team2: winnerOf(86, 'Vinnare M86'), round: 'r16', winner: pickByMatch[95] ?? null },
+    { matchNumber: 96, label: 'M96', team1: winnerOf(87, 'Vinnare M87'), team2: winnerOf(88, 'Vinnare M88'), round: 'r16', winner: pickByMatch[96] ?? null },
+  ]
+
+  const qfm: KnockoutMatchView[] = [
+    { matchNumber: 97, label: 'QF1', team1: winnerOf(89, 'Vinnare M89'), team2: winnerOf(90, 'Vinnare M90'), round: 'qf', winner: pickByMatch[97] ?? null },
+    { matchNumber: 98, label: 'QF2', team1: winnerOf(91, 'Vinnare M91'), team2: winnerOf(92, 'Vinnare M92'), round: 'qf', winner: pickByMatch[98] ?? null },
+    { matchNumber: 99, label: 'QF3', team1: winnerOf(93, 'Vinnare M93'), team2: winnerOf(94, 'Vinnare M94'), round: 'qf', winner: pickByMatch[99] ?? null },
+    { matchNumber: 100, label: 'QF4', team1: winnerOf(95, 'Vinnare M95'), team2: winnerOf(96, 'Vinnare M96'), round: 'qf', winner: pickByMatch[100] ?? null },
+  ]
+
+  const sfm: KnockoutMatchView[] = [
+    { matchNumber: 101, label: 'SF1', team1: winnerOf(97, 'Vinnare QF1'), team2: winnerOf(98, 'Vinnare QF2'), round: 'sf', winner: pickByMatch[101] ?? null },
+    { matchNumber: 102, label: 'SF2', team1: winnerOf(99, 'Vinnare QF3'), team2: winnerOf(100, 'Vinnare QF4'), round: 'sf', winner: pickByMatch[102] ?? null },
+  ]
+
+  const bronzeM: KnockoutMatchView = {
+    matchNumber: 103,
+    label: 'BR',
+    team1: 'Förlorare SF1',
+    team2: 'Förlorare SF2',
+    round: 'bronze',
+    winner: pickByMatch[103] ?? null,
   }
+
+  const finalM: KnockoutMatchView = {
+    matchNumber: 104,
+    label: 'FIN',
+    team1: winnerOf(101, 'Vinnare SF1'),
+    team2: winnerOf(102, 'Vinnare SF2'),
+    round: 'final',
+    winner: pickByMatch[104] ?? null,
+  }
+
+  return [...r32m, ...r16m, ...qfm, ...sfm, bronzeM, finalM]
+}
+
+function ReadonlyBracketMatchRow({ match }: { match: KnockoutMatchView }) {
+  return (
+    <div className="flex items-center px-2 py-1.5 gap-1 bg-navy-900/30">
+      <span className="text-xs text-white/20 font-mono w-8 flex-shrink-0 tnum">{match.label}</span>
+      <div className="flex-1 flex gap-1">
+        {[match.team1, match.team2].map(team => {
+          const isWinner = match.winner === team
+          return (
+            <div
+              key={team}
+              className={`flex-1 py-1.5 px-1 text-xs font-medium border text-center ${
+                isWinner
+                  ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow'
+                  : 'border-white/10 text-white/55'
+              }`}
+            >
+              {team}
+            </div>
+          )
+        })}
+      </div>
+      {match.winner && <span className="text-xs text-swe-yellow w-4 flex-shrink-0">✓</span>}
+    </div>
+  )
+}
+
+export function SlutspelSection({
+  bracketPicks,
+  groups,
+}: {
+  bracketPicks: BracketPick[]
+  groups: Record<string, GroupData>
+}) {
+  const knockoutMatches = buildKnockoutMatches(groups, bracketPicks)
 
   if (bracketPicks.length === 0) {
     return (
@@ -320,75 +433,77 @@ export function SlutspelSection({ bracketPicks }: { bracketPicks: BracketPick[] 
     )
   }
 
+  if (!knockoutMatches) {
+    return (
+      <div className="px-4 py-4">
+        <div className="label text-swe-yellow/60 mb-2">Sektion 2 — Slutspel</div>
+        <p className="text-[11px] text-white/25 italic">Kunde inte bygga slutspelets matchträd från sparad data.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 py-4 space-y-4">
       <div className="label text-swe-yellow/60">Sektion 2 — Slutspel</div>
 
       {DISPLAY_ROUNDS.map(round => {
-        const picks = byRound[round]
-        if (!picks?.length) return null
+        const roundMatches = knockoutMatches.filter(match => match.round === round)
+        if (roundMatches.length === 0) return null
 
-        const isR32 = round === 'r32'
         const isFinal = round === 'final'
-        const subtitle = !isFinal ? `${picks.length} lag vidare` : null
+        const teamCount = roundMatches.length * 2
+        const subtitle = `${teamCount} lag · ${roundMatches.length} matcher`
+        const finalWinner = roundMatches[0]?.winner ?? null
 
         return (
           <div key={round}>
             <div className="flex items-center gap-2 mb-2">
               <span className="label text-[9px]">{ROUND_LABELS[round]}</span>
-              {subtitle && (
-                <span className="text-[9px] text-white/20">{subtitle}</span>
-              )}
+              <span className="text-[9px] text-white/20">{subtitle}</span>
             </div>
 
-            {isFinal ? (
-              // Final — show both finalists from SF picks + champion
-              <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-3 py-2.5">
-                {(byRound['sf'] ?? []).length > 0 ? (byRound['sf'] ?? []).map((p, i) => (
-                  <div key={p.match_number} className="text-xs text-white/60 mb-0.5">
-                    Finalist {i + 1}: <span className="text-white/80 font-medium">{p.pick_team}</span>
+            <div className={`border divide-y divide-white/5 ${isFinal ? 'border-swe-yellow/20 bg-swe-yellow/5' : 'border-white/10'}`}>
+              {roundMatches.map(match => (
+                <ReadonlyBracketMatchRow key={match.matchNumber} match={match} />
+              ))}
+            </div>
+
+            {isFinal && (
+              <div className="mt-2 border border-swe-yellow/20 bg-swe-yellow/5 px-3 py-2.5">
+                <div className="text-xs text-white/60 mb-0.5">
+                  Finalist 1: <span className="text-white/80 font-medium">{roundMatches[0].team1}</span>
+                </div>
+                <div className="text-xs text-white/60 mb-0.5">
+                  Finalist 2: <span className="text-white/80 font-medium">{roundMatches[0].team2}</span>
+                </div>
+                {finalWinner ? (
+                  <div className="text-sm font-display font-black text-swe-yellow mt-1">
+                    🏆 VM-vinnare: {finalWinner}
                   </div>
-                )) : (
-                  <div className="text-xs text-white/30">Finalister saknas.</div>
-                )}
-                {picks.length > 0 ? picks.map(p => (
-                  <div key={p.match_number} className="text-sm font-display font-black text-swe-yellow mt-1">
-                    🏆 VM-vinnare: {p.pick_team}
-                  </div>
-                )) : (
+                ) : (
                   <div className="text-xs text-white/30 mt-1">VM-vinnare saknas.</div>
                 )}
-              </div>
-            ) : isR32 ? (
-              // R32 — compact 2-column tag cloud
-              <div className="flex flex-wrap gap-1.5">
-                {picks.map(p => (
-                  <span key={p.match_number} className="text-[10px] border border-white/10 text-white/55 px-2 py-0.5">
-                    {p.pick_team}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              // R16, QF — slightly more spaced
-              <div className="flex flex-wrap gap-1.5">
-                {picks.map(p => (
-                  <span key={p.match_number} className="text-xs border border-white/15 text-white/65 px-2 py-0.5">
-                    {p.pick_team}
-                  </span>
-                ))}
               </div>
             )}
           </div>
         )
       })}
 
-      {/* Bronze separately */}
-      {(byRound['bronze'] ?? []).map(p => (
-        <div key={p.match_number}>
-          <div className="label text-[9px] mb-1">Bronsmatch — Trea</div>
-          <span className="text-xs border border-white/15 text-white/65 px-2 py-0.5">{p.pick_team}</span>
-        </div>
-      ))}
+      {(() => {
+        const bronzeMatch = knockoutMatches.find(match => match.round === 'bronze')
+        if (!bronzeMatch) return null
+        return (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="label text-[9px]">Bronsmatch</span>
+              <span className="text-[9px] text-white/20">2 lag · 1 match</span>
+            </div>
+            <div className="border border-white/10">
+              <ReadonlyBracketMatchRow match={bronzeMatch} />
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

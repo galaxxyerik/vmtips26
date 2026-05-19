@@ -7,7 +7,9 @@ export async function POST() {
   const to = process.env.ADMIN_EMAIL ?? 'eeengstrand@gmail.com'
 
   if (!apiKey) {
-    return NextResponse.json({ error: 'Missing RESEND_API_KEY' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Missing RESEND_API_KEY. Lägg in RESEND_API_KEY i Vercels Environment Variables för den deployade appen.',
+    }, { status: 500 })
   }
 
   const res = await fetch(RESEND_API_URL, {

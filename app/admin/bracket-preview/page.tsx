@@ -2,45 +2,60 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
-import { SlutspelSection, type BracketPick } from '../AdminSubmissionRow'
+import { SlutspelSection, type BracketPick, type GroupData } from '../AdminSubmissionRow'
 
 export const dynamic = 'force-dynamic'
 
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
+const previewGroups: Record<string, GroupData> = {
+  A: { matches: [], tableOrder: ['A1', 'A2', 'A3', 'A4'], thirdPlaceSelected: false, groupScorer: null },
+  B: { matches: [], tableOrder: ['B1', 'B2', 'B3', 'B4'], thirdPlaceSelected: false, groupScorer: null },
+  C: { matches: [], tableOrder: ['C1', 'C2', 'C3', 'C4'], thirdPlaceSelected: false, groupScorer: null },
+  D: { matches: [], tableOrder: ['D1', 'D2', 'D3', 'D4'], thirdPlaceSelected: false, groupScorer: null },
+  E: { matches: [], tableOrder: ['E1', 'E2', 'E3', 'E4'], thirdPlaceSelected: true, groupScorer: null },
+  F: { matches: [], tableOrder: ['F1', 'F2', 'F3', 'F4'], thirdPlaceSelected: true, groupScorer: null },
+  G: { matches: [], tableOrder: ['G1', 'G2', 'G3', 'G4'], thirdPlaceSelected: true, groupScorer: null },
+  H: { matches: [], tableOrder: ['H1', 'H2', 'H3', 'H4'], thirdPlaceSelected: true, groupScorer: null },
+  I: { matches: [], tableOrder: ['I1', 'I2', 'I3', 'I4'], thirdPlaceSelected: true, groupScorer: null },
+  J: { matches: [], tableOrder: ['J1', 'J2', 'J3', 'J4'], thirdPlaceSelected: true, groupScorer: null },
+  K: { matches: [], tableOrder: ['K1', 'K2', 'K3', 'K4'], thirdPlaceSelected: true, groupScorer: null },
+  L: { matches: [], tableOrder: ['L1', 'L2', 'L3', 'L4'], thirdPlaceSelected: true, groupScorer: null },
+}
+
 const previewBracketPicks: BracketPick[] = [
-  { match_number: 73, pick_team: 'Mexico', round: 'r32' },
-  { match_number: 74, pick_team: 'Czechia', round: 'r32' },
-  { match_number: 75, pick_team: 'South Africa', round: 'r32' },
-  { match_number: 76, pick_team: 'Korea Republic', round: 'r32' },
-  { match_number: 77, pick_team: 'Germany', round: 'r32' },
-  { match_number: 78, pick_team: 'Norway', round: 'r32' },
-  { match_number: 79, pick_team: 'Netherlands', round: 'r32' },
-  { match_number: 80, pick_team: 'Mexico', round: 'r32' },
-  { match_number: 81, pick_team: 'Brazil', round: 'r32' },
-  { match_number: 82, pick_team: 'England', round: 'r32' },
-  { match_number: 83, pick_team: 'France', round: 'r32' },
-  { match_number: 84, pick_team: 'Turkiye', round: 'r32' },
-  { match_number: 85, pick_team: 'Belgium', round: 'r32' },
-  { match_number: 86, pick_team: 'Croatia', round: 'r32' },
-  { match_number: 87, pick_team: 'Portugal', round: 'r32' },
-  { match_number: 88, pick_team: 'Argentina', round: 'r32' },
-  { match_number: 89, pick_team: 'Germany', round: 'r16' },
-  { match_number: 90, pick_team: 'Brazil', round: 'r16' },
-  { match_number: 91, pick_team: 'Norway', round: 'r16' },
-  { match_number: 92, pick_team: 'England', round: 'r16' },
-  { match_number: 93, pick_team: 'Belgium', round: 'r16' },
-  { match_number: 94, pick_team: 'Spain', round: 'r16' },
-  { match_number: 95, pick_team: 'Argentina', round: 'r16' },
-  { match_number: 96, pick_team: 'Portugal', round: 'r16' },
-  { match_number: 97, pick_team: 'Germany', round: 'qf' },
-  { match_number: 98, pick_team: 'England', round: 'qf' },
-  { match_number: 99, pick_team: 'Spain', round: 'qf' },
-  { match_number: 100, pick_team: 'Argentina', round: 'qf' },
-  { match_number: 101, pick_team: 'Germany', round: 'sf' },
-  { match_number: 102, pick_team: 'Spain', round: 'sf' },
-  { match_number: 103, pick_team: 'England', round: 'bronze' },
-  { match_number: 104, pick_team: 'Spain', round: 'final' },
+  { match_number: 73, pick_team: 'A2', round: 'r32' },
+  { match_number: 74, pick_team: 'E1', round: 'r32' },
+  { match_number: 75, pick_team: 'F1', round: 'r32' },
+  { match_number: 76, pick_team: 'C1', round: 'r32' },
+  { match_number: 77, pick_team: 'I1', round: 'r32' },
+  { match_number: 78, pick_team: 'E2', round: 'r32' },
+  { match_number: 79, pick_team: 'A1', round: 'r32' },
+  { match_number: 80, pick_team: 'L1', round: 'r32' },
+  { match_number: 81, pick_team: 'D1', round: 'r32' },
+  { match_number: 82, pick_team: 'G1', round: 'r32' },
+  { match_number: 83, pick_team: 'K2', round: 'r32' },
+  { match_number: 84, pick_team: 'H1', round: 'r32' },
+  { match_number: 85, pick_team: 'B1', round: 'r32' },
+  { match_number: 86, pick_team: 'J1', round: 'r32' },
+  { match_number: 87, pick_team: 'K1', round: 'r32' },
+  { match_number: 88, pick_team: 'G2', round: 'r32' },
+  { match_number: 89, pick_team: 'E1', round: 'r16' },
+  { match_number: 90, pick_team: 'C1', round: 'r16' },
+  { match_number: 91, pick_team: 'I1', round: 'r16' },
+  { match_number: 92, pick_team: 'A1', round: 'r16' },
+  { match_number: 93, pick_team: 'D1', round: 'r16' },
+  { match_number: 94, pick_team: 'H1', round: 'r16' },
+  { match_number: 95, pick_team: 'B1', round: 'r16' },
+  { match_number: 96, pick_team: 'K1', round: 'r16' },
+  { match_number: 97, pick_team: 'E1', round: 'qf' },
+  { match_number: 98, pick_team: 'A1', round: 'qf' },
+  { match_number: 99, pick_team: 'H1', round: 'qf' },
+  { match_number: 100, pick_team: 'K1', round: 'qf' },
+  { match_number: 101, pick_team: 'E1', round: 'sf' },
+  { match_number: 102, pick_team: 'H1', round: 'sf' },
+  { match_number: 103, pick_team: 'A1', round: 'bronze' },
+  { match_number: 104, pick_team: 'H1', round: 'final' },
 ]
 
 export default async function AdminBracketPreviewPage() {
@@ -62,7 +77,7 @@ export default async function AdminBracketPreviewPage() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-white/45">
               Den här testsidan visar en komplett mockad slutspelstrappa i samma komponent som admin-vyn använder.
-              Den ska visa 16, 8, 4, 2 och sedan finalister plus vinnare.
+              Den ska visa faktiska matchpar i varje runda och markera vilken sida som vinner matchen.
             </p>
           </div>
           <Link
@@ -75,10 +90,10 @@ export default async function AdminBracketPreviewPage() {
 
         <div className="grid gap-3 text-xs text-white/55 sm:grid-cols-5">
           {[
-            ['Sextondelsfinal', '16 lag vidare'],
-            ['Åttondelsfinal', '8 lag vidare'],
-            ['Kvartsfinal', '4 lag vidare'],
-            ['Semifinal', '2 lag vidare'],
+            ['Sextondelsfinal', '32 lag · 16 matcher'],
+            ['Åttondelsfinal', '16 lag · 8 matcher'],
+            ['Kvartsfinal', '8 lag · 4 matcher'],
+            ['Semifinal', '4 lag · 2 matcher'],
             ['Final', '2 finalister + 1 vinnare'],
           ].map(([label, value]) => (
             <div key={label} className="border border-white/10 bg-navy-900/40 px-3 py-3">
@@ -89,7 +104,7 @@ export default async function AdminBracketPreviewPage() {
         </div>
 
         <div className="border border-white/10 bg-navy-950/40">
-          <SlutspelSection bracketPicks={previewBracketPicks} />
+          <SlutspelSection bracketPicks={previewBracketPicks} groups={previewGroups} />
         </div>
       </main>
     </div>
