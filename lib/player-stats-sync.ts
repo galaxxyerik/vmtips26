@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import { apiFootballFetch, syncLog } from '@/lib/api-football'
+import { ApiFootballError, apiFootballFetch, syncLog } from '@/lib/api-football'
 import { PLAYER_REGISTRY, type PlayerRegistryEntry } from '@/lib/player-registry'
 import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
 
@@ -249,6 +249,7 @@ export async function syncPlayerStats() {
       if (result.skipped) skipped++
       else synced++
     } catch (err) {
+      if (err instanceof ApiFootballError) throw err
       skipped++
       syncLog(`Varning: spelarstatistik hoppades över för ${player.name}: ${String(err)}`)
     }
