@@ -8,6 +8,7 @@ import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { PLAYER_NAME_ALIASES } from '@/lib/player-registry'
 import { STATIC_PLAYER_STATS } from '@/data/player-stats'
+import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ interface SwedenPlayer {
 }
 interface PlayerStatRow {
   player_name: string
+  season: number | null
   club: string | null
   league: string | null
   goals_club: number | null
@@ -33,6 +35,10 @@ interface PlayerStatRow {
   goals_national: number | null
   caps_national: number | null
   updated_at: string | null
+}
+
+const MANUAL_PLAYER_STAT_SUMMARIES: Record<string, string> = {
+  'Viktor Gyökeres': '20 mål för Arsenal 25/26 · officiellt bekräftat 2 maj 2026',
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -295,8 +301,9 @@ export default function WorldCupGuidePage() {
     const supabase = createClient()
     supabase
       .from('player_stats')
-      .select('player_name, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
-      .then(({ data }: { data: PlayerStatRow[] | null }) => {
+      .select('player_name, season, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
+      .eq('season', PLAYER_STATS_SEASON)
+      .then(({ data }) => {
         const rows = (data ?? []) as PlayerStatRow[]
         if (rows.length === 0) return  // keep static fallback
         setPlayerStats((prev: Record<string, PlayerStatRow>) => ({
@@ -572,19 +579,26 @@ function GroupsTab() {
 // ── Tab: Players ───────────────────────────────────────────────────────────────
 
 function statFor(stats: Record<string, PlayerStatRow>, name: string) {
-  return stats[PLAYER_NAME_ALIASES[name] ?? name] ?? stats[name]
+  const stat = stats[PLAYER_NAME_ALIASES[name] ?? name] ?? stats[name]
+  return stat?.season === PLAYER_STATS_SEASON ? stat : undefined
 }
 
 function PlayerStatsLine({
   stat,
   isGoalkeeper = false,
   fallbackClub,
+  playerName,
 }: {
   stat?: PlayerStatRow
   isGoalkeeper?: boolean
   fallbackClub?: string
+  playerName?: string
 }) {
-  if (!stat) return <span>Klubb: {fallbackClub ?? 'inväntar API'} · Landslag: inväntar API</span>
+  if (!stat) {
+    const manualSummary = playerName ? MANUAL_PLAYER_STAT_SUMMARIES[playerName] : null
+    if (manualSummary) return <span>{manualSummary}</span>
+    return <span>Klubb: {fallbackClub ?? 'inväntar verifiering'} · 25/26-statistik inväntar verifiering</span>
+  }
   const clubPart = isGoalkeeper
     ? `${stat.clean_sheets ?? '–'} hållna nollor · ${stat.minutes_club ?? '–'} min`
     : `${stat.goals_club ?? '–'} mål · ${stat.assists_club ?? '–'} assist · ${stat.minutes_club ?? '–'} min`
@@ -696,7 +710,7 @@ function PlayersTab({
                   {p.position} · {p.club} · {p.age} år
                 </div>
                 <div className="text-white/20 text-[10px] font-mono mt-1">
-                  <PlayerStatsLine stat={stat} fallbackClub={p.club} />
+                  <PlayerStatsLine stat={stat} fallbackClub={p.club} playerName={p.name} />
                 </div>
                 {isExpanded && (
                   <div className="border-t border-white/15 mt-3 pt-3 space-y-2">
@@ -884,7 +898,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                     {p.position} · {p.club} · {p.age} år
                   </div>
                   <div className="text-white/25 text-[10px] font-mono">
-                    <PlayerStatsLine stat={statFor(stats, p.name)} fallbackClub={p.club} />
+                    <PlayerStatsLine stat={statFor(stats, p.name)} fallbackClub={p.club} playerName={p.name} />
                   </div>
                   {isExpanded && (
                     <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
@@ -922,6 +936,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                         stat={statFor(stats, p.name)}
                         isGoalkeeper={pos === 'Målvakter'}
                         fallbackClub={p.club}
+                        playerName={p.name}
                       />
                     </div>
                   </div>

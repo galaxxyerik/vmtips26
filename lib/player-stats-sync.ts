@@ -36,6 +36,24 @@ interface ApiPlayerSearchResponse {
   }[]
 }
 
+const NON_LEAGUE_COMPETITION_TOKENS = [
+  'champions league',
+  'europa league',
+  'conference league',
+  'super cup',
+  'community shield',
+  'league cup',
+  'fa cup',
+  'coppa',
+  'coupe',
+  'friendlies',
+  'nations league',
+  'world cup - qualification',
+  'euro championship',
+  'qualification',
+  'play-offs',
+]
+
 function isFatalSupabaseError(message: string) {
   const normalized = message.toLowerCase()
   return (
@@ -49,7 +67,12 @@ function isFatalSupabaseError(message: string) {
 }
 
 function intValue(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
 }
 
 function normalizeName(value: string) {
@@ -71,12 +94,21 @@ function surname(value: string) {
   return parts[parts.length - 1] ?? ''
 }
 
+function isLikelyLeagueCompetition(
+  row: NonNullable<NonNullable<ApiPlayerResponse['response']>[number]['statistics']>[number]
+) {
+  if (row.league?.type === 'League') return true
+  const name = row.league?.name?.toLowerCase() ?? ''
+  if (!name) return false
+  return !NON_LEAGUE_COMPETITION_TOKENS.some(token => name.includes(token))
+}
+
 function pickLeagueStats(
   rows: NonNullable<ApiPlayerResponse['response']>[number]['statistics'] = [],
   nationalTeamId: number | null
 ) {
   const nonNationalRows = rows.filter(row => row.team?.id !== nationalTeamId)
-  const leagueRows = nonNationalRows.filter(row => row.league?.type === 'League')
+  const leagueRows = nonNationalRows.filter(isLikelyLeagueCompetition)
   const selected = [...leagueRows, ...nonNationalRows]
     .sort((a, b) => intValue(b.games?.minutes) - intValue(a.games?.minutes))[0]
   return {
@@ -224,26 +256,19 @@ export async function syncPlayerStats() {
   const service = createServiceClient()
   syncLog('Startar synk av spelarstatistik')
 
-  const { data: existingRows, error: preflightError } = await service
+  const { error: preflightError } = await service
     .from('player_stats')
     .select('player_name')
-    .eq('season', PLAYER_STATS_SEASON)
+    .limit(1)
 
   if (preflightError) {
     throw new Error(`Supabase service-role kan inte läsa player_stats: ${preflightError.message}`)
   }
 
-  const existingPlayerNames = new Set((existingRows ?? []).map(row => row.player_name))
   let synced = 0
   let skipped = 0
-  let alreadySynced = 0
 
   for (const player of PLAYER_REGISTRY) {
-    if (existingPlayerNames.has(player.name)) {
-      alreadySynced++
-      continue
-    }
-
     try {
       const result = await syncOnePlayer(player)
       if (result.skipped) skipped++
@@ -255,8 +280,8 @@ export async function syncPlayerStats() {
     }
   }
 
-  const status = synced > 0 || alreadySynced > 0 ? 'ok' : 'error'
-  const message = `${synced} spelare synkade, ${alreadySynced} fanns redan, ${skipped} hoppades över`
+  const status = synced > 0 ? 'ok' : 'error'
+  const message = `${synced} spelare synkade, ${skipped} hoppades över`
 
   const { error: logError } = await service.from('vmt_sync_log').upsert({
     sync_key: 'player_stats',
@@ -270,5 +295,5 @@ export async function syncPlayerStats() {
   }
 
   syncLog(`Klar med spelarstatistik: ${message}`)
-  return { synced, skipped, alreadySynced }
+  return { synced, skipped, alreadySynced: 0 }
 }
