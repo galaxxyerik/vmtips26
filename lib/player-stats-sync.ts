@@ -36,6 +36,18 @@ interface ApiPlayerSearchResponse {
   }[]
 }
 
+function isFatalSupabaseError(message: string) {
+  const normalized = message.toLowerCase()
+  return (
+    normalized.includes('invalid api key') ||
+    normalized.includes('jwt') ||
+    normalized.includes('permission denied') ||
+    normalized.includes('row-level security') ||
+    normalized.includes('relation "player_stats" does not exist') ||
+    normalized.includes('schema cache')
+  )
+}
+
 function intValue(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
@@ -198,6 +210,7 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
   }, { onConflict: 'player_id,season' })
 
   if (error) {
+    if (isFatalSupabaseError(error.message)) throw error
     syncLog(`Varning: kunde inte spara spelarstatistik för ${player.name}: ${error.message}`)
     return { skipped: true }
   }
@@ -208,6 +221,14 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
 export async function syncPlayerStats() {
   const service = createServiceClient()
   syncLog('Startar synk av spelarstatistik')
+
+  const { error: preflightError } = await service
+    .from('player_stats')
+    .select('player_id', { count: 'exact', head: true })
+
+  if (preflightError) {
+    throw new Error(`Supabase service-role kan inte läsa player_stats: ${preflightError.message}`)
+  }
 
   let synced = 0
   let skipped = 0
@@ -223,13 +244,20 @@ export async function syncPlayerStats() {
     }
   }
 
-  await service.from('vmt_sync_log').upsert({
+  const status = synced > 0 ? 'ok' : 'error'
+  const message = `${synced} spelare synkade, ${skipped} hoppades över`
+
+  const { error: logError } = await service.from('vmt_sync_log').upsert({
     sync_key: 'player_stats',
     synced_at: new Date().toISOString(),
-    status: 'ok',
-    message: `${synced} spelare synkade, ${skipped} hoppades över`,
+    status,
+    message,
   }, { onConflict: 'sync_key' })
 
-  syncLog(`Klar med spelarstatistik: ${synced} synkade, ${skipped} hoppades över`)
+  if (logError) {
+    throw new Error(`Kunde inte skriva synklogg för player_stats: ${logError.message}`)
+  }
+
+  syncLog(`Klar med spelarstatistik: ${message}`)
   return { synced, skipped }
 }
