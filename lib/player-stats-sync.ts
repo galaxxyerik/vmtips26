@@ -222,18 +222,26 @@ export async function syncPlayerStats() {
   const service = createServiceClient()
   syncLog('Startar synk av spelarstatistik')
 
-  const { error: preflightError } = await service
+  const { data: existingRows, error: preflightError } = await service
     .from('player_stats')
-    .select('player_id', { count: 'exact', head: true })
+    .select('player_name')
+    .eq('season', CLUB_SEASON)
 
   if (preflightError) {
     throw new Error(`Supabase service-role kan inte läsa player_stats: ${preflightError.message}`)
   }
 
+  const existingPlayerNames = new Set((existingRows ?? []).map(row => row.player_name))
   let synced = 0
   let skipped = 0
+  let alreadySynced = 0
 
   for (const player of PLAYER_REGISTRY) {
+    if (existingPlayerNames.has(player.name)) {
+      alreadySynced++
+      continue
+    }
+
     try {
       const result = await syncOnePlayer(player)
       if (result.skipped) skipped++
@@ -244,8 +252,8 @@ export async function syncPlayerStats() {
     }
   }
 
-  const status = synced > 0 ? 'ok' : 'error'
-  const message = `${synced} spelare synkade, ${skipped} hoppades över`
+  const status = synced > 0 || alreadySynced > 0 ? 'ok' : 'error'
+  const message = `${synced} spelare synkade, ${alreadySynced} fanns redan, ${skipped} hoppades över`
 
   const { error: logError } = await service.from('vmt_sync_log').upsert({
     sync_key: 'player_stats',
@@ -259,5 +267,5 @@ export async function syncPlayerStats() {
   }
 
   syncLog(`Klar med spelarstatistik: ${message}`)
-  return { synced, skipped }
+  return { synced, skipped, alreadySynced }
 }
