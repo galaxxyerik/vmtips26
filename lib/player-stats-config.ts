@@ -1,0 +1,1 @@
+export const PLAYER_STATS_SEASON = 2025

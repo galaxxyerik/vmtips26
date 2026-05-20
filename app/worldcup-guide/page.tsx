@@ -7,6 +7,7 @@ import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { PLAYER_NAME_ALIASES } from '@/lib/player-registry'
+import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -302,6 +303,7 @@ export default function WorldCupGuidePage() {
     supabase
       .from('player_stats')
       .select('player_name, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
+      .eq('season', PLAYER_STATS_SEASON)
       .then(({ data }) => {
         const rows = (data ?? []) as PlayerStatRow[]
         setPlayerStats(Object.fromEntries(rows.map(row => [row.player_name, row])))
@@ -636,17 +638,9 @@ function PlayersTab({
                 <div className="text-white/35 text-[11px] uppercase tracking-wider mt-1.5">
                   {p.position} · {p.club} · {p.age} år
                 </div>
-                {p.stat && (
-                  <div className="mt-1.5">
-                    <span className="font-display font-black text-sm text-white">{p.stat}</span>
-                    <span className="text-white/30 text-[10px] ml-1.5">{p.statLabel}</span>
-                  </div>
-                )}
-                {stat && !p.stat && (
-                  <div className="text-white/20 text-[10px] font-mono mt-1">
-                    <PlayerStatsLine stat={stat} />
-                  </div>
-                )}
+                <div className="text-white/20 text-[10px] font-mono mt-1">
+                  <PlayerStatsLine stat={stat} fallbackClub={p.club} />
+                </div>
                 {isExpanded && (
                   <div className="border-t border-white/15 mt-3 pt-3 space-y-2">
                     <p className="text-[15px] text-white/80 leading-relaxed">{p.why}</p>

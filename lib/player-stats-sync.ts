@@ -1,8 +1,8 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
 import { PLAYER_REGISTRY, type PlayerRegistryEntry } from '@/lib/player-registry'
+import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
 
-const CLUB_SEASON = 2024
 const nationalTeamCache = new Map<string, number | null>()
 const squadCache = new Map<string, { id: number; name: string }[]>()
 
@@ -75,8 +75,10 @@ function pickLeagueStats(
   rows: NonNullable<ApiPlayerResponse['response']>[number]['statistics'] = [],
   nationalTeamId: number | null
 ) {
-  const leagueRows = rows.filter(row => row.league?.type === 'League' && row.team?.id !== nationalTeamId)
-  const selected = leagueRows[0] ?? rows[0]
+  const nonNationalRows = rows.filter(row => row.team?.id !== nationalTeamId)
+  const leagueRows = nonNationalRows.filter(row => row.league?.type === 'League')
+  const selected = [...leagueRows, ...nonNationalRows]
+    .sort((a, b) => intValue(b.games?.minutes) - intValue(a.games?.minutes))[0]
   return {
     club: selected?.team?.name ?? null,
     league: selected?.league?.name ?? null,
@@ -115,7 +117,7 @@ async function searchPlayerDirectly(player: PlayerRegistryEntry): Promise<number
 
   const query = encodeURIComponent(surname(player.name))
   const json = await apiFootballFetch<ApiPlayerSearchResponse>(
-    `/players?search=${query}&team=${nationalTeamId}&season=${CLUB_SEASON}`
+    `/players?search=${query}&team=${nationalTeamId}&season=${PLAYER_STATS_SEASON}`
   )
   const candidates = json?.response ?? []
   const normalizedTarget = normalizeName(player.name)
@@ -184,7 +186,7 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
   if (!playerId) return { skipped: true }
   const nationalTeamId = await resolveNationalTeamId(player)
 
-  const clubJson = await apiFootballFetch<ApiPlayerResponse>(`/players?id=${playerId}&season=${CLUB_SEASON}`)
+  const clubJson = await apiFootballFetch<ApiPlayerResponse>(`/players?id=${playerId}&season=${PLAYER_STATS_SEASON}`)
   if (!clubJson?.response?.length) {
     syncLog(`Varning: ingen spelardata hämtades för ${player.name}`)
     return { skipped: true }
@@ -199,7 +201,7 @@ async function syncOnePlayer(player: PlayerRegistryEntry) {
     nationality: player.nationality,
     club: clubStats.club,
     league: clubStats.league,
-    season: CLUB_SEASON,
+    season: PLAYER_STATS_SEASON,
     goals_club: clubStats.goals,
     assists_club: clubStats.assists,
     minutes_club: clubStats.minutes,
@@ -225,7 +227,7 @@ export async function syncPlayerStats() {
   const { data: existingRows, error: preflightError } = await service
     .from('player_stats')
     .select('player_name')
-    .eq('season', CLUB_SEASON)
+    .eq('season', PLAYER_STATS_SEASON)
 
   if (preflightError) {
     throw new Error(`Supabase service-role kan inte läsa player_stats: ${preflightError.message}`)
