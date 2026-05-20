@@ -178,6 +178,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
           className="mt-4 text-xs text-white/20 tnum"
         />
 
+        {/* How it works — 3 steps */}
         <div className="mt-8 max-w-3xl border border-white/10 bg-navy-950/35 backdrop-blur-sm">
           <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
             {[
@@ -188,13 +189,13 @@ export default function LandingPage({ userName }: LandingPageProps) {
               },
               {
                 step: '02',
-                title: 'Lägg 100 kr via Swish',
-                body: 'Skicka in när du är klar. Samma mejl låter dig fortsätta där du slutade fram till deadline.',
+                title: 'Swisha 100 kr',
+                body: 'Betala via Swish när du är klar — belopp och mottagare är förifyllda.',
               },
               {
                 step: '03',
-                title: 'Följ tabellen live',
-                body: 'Se poängen ticka in under VM och jämför ditt tips med kompisarnas i ledartavlan.',
+                title: 'Följ live',
+                body: 'Se poängen ticka in under VM och jämför med kompisarnas tips i ledartavlan.',
               },
             ].map(item => (
               <div key={item.step} className="px-4 py-4 sm:px-5 sm:py-5">
@@ -210,6 +211,21 @@ export default function LandingPage({ userName }: LandingPageProps) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Key selling points */}
+        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 max-w-3xl">
+          {[
+            'Jämför med kompisar',
+            'Automatisk poängräkning',
+            'Sveriges grupp ingår',
+            'Swish-betalning',
+          ].map(point => (
+            <div key={point} className="flex items-center gap-1.5 text-[11px] text-white/30">
+              <div className="w-1 h-1 bg-swe-yellow/40 shrink-0" />
+              {point}
+            </div>
+          ))}
         </div>
       </div>
 
