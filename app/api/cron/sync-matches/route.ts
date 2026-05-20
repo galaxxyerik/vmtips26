@@ -6,7 +6,7 @@ const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 async function isAllowed(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
-  if (authHeader === `Bearer ${process.env.CRON_SECRET}`) return true
+  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) return true
   if (process.env.NODE_ENV !== 'production') return true
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
