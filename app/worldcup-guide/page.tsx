@@ -399,19 +399,80 @@ export default function WorldCupGuidePage() {
   )
 }
 
+const F = (code: string) => `https://flagcdn.com/${code}.svg`
+
 const FLAG_MAP: Record<string, string> = {
-  'Sverige': '/images/flag-se.svg',
-  'Nederländerna': '/images/flag-nl.svg',
-  'Japan': '/images/flag-jp.svg',
-  'Tunisien': '/images/flag-tn.svg',
-  'Brasilien': '/images/flag-br.svg',
-  'Frankrike': '/images/flag-fr.svg',
-  'Spanien': '/images/flag-es.svg',
-  'Argentina': '/images/flag-ar.svg',
-  'Portugal': '/images/flag-pt.svg',
-  'Tyskland': '/images/flag-de.svg',
-  'USA': '/images/flag-us.svg',
-  'England': '/images/flag-gb.svg',
+  // ── Local high-quality SVGs ────────────────────────────────────────────────
+  'Sverige':        '/images/flag-se.svg',
+  'Nederländerna':  '/images/flag-nl.svg',
+  'Japan':          '/images/flag-jp.svg',
+  'Tunisien':       '/images/flag-tn.svg',
+  'Brasilien':      '/images/flag-br.svg',
+  'Frankrike':      '/images/flag-fr.svg',
+  'Spanien':        '/images/flag-es.svg',
+  'Argentina':      '/images/flag-ar.svg',
+  'Portugal':       '/images/flag-pt.svg',
+  'Tyskland':       '/images/flag-de.svg',
+  'USA':            '/images/flag-us.svg',
+  'England':        '/images/flag-gb.svg',
+
+  // ── Grupp A ────────────────────────────────────────────────────────────────
+  'Mexiko':         F('mx'),
+  'Sydkorea':       F('kr'),
+  'Tjeckien':       F('cz'),
+  'Sydafrika':      F('za'),
+
+  // ── Grupp B ────────────────────────────────────────────────────────────────
+  'Kanada':         F('ca'),
+  'Schweiz':        F('ch'),
+  'Bosnien-H.':     F('ba'),
+  'Qatar':          F('qa'),
+
+  // ── Grupp C ────────────────────────────────────────────────────────────────
+  'Marocko':        F('ma'),
+  'Skottland':      F('gb-sct'),
+  'Haiti':          F('ht'),
+
+  // ── Grupp D ────────────────────────────────────────────────────────────────
+  'Turkiet':        F('tr'),
+  'Australien':     F('au'),
+  'Paraguay':       F('py'),
+
+  // ── Grupp E ────────────────────────────────────────────────────────────────
+  'Ecuador':        F('ec'),
+  'Elfenbenskusten': F('ci'),
+  'Curaçao':        F('cw'),
+
+  // ── Grupp G ────────────────────────────────────────────────────────────────
+  'Belgien':        F('be'),
+  'Egypten':        F('eg'),
+  'Iran':           F('ir'),
+  'Nya Zeeland':    F('nz'),
+
+  // ── Grupp H ────────────────────────────────────────────────────────────────
+  'Uruguay':        F('uy'),
+  'Saudiarabien':   F('sa'),
+  'Kap Verde':      F('cv'),
+
+  // ── Grupp I ────────────────────────────────────────────────────────────────
+  'Norge':          F('no'),
+  'Senegal':        F('sn'),
+  'Irak':           F('iq'),
+
+  // ── Grupp J ────────────────────────────────────────────────────────────────
+  'Österrike':      F('at'),
+  'Algeriet':       F('dz'),
+  'Jordanien':      F('jo'),
+
+  // ── Grupp K ────────────────────────────────────────────────────────────────
+  'Colombia':       F('co'),
+  'Uzbekistan':     F('uz'),
+  'Kongo DR':       F('cd'),
+
+  // ── Grupp L ────────────────────────────────────────────────────────────────
+  'Kroatien':       F('hr'),
+  'Ghana':          F('gh'),
+  'Panama':         F('pa'),
 }
 
 // ── Tab: Groups ────────────────────────────────────────────────────────────────
