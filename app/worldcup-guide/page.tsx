@@ -7,7 +7,7 @@ import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { PLAYER_NAME_ALIASES } from '@/lib/player-registry'
-import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
+import { STATIC_PLAYER_STATS } from '@/data/player-stats'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -287,20 +287,28 @@ export default function WorldCupGuidePage() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   useEffect(() => {
+    // Seed with static data so stats show immediately (no "inväntar API")
+    setPlayerStats(STATIC_PLAYER_STATS as Record<string, PlayerStatRow>)
+    setLastUpdated(STATIC_PLAYER_STATS['Viktor Gyökeres']?.updated_at ?? null)
+
+    // Try to override with live Supabase rows if available
     const supabase = createClient()
     supabase
       .from('player_stats')
       .select('player_name, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
-      .eq('season', PLAYER_STATS_SEASON)
-      .then(({ data }) => {
+      .then(({ data }: { data: PlayerStatRow[] | null }) => {
         const rows = (data ?? []) as PlayerStatRow[]
-        setPlayerStats(Object.fromEntries(rows.map(row => [row.player_name, row])))
+        if (rows.length === 0) return  // keep static fallback
+        setPlayerStats((prev: Record<string, PlayerStatRow>) => ({
+          ...prev,
+          ...Object.fromEntries(rows.map(row => [row.player_name, row])),
+        }))
         const newest = rows
           .map(row => row.updated_at)
           .filter(Boolean)
           .sort()
           .at(-1) ?? null
-        setLastUpdated(newest)
+        if (newest) setLastUpdated(newest)
       })
   }, [])
 
