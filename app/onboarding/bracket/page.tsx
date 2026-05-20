@@ -148,10 +148,12 @@ export default function BracketPage() {
       nextPicks[matchNumber] = team
     }
 
-    // Always clear the old team from every downstream match
+    // Clear the old team from downstream matches only (higher match numbers)
     if (prevPick) {
       for (const [key, val] of Object.entries(nextPicks)) {
-        if (val === prevPick) delete nextPicks[Number(key)]
+        if (val === prevPick && Number(key) > matchNumber) {
+          delete nextPicks[Number(key)]
+        }
       }
     }
 
@@ -256,6 +258,7 @@ export default function BracketPage() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   )
 }
