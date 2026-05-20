@@ -259,7 +259,6 @@ export default function BracketPage() {
         </div>
       </div>
     </div>
-    </div>
   )
 }
 
