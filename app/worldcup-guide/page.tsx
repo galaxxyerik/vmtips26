@@ -132,6 +132,7 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
   { name: 'Alexander Isak', club: 'Liverpool', position: 'Anfallare', age: 26, desc: 'Premier Leagues mest kompletta anfallare. Isak kombinerar exceptionell teknik med klinisk avslutning — hans rörlighet i mellanzonen ger Sverige ett offensivt vapen ingen förväntar sig.', keyStrength: 'Teknisk kontroll i högt tempo, ett vänsterben svårt att förutse och förmågan att skapa ur stillastående.', rating: 9, imageKey: 'img.player.isak' },
   { name: 'Victor Lindelöf', club: 'Aston Villa', position: 'Mittback · Kapten', age: 31, desc: 'Kapten och ryggraden i Potters defensivsystem. Lindelöf har mognat till en av Europas pålitligaste centralbackar — teknisk, lugn och med ett ledarskap som präglar hela laget.', keyStrength: 'Orubblig under press, exceptionellt passningsspel bakifrån och defensivt läsande som skapar trygghet.', rating: 8, imageKey: 'img.player.lindelof' },
   { name: 'Lucas Bergvall', club: 'Tottenham', position: 'Mittfältare', age: 19, desc: 'Turneringens yngsta stjärna i blågult. Bergvall har redan visat att han hör hemma i Premier League — teknisk, modig och med ett spelsinne sällsynt för sin ålder.', keyStrength: 'Teknisk säkerhet under press, förmåga att vända spelet och en mognad i beslutsfattandet som chockar erfarna.', rating: 8, imageKey: 'img.player.bergvall' },
+  { name: 'Yasin Ayari', club: 'Brighton', position: 'Mittfältare', age: 22, desc: 'Potters Brighton-koppling gör Ayari extra intressant. Han ger Sverige pressresistens, tempo i passningsspelet och en mittfältsmotor som kan överleva långa perioder utan boll mot starkare lag.', keyStrength: 'Första touch under press, snabba spelvändningar och förmågan att både vinna andrabollar och sätta fart framåt.', rating: 8, imageKey: 'img.player.ayari' },
   { name: 'Anthony Elanga', club: 'Newcastle United', position: 'Ytterforward', age: 23, desc: 'Newcastles raketssnabba ytter som kan avgöra matcher på ett ögonblick. Elanga är Sveriges vapen i kontringar — hans sprintkapacitet och direkthet gör backs desperata.', keyStrength: 'Explosiv hastighet i djupled, direkthet i 1-mot-1 och outhållig press som tvingar fram misstag.', rating: 7, imageKey: 'img.player.elanga' },
 ]
 
@@ -185,11 +186,11 @@ const SWEDEN_PLAYERS: SwedenPlayer[] = []
 
 const GROUP_F_NOTABLES: Player[] = [
   { name: 'Virgil van Dijk', country: 'Nederländerna', flag: '🇳🇱', club: 'Liverpool', position: 'Mittback', age: 34, why: 'Ledaren i Nederländernas backlinje och fortfarande en av turneringens mest respekterade mittbackar.', style: 'Positionssäker, dominant i luftrummet och lugn i uppspelen.', stat: '', statLabel: '', rating: 8 },
-  { name: 'Xavi Simons', country: 'Nederländerna', flag: '🇳🇱', club: 'RB Leipzig', position: 'Offensiv mittfältare', age: 23, why: 'Kreativ motor mellan lagdelarna, med förmågan att öppna matcher Sverige helst vill hålla låsta.', style: 'Snabb riktningsförändring, sista pass och mod i trånga ytor.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Frenkie de Jong', country: 'Nederländerna', flag: '🇳🇱', club: 'FC Barcelona', position: 'Mittfältare', age: 29, why: 'När Simons saknas blir De Jong ännu mer central. Han är spelaren som kan ta Nederländerna ur svensk press, styra tempot och få Gakpo och Reijnders rättvända.', style: 'Bolltrygg regissör med långa driv, perfekt kroppsvinkel och förmåga att bryta press utan att stressa.', stat: '', statLabel: '', rating: 9 },
   { name: 'Cody Gakpo', country: 'Nederländerna', flag: '🇳🇱', club: 'Liverpool', position: 'Vänsterytter', age: 26, why: 'Direkt hot från kanten och en av Grupp F:s tydligaste målspelare.', style: 'Stark i omställning, bra skott och smarta löpningar in centralt.', stat: '', statLabel: '', rating: 8 },
   { name: 'Tijjani Reijnders', country: 'Nederländerna', flag: '🇳🇱', club: 'Manchester City', position: 'Mittfältare', age: 27, why: 'Tempoväxlare på mitten som kan styra rytmen om Sverige blir passivt.', style: 'Bolltrygg, löpstark och vass i ytan framför backlinjen.', stat: '', statLabel: '', rating: 8 },
-  { name: 'Takumi Minamino', country: 'Japan', flag: '🇯🇵', club: 'Monaco', position: 'Offensiv mittfältare', age: 31, why: 'Rutinerad japansk nyckelspelare med näsa för ytor runt straffområdet.', style: 'Intelligent rörelse, snabb kombinationsfotboll och klinisk tajming.', stat: '', statLabel: '', rating: 7 },
-  { name: 'Kaoru Mitoma', country: 'Japan', flag: '🇯🇵', club: 'Brighton', position: 'Vänsterytter', age: 29, why: 'Japans farligaste 1-mot-1-hot och en spelare som kan förändra en match på en dribbling.', style: 'Explosiv första touch, låg tyngdpunkt och precisa inspel.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Takefusa Kubo', country: 'Japan', flag: '🇯🇵', club: 'Real Sociedad', position: 'Högerytter', age: 25, why: 'Med Mitoma och Minamino borta blir Kubo Japans tydligaste kreativa huvudperson. Han kan bära boll, hota i halvrummet och ge Sverige problem mellan ytterback och mittback.', style: 'Låg tyngdpunkt, vänsterfot med precision och mod att gå på avslut eller sista passningen tidigt.', stat: '', statLabel: '', rating: 8 },
+  { name: 'Ritsu Doan', country: 'Japan', flag: '🇯🇵', club: 'Eintracht Frankfurt', position: 'Högermittfältare', age: 27, why: 'Doan är en bevisad turneringsspelare och väntas ta ännu större ansvar när Japan saknar sina stora offensiva namn. Hans vänsterfot och tajming gör honom farlig i varje omställning.', style: 'Direkt, smart i presspelet och vass när han får kliva in från kanten mot sin starka fot.', stat: '', statLabel: '', rating: 8 },
   { name: 'Daichi Kamada', country: 'Japan', flag: '🇯🇵', club: 'Crystal Palace', position: 'Mittfältare', age: 29, why: 'Teknisk mittfältare med internationell rutin och smart positionering.', style: 'Lugn med boll, bra blick och hot från andra våg.', stat: '', statLabel: '', rating: 7 },
   { name: 'Youssef Msakni', country: 'Tunisien', flag: '🇹🇳', club: 'Al Arabi', position: 'Anfallare', age: 35, why: 'Tunisiens stora profil, erfaren nog att straffa varje misstag.', style: 'Fin teknik, bra avslut och naturlig känsla för avgörande lägen.', stat: '', statLabel: '', rating: 7 },
   { name: 'Wahbi Khazri', country: 'Tunisien', flag: '🇹🇳', club: 'Montpellier', position: 'Anfallare', age: 35, why: 'Rutinerad avslutare med fast situationer och distansskott som specialitet.', style: 'Smart, cynisk och farlig så fort han får vända upp.', stat: '', statLabel: '', rating: 7 },
@@ -215,11 +216,11 @@ const PLAYER_API_IDS: Record<string, number> = {
   'Endrick': 425733, 'Estêvão Willian': 340279, 'Lionel Messi': 154,
   'Cristiano Ronaldo': 874, 'Mohamed Salah': 306, 'Harry Kane': 184,
   'Phil Foden': 631, 'Federico Valverde': 756,
-  'Virgil van Dijk': 290, 'Xavi Simons': 162016, 'Tijjani Reijnders': 36902,
-  'Takumi Minamino': 1101, 'Kaoru Mitoma': 106835, 'Daichi Kamada': 2601,
+  'Virgil van Dijk': 290, 'Tijjani Reijnders': 36902,
+  'Daichi Kamada': 2601,
   'Wahbi Khazri': 22102, 'Alexander Isak': 2864,
   'Victor Nilsson Lindelöf': 889, 'Lucas Bergvall': 347316,
-  'Anthony Elanga': 153430,
+  'Anthony Elanga': 153430, 'Yasin Ayari': 265820,
 }
 
 function playerPhotoUrl(name: string): string | null {
@@ -247,8 +248,7 @@ const PLAYER_PHOTOS: Record<string, string> = {
   'Sverre Nypan':      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg/800px-Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg',
   'Warren Zaïre-Emery':'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Zaire_asse_psg_2425.png/800px-Zaire_asse_psg_2425.png',
   'Virgil van Dijk':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/800px-20160604_AUT_NED_8876_%28cropped%29.jpg',
-  'Xavi Simons':       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Xavi_Simons%2C_Nick_Verhagen_in_duel_met_Xavi_Simons.jpg/800px-Xavi_Simons%2C_Nick_Verhagen_in_duel_met_Xavi_Simons.jpg',
-  'Kaoru Mitoma':      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Kaoru_Mitoma_%282022%29.jpg/800px-Kaoru_Mitoma_%282022%29.jpg',
+  'Frenkie de Jong':   'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Frenkie_de_Jong_2019.jpg/800px-Frenkie_de_Jong_2019.jpg',
   'Tijjani Reijnders': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Reijnders_arriva_in_albergo_%28cropped%29.jpg/800px-Reijnders_arriva_in_albergo_%28cropped%29.jpg',
 }
 
