@@ -217,7 +217,7 @@ const PLAYER_API_IDS: Record<string, number> = {
   'Cristiano Ronaldo': 874, 'Mohamed Salah': 306, 'Harry Kane': 184,
   'Phil Foden': 631, 'Federico Valverde': 756,
   'Virgil van Dijk': 290, 'Tijjani Reijnders': 36902,
-  'Daichi Kamada': 2601,
+  'Takefusa Kubo': 32862, 'Ritsu Doan': 2598, 'Daichi Kamada': 2601,
   'Wahbi Khazri': 22102, 'Alexander Isak': 2864,
   'Victor Nilsson Lindelöf': 889, 'Lucas Bergvall': 347316,
   'Anthony Elanga': 153430, 'Yasin Ayari': 265820,
