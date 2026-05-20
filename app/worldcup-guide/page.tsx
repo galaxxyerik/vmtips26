@@ -138,11 +138,12 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
 ]
 
 const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
-  'img.player.gyokeres': '/images/gyokeres-fotmob.png',
-  'img.player.isak': '/images/isak-fotmob.png',
-  'img.player.lindelof': '/images/lindelof-fotmob.png',
-  'img.player.bergvall': '/images/bergvall-fotmob.png',
-  'img.player.elanga': '/images/elanga-fotmob.png',
+  'img.player.gyokeres': '/images/gyokeres-arsenal-portrait.jpg',
+  'img.player.isak':     '/images/isak-action-lfc.webp',
+  'img.player.lindelof': '/images/lindelof-action.jpg',
+  'img.player.bergvall': '/images/bergvall-action.jpg',
+  'img.player.elanga':   '/images/elanga-action.jpg',
+  // Ayari: no local image — ghost-name fallback by design
 }
 
 interface SquadPlayer { name: string; club: string; pos: string }
@@ -208,49 +209,36 @@ const FAVORITES = [
   { country: 'Marocko', flag: '🇲🇦', pct: 6 },
 ]
 
-// ── Player photo IDs (api-sports.io) ──────────────────────────────────────────
-
-const PLAYER_API_IDS: Record<string, number> = {
-  'Viktor Gyökeres': 18979, 'Kylian Mbappé': 278, 'Vinicius Jr': 762,
-  'Jude Bellingham': 129718, 'Lamine Yamal': 386828, 'Erling Haaland': 1100,
-  'Pedri': 133609, 'Bukayo Saka': 1460, 'Cody Gakpo': 247,
-  'Endrick': 425733, 'Estêvão Willian': 340279, 'Lionel Messi': 154,
-  'Cristiano Ronaldo': 874, 'Mohamed Salah': 306, 'Harry Kane': 184,
-  'Phil Foden': 631, 'Federico Valverde': 756,
-  'Virgil van Dijk': 290, 'Tijjani Reijnders': 36902,
-  'Takefusa Kubo': 32862, 'Ritsu Doan': 2598, 'Daichi Kamada': 2601,
-  'Wahbi Khazri': 22102, 'Alexander Isak': 2864,
-  'Victor Nilsson Lindelöf': 889, 'Lucas Bergvall': 347316,
-  'Anthony Elanga': 153430, 'Yasin Ayari': 265820,
-}
-
-function playerPhotoUrl(name: string): string | null {
-  const id = PLAYER_API_IDS[name]
-  return id ? `https://media.api-sports.io/football/players/${id}.png` : null
-}
+// ── Player photos ─────────────────────────────────────────────────────────────
+// Local files take priority. Add /images/players/<name>.jpg to upgrade any entry.
+// Wikipedia fallbacks work from browsers (403 only from server-side curl tests).
 
 const PLAYER_PHOTOS: Record<string, string> = {
-  'Viktor Gyökeres':   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Viktor_Gy%C3%B6keres_2018.jpg/800px-Viktor_Gy%C3%B6keres_2018.jpg',
-  'Kylian Mbappé':     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg/800px-Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg',
-  'Vinicius Jr':       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg/800px-2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg',
-  'Jude Bellingham':   'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg/800px-25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg',
-  'Lamine Yamal':      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Lamine_Yamal_in_2025.jpg/800px-Lamine_Yamal_in_2025.jpg',
-  'Erling Haaland':    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Erling_Haaland_June_2025.jpg/800px-Erling_Haaland_June_2025.jpg',
-  'Pedri':             'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Pedri.jpg/800px-Pedri.jpg',
-  'Jamal Musiala':     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_2022_%28cropped%29.jpg/800px-Jamal_Musiala_2022_%28cropped%29.jpg',
-  'Bukayo Saka':       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg/800px-1_bukayo_saka_arsenal_2025_%28cropped%29.jpg',
-  'Achraf Hakimi':     'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Achraf_Hakimi_%28cropped%29.jpg/800px-Achraf_Hakimi_%28cropped%29.jpg',
-  'Cody Gakpo':        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg/800px-Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg',
-  'Julián Álvarez':    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg/800px-Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg',
-  'Endrick':           'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Endrick-Palmeiras-Liverpool-abr24.jpg/800px-Endrick-Palmeiras-Liverpool-abr24.jpg',
-  'Arda Güler':        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg/800px-Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg',
-  'Takefusa Kubo':     'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Takefusa_Kubo_2019.png/800px-Takefusa_Kubo_2019.png',
-  'Estêvão Willian':   'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg/800px-Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg',
-  'Sverre Nypan':      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg/800px-Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg',
-  'Warren Zaïre-Emery':'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Zaire_asse_psg_2425.png/800px-Zaire_asse_psg_2425.png',
-  'Virgil van Dijk':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/800px-20160604_AUT_NED_8876_%28cropped%29.jpg',
-  'Frenkie de Jong':   'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Frenkie_de_Jong_2019.jpg/800px-Frenkie_de_Jong_2019.jpg',
-  'Tijjani Reijnders': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Reijnders_arriva_in_albergo_%28cropped%29.jpg/800px-Reijnders_arriva_in_albergo_%28cropped%29.jpg',
+  // ── Local files (high quality) ────────────────────────────────────────────
+  'Viktor Gyökeres':        '/images/gyokeres-arsenal-portrait.jpg',
+  'Virgil van Dijk':        '/images/van-dijk-portrait.jpg',
+
+  // ── Internationella stjärnor (Wikipedia — lägg lokala filer för att uppgradera)
+  'Kylian Mbappé':          'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg/800px-Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg',
+  'Vinicius Jr':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg/800px-2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg',
+  'Jude Bellingham':        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg/800px-25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg',
+  'Lamine Yamal':           'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Lamine_Yamal_in_2025.jpg/800px-Lamine_Yamal_in_2025.jpg',
+  'Erling Haaland':         'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Erling_Haaland_June_2025.jpg/800px-Erling_Haaland_June_2025.jpg',
+  'Pedri':                  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Pedri.jpg/800px-Pedri.jpg',
+  'Jamal Musiala':          'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_2022_%28cropped%29.jpg/800px-Jamal_Musiala_2022_%28cropped%29.jpg',
+  'Bukayo Saka':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg/800px-1_bukayo_saka_arsenal_2025_%28cropped%29.jpg',
+  'Achraf Hakimi':          'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Achraf_Hakimi_%28cropped%29.jpg/800px-Achraf_Hakimi_%28cropped%29.jpg',
+  'Julián Álvarez':         'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg/800px-Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg',
+  'Endrick':                'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Endrick-Palmeiras-Liverpool-abr24.jpg/800px-Endrick-Palmeiras-Liverpool-abr24.jpg',
+  'Arda Güler':             'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg/800px-Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg',
+  'Takefusa Kubo':          'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Takefusa_Kubo_2019.png/800px-Takefusa_Kubo_2019.png',
+  'Estêvão Willian':        'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg/800px-Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg',
+  'Sverre Nypan':           'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg/800px-Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg',
+  'Warren Zaïre-Emery':     'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Zaire_asse_psg_2425.png/800px-Zaire_asse_psg_2425.png',
+  'Frenkie de Jong':        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Frenkie_de_Jong_2019.jpg/800px-Frenkie_de_Jong_2019.jpg',
+  'Tijjani Reijnders':      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Reijnders_arriva_in_albergo_%28cropped%29.jpg/800px-Reijnders_arriva_in_albergo_%28cropped%29.jpg',
+  'Cody Gakpo':             'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg/800px-Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg',
+  // Ritsu Doan, Daichi Kamada, Msakni, Khazri → ghost-name fallback
 }
 
 const COUNTRY_COLORS: Record<string, string> = {
@@ -788,7 +776,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
           {FEATURED_PLAYERS.map(p => {
             const isExpanded = expandedPlayer === p.name
-            const photo = PLAYER_IMAGE_FALLBACKS[p.imageKey] ?? playerPhotoUrl(p.name)
+            const photo = PLAYER_IMAGE_FALLBACKS[p.imageKey] ?? null
             return (
               <div
                 key={p.name}
