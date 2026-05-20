@@ -133,7 +133,27 @@ export default function BracketPage() {
       round: 'final',
     }
 
-    setAllMatches([...r32m, ...r16m, ...qfm, ...sfm, bronzeM, finalM])
+    const finalMatches = [...r32m, ...r16m, ...qfm, ...sfm, bronzeM, finalM]
+    setAllMatches(finalMatches)
+
+    // Clear any picks whose value no longer matches either team in that match
+    // (can happen if upstream picks were incorrectly cleared by a previous bug)
+    const stalePicks = finalMatches.filter(m => {
+      const p = picks[m.matchNumber]
+      if (p === undefined) return false
+      if (m.round === 'bronze' && (p === `Förlorare ${sfm[0].label}` || p === `Förlorare ${sfm[1].label}`)) return false
+      return p !== m.team1 && p !== m.team2
+    })
+    if (stalePicks.length > 0) {
+      setDraft(prev => {
+        if (!prev) return prev
+        const cleaned = { ...prev.bracketPicks }
+        stalePicks.forEach(m => delete cleaned[m.matchNumber])
+        const next = { ...prev, bracketPicks: cleaned }
+        saveDraft(next)
+        return next
+      })
+    }
   }
 
   function handlePick(matchNumber: number, team: string) {
