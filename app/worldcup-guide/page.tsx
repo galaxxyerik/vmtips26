@@ -516,8 +516,16 @@ function statFor(stats: Record<string, PlayerStatRow>, name: string) {
   return stats[PLAYER_NAME_ALIASES[name] ?? name] ?? stats[name]
 }
 
-function PlayerStatsLine({ stat, isGoalkeeper = false }: { stat?: PlayerStatRow; isGoalkeeper?: boolean }) {
-  if (!stat) return <span>Klubb: – · Landslag: –</span>
+function PlayerStatsLine({
+  stat,
+  isGoalkeeper = false,
+  fallbackClub,
+}: {
+  stat?: PlayerStatRow
+  isGoalkeeper?: boolean
+  fallbackClub?: string
+}) {
+  if (!stat) return <span>Klubb: {fallbackClub ?? 'inväntar API'} · Landslag: inväntar API</span>
   const clubPart = isGoalkeeper
     ? `${stat.clean_sheets ?? '–'} hållna nollor · ${stat.minutes_club ?? '–'} min`
     : `${stat.goals_club ?? '–'} mål · ${stat.assists_club ?? '–'} assist · ${stat.minutes_club ?? '–'} min`
@@ -825,7 +833,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                     {p.position} · {p.club} · {p.age} år
                   </div>
                   <div className="text-white/25 text-[10px] font-mono">
-                    <PlayerStatsLine stat={statFor(stats, p.name)} />
+                    <PlayerStatsLine stat={statFor(stats, p.name)} fallbackClub={p.club} />
                   </div>
                   {isExpanded && (
                     <div className="pt-3 space-y-3 border-t border-white/10 mt-3">
@@ -859,7 +867,11 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-white/80 font-medium">{p.name}</div>
                     <div className="text-[10px] text-white/35">
-                      <PlayerStatsLine stat={statFor(stats, p.name)} isGoalkeeper={pos === 'Målvakter'} />
+                      <PlayerStatsLine
+                        stat={statFor(stats, p.name)}
+                        isGoalkeeper={pos === 'Målvakter'}
+                        fallbackClub={p.club}
+                      />
                     </div>
                   </div>
                   <span className="text-xs text-white/30">{statFor(stats, p.name)?.club ?? p.club}</span>
