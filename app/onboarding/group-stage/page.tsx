@@ -133,14 +133,15 @@ export default function GroupStagePage() {
           </div>
         </div>
       </div>
-      <div className="mb-4 border border-white/10 bg-white/[0.03] px-4 py-3">
-        <div className="font-display font-black text-[11px] uppercase tracking-[0.18em] text-swe-yellow/70">
+      <div className="mb-4 border border-swe-yellow/20 bg-swe-yellow/5 px-4 py-3">
+        <div className="font-display font-black text-[11px] uppercase tracking-[0.18em] text-swe-yellow/80">
           Sparas automatiskt
         </div>
         <p className="mt-1 text-sm leading-relaxed text-white/45">
-          Du behöver inte fylla i allt nu. Så länge du återkommer med samma mejl sparas det du redan tippat.
+          Du behöver inte fylla i allt på en gång — ditt tips sparas automatiskt. Återkommer du med samma e-post kan du fortsätta där du slutade.
         </p>
       </div>
+
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center gap-2 text-xs">
