@@ -25,6 +25,21 @@ function getStoredField(field: 'name' | 'email'): string {
   catch { return '' }
 }
 
+const EDITORIAL_STATEMENTS = [
+  {
+    claim: 'TIPPA HELA VM I ETT DRAG',
+    support: 'Gruppspel, slutspel och skyttekung — ett sammanhållet tips.',
+  },
+  {
+    claim: 'SWISHA 100 KR. KLART.',
+    support: 'Betalning när du är redo. Du kan alltid komma tillbaka.',
+  },
+  {
+    claim: 'FÖLJ TABELLEN LIVE UNDER VM',
+    support: 'Se poängen ticka in match för match mot dina kompisar.',
+  },
+]
+
 export default function LandingPage({ userName }: LandingPageProps) {
   const router = useRouter()
   const [name, setName] = useState<string>(() => getStoredField('name'))
@@ -75,7 +90,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
 
   return (
     <main className="relative min-h-screen bg-navy-950 text-white overflow-hidden">
-      {/* Sweden celebration background */}
+      {/* Background photography */}
       <Image
         src="/images/sweden-poland-wc-qual-2.jpg"
         alt=""
@@ -85,9 +100,10 @@ export default function LandingPage({ userName }: LandingPageProps) {
         className="object-cover object-[62%_center] z-0"
         priority
       />
-      {/* Overlays — left-heavy gradient to darken bg behind content */}
-      <div className="absolute inset-0 bg-gradient-to-b from-navy-950/60 via-navy-950/75 to-navy-950 z-[1]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-950/60 to-transparent z-[1]" />
+      {/* Vertical darkening — heavier at bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-navy-950/50 via-navy-950/65 to-navy-950 z-[1]" />
+      {/* Horizontal darkening — left side nearly opaque, fades right to reveal photography */}
+      <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-950/55 to-transparent z-[1]" />
 
       {/* Resume modal */}
       {showModal && (
@@ -103,12 +119,8 @@ export default function LandingPage({ userName }: LandingPageProps) {
               </p>
             )}
             <div className="flex gap-2 pt-1">
-              <button onClick={handleResume} className="btn-primary flex-1">
-                Fortsätt →
-              </button>
-              <button onClick={handleRestart} className="btn-secondary flex-1">
-                Börja om
-              </button>
+              <button onClick={handleResume} className="btn-primary flex-1">Fortsätt →</button>
+              <button onClick={handleRestart} className="btn-secondary flex-1">Börja om</button>
             </div>
           </div>
         </div>
@@ -116,120 +128,98 @@ export default function LandingPage({ userName }: LandingPageProps) {
 
       <NavBar userName={userName ?? null} />
 
-      {/* Hero content */}
-      <div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-24 sm:pb-32 max-w-2xl">
-        {/* Eyebrow */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-px w-8 bg-swe-yellow" />
+      {/* Two-column hero layout */}
+      <div className="relative z-10 lg:grid lg:grid-cols-2 lg:min-h-screen">
+
+        {/* ── Left column: headline + form ─────────────────────────── */}
+        <div className="px-6 sm:px-10 pt-12 sm:pt-16 pb-10 lg:pb-28 flex flex-col justify-start">
+
+          {/* Eyebrow */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-px w-8 bg-swe-yellow" />
+            <Editable
+              contentKey="landing.eyebrow"
+              fallback="11 juni — 19 juli 2026 · USA / CAN / MEX"
+              className="font-display font-black uppercase tracking-[0.22em] text-[10px] text-swe-yellow"
+            />
+          </div>
+
+          {/* Giant headline */}
+          <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.02em] text-[clamp(72px,14vw,160px)]">
+            <Editable contentKey="landing.hero.line1" fallback="HELA VM." /><br />
+            <span className="text-swe-yellow">
+              <Editable contentKey="landing.hero.line2" fallback="ETT TIPS." />
+            </span>
+          </h1>
+
           <Editable
-            contentKey="landing.eyebrow"
-            fallback="11 juni — 19 juli 2026 · USA / CAN / MEX"
-            className="font-display font-black uppercase tracking-[0.22em] text-[10px] text-swe-yellow"
+            contentKey="landing.subtitle"
+            fallback="48 matcher. 12 grupper. Ett slutspel. En insats. En vinnare. Alla andra köper öl."
+            multiline
+            as="p"
+            className="mt-6 text-base sm:text-lg text-white/60 max-w-[420px] leading-snug font-medium"
+          />
+
+          {/* Entry form */}
+          <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-[420px]">
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Ditt namn"
+              autoComplete="name"
+              className="input"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Din e-post"
+              autoComplete="email"
+              className="input"
+            />
+            {error && <p className="text-xs text-loss-500">{error}</p>}
+            <button type="submit" disabled={!canStart} className="btn-primary w-full text-base">
+              Påbörja ditt tips →
+            </button>
+            <p className="text-xs text-white/35 leading-relaxed">
+              Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
+            </p>
+          </form>
+
+          <Editable
+            contentKey="landing.deadline"
+            fallback="Insats: 100 kr · Deadline: 11 juni 2026"
+            as="p"
+            className="mt-4 text-xs text-white/20 tnum"
           />
         </div>
 
-        {/* Giant headline */}
-        <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.02em] text-[clamp(72px,14vw,160px)]">
-          <Editable contentKey="landing.hero.line1" fallback="HELA VM." /><br />
-          <span className="text-swe-yellow">
-            <Editable contentKey="landing.hero.line2" fallback="ETT TIPS." />
-          </span>
-        </h1>
+        {/* ── Right column: editorial statements ──────────────────── */}
+        <div className="relative px-6 sm:px-10 lg:px-14 xl:px-20 pt-10 lg:pt-0 pb-28 flex flex-col justify-center">
+          {/* Subtle dark wash behind type so it's legible against photography */}
+          <div className="absolute inset-0 hidden lg:block pointer-events-none bg-gradient-to-r from-navy-950/30 via-black/20 to-transparent" />
 
-        <Editable
-          contentKey="landing.subtitle"
-          fallback="48 matcher. 12 grupper. Ett slutspel. En insats. En vinnare. Alla andra köper öl."
-          multiline
-          as="p"
-          className="mt-6 text-base sm:text-lg text-white/60 max-w-md leading-snug font-medium"
-        />
-
-        {/* Entry form */}
-        <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-sm">
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Ditt namn"
-            autoComplete="name"
-            className="input"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="Din e-post"
-            autoComplete="email"
-            className="input"
-          />
-          {error && <p className="text-xs text-loss-500">{error}</p>}
-          <button type="submit" disabled={!canStart} className="btn-primary w-full text-base">
-            Påbörja ditt tips →
-          </button>
-          <p className="text-xs text-white/35 leading-relaxed">
-            Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
-          </p>
-        </form>
-
-        <Editable
-          contentKey="landing.deadline"
-          fallback="Insats: 100 kr · Deadline: 11 juni 2026"
-          as="p"
-          className="mt-4 text-xs text-white/20 tnum"
-        />
-
-        {/* How it works — 3 steps */}
-        <div className="mt-8 max-w-3xl border border-white/10 bg-navy-950/35 backdrop-blur-sm">
-          <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
-            {[
-              {
-                step: '01',
-                title: 'Tippa hela VM',
-                body: 'Gruppspel, slutspel och skyttekung i ett sammanhållet tips.',
-              },
-              {
-                step: '02',
-                title: 'Swisha 100 kr',
-                body: 'Betala via Swish när du är klar — belopp och mottagare är förifyllda.',
-              },
-              {
-                step: '03',
-                title: 'Följ live',
-                body: 'Se poängen ticka in under VM och jämför med kompisarnas tips i ledartavlan.',
-              },
-            ].map(item => (
-              <div key={item.step} className="px-4 py-4 sm:px-5 sm:py-5">
-                <div className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-swe-yellow/75">
-                  {item.step}
+          <div className="relative">
+            {EDITORIAL_STATEMENTS.map((s, i) => (
+              <div key={s.claim}>
+                {i > 0 && <div className="border-t border-white/15" />}
+                <div className="py-7 lg:py-9">
+                  <p className="font-display font-black uppercase leading-[0.88] tracking-tight text-white text-[clamp(30px,3.2vw,48px)]">
+                    {s.claim}
+                  </p>
+                  <p className="mt-2.5 text-sm text-white/60 leading-snug">
+                    {s.support}
+                  </p>
                 </div>
-                <div className="mt-2 font-display font-black uppercase tracking-wide text-sm text-white">
-                  {item.title}
-                </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/45">
-                  {item.body}
-                </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Key selling points */}
-        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 max-w-3xl">
-          {[
-            'Jämför med kompisar',
-            'Automatisk poängräkning',
-            'Sveriges grupp ingår',
-            'Swish-betalning',
-          ].map(point => (
-            <div key={point} className="flex items-center gap-1.5 text-[11px] text-white/30">
-              <div className="w-1 h-1 bg-swe-yellow/40 shrink-0" />
-              {point}
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Bottom strap — Sverige info */}
+      {/* Bottom strap */}
       <div className="absolute bottom-0 inset-x-0 z-10">
         <div className="h-0.5 bg-gradient-to-r from-swe-yellow via-swe-blue to-swe-yellow opacity-60" />
         <div className="bg-navy-950/90 border-t border-white/10">
@@ -240,7 +230,6 @@ export default function LandingPage({ userName }: LandingPageProps) {
               <span className="text-white/30">·</span>
               <span className="font-mono tnum text-white/50">Grupp F</span>
               <span className="text-white/20">·</span>
-              {/* Group F opponent flags */}
               <img src="/images/flag-nl.svg" alt="Nederländernas flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Nederländerna" />
               <img src="/images/flag-jp.svg" alt="Japans flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Japan" />
               <img src="/images/flag-tn.svg" alt="Tunisiens flagga" className="w-5 h-3.5 object-cover opacity-50 hover:opacity-80 transition-opacity" title="Tunisien" />
