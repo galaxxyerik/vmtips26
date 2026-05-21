@@ -304,19 +304,19 @@ function GroupInsightsPanel({ group }: { group: string }) {
       </div>
       <div className="space-y-3 text-sm">
         <div>
-          <p className="text-[10px] font-display font-black uppercase tracking-wider text-white/35 mb-1">Prognos</p>
+          <p className="text-xs font-display font-black uppercase tracking-wider text-white/60 mb-1">Prognos</p>
           <p className="text-white/80 leading-relaxed">{insight.prognos}</p>
         </div>
         <div className="border-t border-white/5 pt-3">
-          <p className="text-[10px] font-display font-black uppercase tracking-wider text-white/35 mb-1">Storstjarna</p>
-          <p className="text-white/80 leading-relaxed">{insight.storstjarna}</p>
+          <p className="text-xs font-display font-black uppercase tracking-wider text-white/60 mb-1">Storstjärna</p>
+          <p className="text-white/90 leading-relaxed">{insight.storstjarna}</p>
         </div>
         <div className="border-t border-white/5 pt-3">
-          <p className="text-[10px] font-display font-black uppercase tracking-wider text-swe-yellow/50 mb-1">Varning</p>
-          <p className="text-white/70 leading-relaxed">{insight.varning}</p>
+          <p className="text-xs font-display font-black uppercase tracking-wider text-swe-yellow mb-1">Varning</p>
+          <p className="text-white/90 leading-relaxed">{insight.varning}</p>
         </div>
       </div>
-      <p className="text-[10px] text-white/20 italic border-t border-white/5 pt-3">Redaktionell prognos — inte garantier.</p>
+      <p className="text-xs text-white/35 italic border-t border-white/5 pt-3">Redaktionell prognos — inte garantier.</p>
     </div>
   )
 }
@@ -352,7 +352,7 @@ function GroupPanel({
         <h2 className="font-display font-black text-base uppercase tracking-wider text-white">Grupp {group}</h2>
         <button
           onClick={onRandomize}
-          className="text-sm text-white/60 hover:text-swe-yellow border border-white/20 hover:border-swe-yellow/30 transition-colors px-3 py-1.5"
+          className="text-sm text-white/80 hover:text-swe-yellow border border-white/30 hover:border-swe-yellow/30 transition-colors px-3 py-1.5"
         >
           ↺ Slumpa grupp
         </button>
@@ -391,7 +391,7 @@ function GroupPanel({
               const s = statsMap[team]
               return (
                 <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-white/5 last:border-0 bg-navy-900/50">
-                  <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
+                  <span className="w-5 text-center text-xs font-display font-black text-white/50 tnum">{idx + 1}</span>
                   <span className="flex-1 text-sm font-medium text-white">{team}</span>
                   {s && (
                     <span className="text-xs text-white/65 tnum tabular-nums">
@@ -406,12 +406,12 @@ function GroupPanel({
                   <div className="flex gap-1">
                     <button onClick={() => idx > 0 && onReorder(idx, idx - 1)}
                       disabled={idx === 0}
-                      className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
+                      className="w-6 h-6 text-white/60 hover:text-white disabled:opacity-20 text-xs border border-white/20 hover:border-white/40 transition-colors">
                       ↑
                     </button>
                     <button onClick={() => idx < tableOrder.length - 1 && onReorder(idx, idx + 1)}
                       disabled={idx === tableOrder.length - 1}
-                      className="w-6 h-6 text-white/35 hover:text-white disabled:opacity-20 text-xs border border-white/10 hover:border-white/30 transition-colors">
+                      className="w-6 h-6 text-white/60 hover:text-white disabled:opacity-20 text-xs border border-white/20 hover:border-white/40 transition-colors">
                       ↓
                     </button>
                   </div>
@@ -445,11 +445,11 @@ function GroupPanel({
                 onChange={e => onScorer(e.target.value)}
                 onBlur={onScorerBlur}
                 placeholder={`Skyttekung grupp ${group}...`}
-                className="flex-1 bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 outline-none border-b border-white/20 pb-1 focus:border-swe-yellow transition-colors"
               />
               <button
                 onClick={onRandomizeScorer}
-                className="flex-shrink-0 flex items-center gap-1 text-xs font-display font-black uppercase tracking-wide text-white/55 hover:text-swe-yellow border border-white/20 hover:border-swe-yellow/30 transition-colors px-2.5 py-1.5"
+                className="flex-shrink-0 flex items-center gap-1 text-sm text-white/75 hover:text-swe-yellow border border-white/30 hover:border-swe-yellow/30 transition-colors px-2.5 py-1.5"
                 title="Slumpa ett namnförslag"
               >
                 ↺ Slumpa
@@ -498,7 +498,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
             className={`w-8 h-7 text-xs font-display font-black border transition-colors flex-shrink-0 ${
               pick === opt
                 ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
-                : 'bg-navy-800 text-white/40 border-white/10 hover:text-white hover:border-white/30'
+                : 'bg-navy-800 text-white/70 border-white/15 hover:text-white hover:border-white/40'
             }`}>
             {opt}
           </button>

@@ -50,15 +50,21 @@ export default function LandingPage({ userName }: LandingPageProps) {
   const [draftTime, setDraftTime] = useState<string | null>(null)
   const [isStarting, setIsStarting] = useState(false)
 
-  async function handleStart(e: React.FormEvent) {
+  async function handleStart(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!name.trim() || !email.trim()) { setError('Namn och e-post krävs.'); return }
+    // Read actual DOM values to handle browser autofill (autofill doesn't fire onChange)
+    const form = e.currentTarget
+    const nameVal = (form.elements.namedItem('entry-name') as HTMLInputElement)?.value?.trim() || name.trim()
+    const emailVal = (form.elements.namedItem('entry-email') as HTMLInputElement)?.value?.trim() || email.trim()
+    if (!nameVal || !emailVal) { setError('Namn och e-post krävs.'); return }
+    if (nameVal !== name) setName(nameVal)
+    if (emailVal !== email) setEmail(emailVal)
     setError('')
     setIsStarting(true)
 
-    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedEmail = emailVal.toLowerCase()
     const d = loadDraft()
-    d.name = name.trim()
+    d.name = nameVal
     d.email = normalizedEmail
     saveDraft(d)
 
@@ -71,7 +77,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
         if (res.ok) {
           const { draft: serverDraft } = await res.json() as { draft: import('@/lib/types').OnboardingDraft }
           if (serverDraft && Object.keys(serverDraft.matchPicks ?? {}).length > 0) {
-            restoreDraft({ ...serverDraft, name: name.trim(), email: normalizedEmail })
+            restoreDraft({ ...serverDraft, name: nameVal, email: normalizedEmail })
             const step = serverDraft.step ?? 'group-stage'
             setResumePath(STEP_PATHS[step] ?? '/onboarding/group-stage')
             setDraftTime(serverDraft.updatedAt ?? null)
@@ -189,6 +195,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
           {/* Entry form */}
           <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-[420px]">
             <input
+              name="entry-name"
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -197,6 +204,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
               className="input"
             />
             <input
+              name="entry-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -205,7 +213,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
               className="input"
             />
             {error && <p className="text-xs text-loss-500">{error}</p>}
-            <button type="submit" disabled={!canStart || isStarting} className="btn-primary w-full text-base">
+            <button type="submit" disabled={isStarting} className="btn-primary w-full text-base">
               {isStarting ? 'Kollar...' : 'Påbörja ditt tips →'}
             </button>
             <p className="text-center text-sm mt-1">
