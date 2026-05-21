@@ -115,4 +115,6 @@ export const VERIFIED_PLAYER_STATS: Record<string, PlayerStatRecord> = Object.fr
   VERIFIED_PLAYER_STATS_LIST.map(stat => [stat.player_name, stat])
 )
 
+export const STATS_LIST = VERIFIED_PLAYER_STATS_LIST
+
 export const VERIFIED_PLAYER_STATS_UPDATED_AT = VERIFIED_AT
