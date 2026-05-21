@@ -266,7 +266,16 @@ export default function GroupStagePage() {
         </div>{/* end left column */}
 
         {/* Group insights panel */}
-        <div className="mt-6 lg:mt-0 lg:sticky lg:top-[72px]">
+        <div className="mt-6 lg:mt-0 lg:sticky lg:top-[72px] space-y-3">
+          <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-4 py-3">
+            <p className="text-xs text-white/70 leading-relaxed">
+              Du kan lämna sidan när som helst — t ex för att läsa{' '}
+              <a href="/regler" className="text-swe-yellow/80 hover:text-swe-yellow underline underline-offset-2">reglerna</a>{' '}
+              eller{' '}
+              <a href="/worldcup-guide" className="text-swe-yellow/80 hover:text-swe-yellow underline underline-offset-2">VM-bibeln</a>.
+              Ditt tips sparas automatiskt. Tryck på den gula knappen nere till höger för att komma tillbaka.
+            </p>
+          </div>
           <GroupInsightsPanel group={activeGroup} />
         </div>
       </div>{/* end grid */}
