@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { loadDraft, saveDraft, setStep, computeGroupStandings } from '@/lib/onboarding-storage'
 import type { VmtMatch, Pick, GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
+import { randomizeGroupPicks, randomGroupScorer } from '@/lib/group-randomize'
 
 export default function GroupStagePage() {
   const router = useRouter()
@@ -34,14 +35,19 @@ export default function GroupStagePage() {
     })
   }
 
-  function handlePick(matchId: number, pick: Pick) {
+  function handlePick(matchId: number, pick: Pick | null) {
     const hadBracketPicks = Object.keys(draft?.bracketPicks ?? {}).length > 0
     update(d => {
-      const next = { ...d, matchPicks: { ...d.matchPicks, [matchId]: pick } }
+      const next = { ...d, matchPicks: { ...d.matchPicks } }
+      if (pick === null) {
+        delete next.matchPicks[matchId]
+      } else {
+        next.matchPicks[matchId] = pick
+      }
       const match = matches.find(m => m.id === matchId)
       if (!match?.group_label) return next
       const groupMatches = matches.filter(m => m.group_label === match.group_label)
-      const allPicked = groupMatches.every(m => m.id === matchId ? true : next.matchPicks[m.id])
+      const allPicked = groupMatches.every(m => next.matchPicks[m.id])
       if (allPicked) {
         const standings = computeGroupStandings(groupMatches, next.matchPicks)
         next.groupTableOrder = { ...next.groupTableOrder, [match.group_label]: standings.map(s => s.team) }
@@ -80,6 +86,34 @@ export default function GroupStagePage() {
 
   function handleScorerBlur(group: string) {
     update(d => ({ ...d, groupScorers: { ...d.groupScorers, [group]: (d.groupScorers[group] ?? '').trim() } }))
+  }
+
+  function handleRandomizeGroup(group: GroupLabel) {
+    const groupMatches = matches.filter(m => m.group_label === group)
+    if (groupMatches.length === 0) return
+    const hadBracketPicks = Object.keys(draft?.bracketPicks ?? {}).length > 0
+    const newPicks = randomizeGroupPicks(groupMatches)
+    update(d => {
+      const updatedMatchPicks = { ...d.matchPicks, ...newPicks }
+      const standings = computeGroupStandings(groupMatches, updatedMatchPicks)
+      const next = {
+        ...d,
+        matchPicks: updatedMatchPicks,
+        groupTableOrder: { ...d.groupTableOrder, [group]: standings.map(s => s.team) },
+      }
+      if (Object.keys(d.bracketPicks).length > 0) next.bracketPicks = {}
+      return next
+    })
+    if (hadBracketPicks) setBracketCleared(true)
+  }
+
+  function handleRandomizeScorer(group: GroupLabel) {
+    const groupMatches = matches.filter(m => m.group_label === group)
+    const teamNames = [...new Set(groupMatches.flatMap(m => [m.home_team, m.away_team]))]
+    const scorer = randomGroupScorer(teamNames)
+    if (scorer) {
+      update(d => ({ ...d, groupScorers: { ...d.groupScorers, [group]: scorer } }))
+    }
   }
 
   const groupedMatches = useCallback(() => {
@@ -196,6 +230,8 @@ export default function GroupStagePage() {
         onThirdPlace={checked => handleThirdPlace(activeGroup, checked)}
         onScorer={val => handleScorer(activeGroup, val)}
         onScorerBlur={() => handleScorerBlur(activeGroup)}
+        onRandomize={() => handleRandomizeGroup(activeGroup)}
+        onRandomizeScorer={() => handleRandomizeScorer(activeGroup)}
         onNextGroup={() => {
           const idx = GROUPS.indexOf(activeGroup)
           if (idx < GROUPS.length - 1) setActiveGroup(GROUPS[idx + 1])
@@ -228,7 +264,7 @@ export default function GroupStagePage() {
 function GroupPanel({
   group, matches, matchPicks, tableOrder, thirdPlaceSelected,
   thirdPlaceDisabled, scorer, onPick, onReorder, onThirdPlace, onScorer, onScorerBlur,
-  onNextGroup, isLastGroup, groupDone,
+  onRandomize, onRandomizeScorer, onNextGroup, isLastGroup, groupDone,
 }: {
   group: GroupLabel
   matches: VmtMatch[]
@@ -237,11 +273,13 @@ function GroupPanel({
   thirdPlaceSelected: boolean
   thirdPlaceDisabled: boolean
   scorer: string
-  onPick: (id: number, pick: Pick) => void
+  onPick: (id: number, pick: Pick | null) => void
   onReorder: (from: number, to: number) => void
   onThirdPlace: (checked: boolean) => void
   onScorer: (val: string) => void
   onScorerBlur: () => void
+  onRandomize: () => void
+  onRandomizeScorer: () => void
   onNextGroup: () => void
   isLastGroup: boolean
   groupDone: boolean
@@ -250,7 +288,15 @@ function GroupPanel({
 
   return (
     <div className="space-y-3">
-      <h2 className="font-display font-black text-sm uppercase tracking-wider text-white/60">Grupp {group}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-black text-sm uppercase tracking-wider text-white/60">Grupp {group}</h2>
+        <button
+          onClick={onRandomize}
+          className="text-xs text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2 py-1"
+        >
+          ↺ Slumpa grupp
+        </button>
+      </div>
 
       {/* Matches */}
       {matches.length === 0 ? (
@@ -324,14 +370,23 @@ function GroupPanel({
             </span>
           </label>
           <div className="px-3 py-2.5">
-            <input
-              type="text"
-              value={scorer}
-              onChange={e => onScorer(e.target.value)}
-              onBlur={onScorerBlur}
-              placeholder={`Skyttekung grupp ${group}...`}
-              className="w-full bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={scorer}
+                onChange={e => onScorer(e.target.value)}
+                onBlur={onScorerBlur}
+                placeholder={`Skyttekung grupp ${group}...`}
+                className="flex-1 bg-transparent text-sm text-white/80 placeholder:text-white/25 outline-none border-b border-white/10 pb-1 focus:border-swe-yellow transition-colors"
+              />
+              <button
+                onClick={onRandomizeScorer}
+                className="text-xs text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2 py-1 flex-shrink-0"
+                title="Slumpa skyttekung"
+              >
+                ↺
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -358,7 +413,7 @@ function GroupPanel({
   )
 }
 
-function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null; onPick: (p: Pick) => void }) {
+function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null; onPick: (p: Pick | null) => void }) {
   const kickoff = new Date(match.kickoff)
   const dateStr = kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
   const timeStr = kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
@@ -371,7 +426,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
           {match.home_team}
         </span>
         {(['1', 'X', '2'] as Pick[]).map(opt => (
-          <button key={opt} onClick={() => onPick(opt)}
+          <button key={opt} onClick={() => onPick(pick === opt ? null : opt)}
             className={`w-8 h-7 text-xs font-display font-black border transition-colors flex-shrink-0 ${
               pick === opt
                 ? 'bg-swe-yellow text-navy-950 border-swe-yellow'

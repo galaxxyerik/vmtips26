@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { hasDraft, getDraftStep, getDraftTimestamp, clearDraft, loadDraft, saveDraft } from '@/lib/onboarding-storage'
+import { hasDraft, getDraftStep, getDraftTimestamp, clearDraft, loadDraft, saveDraft, restoreDraft } from '@/lib/onboarding-storage'
 import { ONBOARDING_KEY } from '@/lib/types'
 import { Editable } from '@/components/Editable'
 import NavBar from '@/components/NavBar'
@@ -48,16 +48,42 @@ export default function LandingPage({ userName }: LandingPageProps) {
   const [showModal, setShowModal] = useState(false)
   const [resumePath, setResumePath] = useState('/onboarding/group-stage')
   const [draftTime, setDraftTime] = useState<string | null>(null)
+  const [isStarting, setIsStarting] = useState(false)
 
-  function handleStart(e: React.FormEvent) {
+  async function handleStart(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !email.trim()) { setError('Namn och e-post krävs.'); return }
     setError('')
+    setIsStarting(true)
 
+    const normalizedEmail = email.trim().toLowerCase()
     const d = loadDraft()
     d.name = name.trim()
-    d.email = email.trim()
+    d.email = normalizedEmail
     saveDraft(d)
+
+    const localHasPicks = Object.keys(d.matchPicks).length > 0
+
+    if (!localHasPicks) {
+      // No local picks — check server in case the user is on a new device
+      try {
+        const res = await fetch(`/api/draft?email=${encodeURIComponent(normalizedEmail)}`)
+        if (res.ok) {
+          const { draft: serverDraft } = await res.json() as { draft: import('@/lib/types').OnboardingDraft }
+          if (serverDraft && Object.keys(serverDraft.matchPicks ?? {}).length > 0) {
+            restoreDraft({ ...serverDraft, name: name.trim(), email: normalizedEmail })
+            const step = serverDraft.step ?? 'group-stage'
+            setResumePath(STEP_PATHS[step] ?? '/onboarding/group-stage')
+            setDraftTime(serverDraft.updatedAt ?? null)
+            setIsStarting(false)
+            setShowModal(true)
+            return
+          }
+        }
+      } catch { /* network error — fall through to normal flow */ }
+    }
+
+    setIsStarting(false)
 
     if (hasDraft()) {
       const step = getDraftStep()
@@ -179,8 +205,8 @@ export default function LandingPage({ userName }: LandingPageProps) {
               className="input"
             />
             {error && <p className="text-xs text-loss-500">{error}</p>}
-            <button type="submit" disabled={!canStart} className="btn-primary w-full text-base">
-              Påbörja ditt tips →
+            <button type="submit" disabled={!canStart || isStarting} className="btn-primary w-full text-base">
+              {isStarting ? 'Kollar...' : 'Påbörja ditt tips →'}
             </button>
             <p className="text-xs text-white/35 leading-relaxed">
               Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
