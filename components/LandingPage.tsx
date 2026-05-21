@@ -214,7 +214,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
               </a>
             </p>
             <p className="text-xs text-white/35 leading-relaxed">
-              Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
+              Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar. Har du redan skickat in ditt tips kan du logga in och ändra det fram till VM-start den 11 juni.
             </p>
           </form>
 
