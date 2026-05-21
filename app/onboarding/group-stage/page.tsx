@@ -303,6 +303,9 @@ function GroupPanel({
         <p className="text-white/30 text-sm">Inga matcher inlagda ännu.</p>
       ) : (
         <div className="border border-white/10 divide-y divide-white/5">
+          <div className="px-2 py-1.5 text-[10px] text-white/25 text-center tracking-wider bg-navy-900/60">
+            1 = hemmaseger · X = oavgjort · 2 = bortaseger
+          </div>
           {matches.map(m => (
             <MatchRow key={m.id} match={m} pick={matchPicks[m.id] ?? null} onPick={p => onPick(m.id, p)} />
           ))}

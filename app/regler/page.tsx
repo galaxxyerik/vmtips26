@@ -33,6 +33,28 @@ export default async function ReglerPage() {
 
       <main className="mx-auto max-w-5xl px-4 lg:px-8 py-12">
         <div className="space-y-14">
+          <Section title="Turneringsformat">
+            <p className="text-white/60 leading-relaxed mb-4">
+              FIFA VM 2026 spelas i USA, Kanada och Mexiko med <strong className="text-white">48 lag</strong> fördelade på <strong className="text-white">12 grupper</strong>.
+            </p>
+            <div className="space-y-4">
+              <div className="border-l-2 border-swe-yellow/40 pl-4">
+                <div className="font-display font-black text-sm uppercase tracking-wider text-white/70 mb-1">Gruppspel</div>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  Varje grupp har 4 lag som möter varandra en gång (6 matcher per grupp). Du tippar utfallet för varje match:
+                  <span className="text-white/75 font-medium"> 1 = hemmalaget vinner, X = oavgjort, 2 = bortalaget vinner.</span>
+                  {' '}De 2 bästa lagen i varje grupp går vidare automatiskt. Dessutom går de 8 bästa av de 12 tredjeplacerade vidare — du väljer vilka 8 du tror tar sig vidare.
+                </p>
+              </div>
+              <div className="border-l-2 border-swe-yellow/40 pl-4">
+                <div className="font-display font-black text-sm uppercase tracking-wider text-white/70 mb-1">Slutspel</div>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  32 lag möts i ett rent utslagsspel från sextondelsfinal till final. Du tippar vinnaren av varje match — förlorar ett lag är de ute. Det spelas också en bronsmatch om tredjeplats.
+                </p>
+              </div>
+            </div>
+          </Section>
+
           <Section title="Deadline">
             <p className="text-white/60 leading-relaxed">
               Alla tips måste vara inlämnade och betalda senast{' '}
