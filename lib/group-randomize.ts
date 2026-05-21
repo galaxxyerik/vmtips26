@@ -52,20 +52,20 @@ export function randomizeGroupPicks(matches: VmtMatch[]): Record<number, Pick> {
 export const TEAM_SCORERS: Record<string, string[]> = {
   // ── Grupp A ──────────────────────────────────────────────────────────────────
   'Mexiko':              ['Santiago Giménez', 'Raúl Jiménez', 'Roberto Alvarado'],
-  'Sydkorea':            ['Son Heung-min', 'Cho Gue-sung', 'Hwang Hee-chan'],
-  'Tjeckien':            ['Patrik Schick', 'Adam Hložek', 'Jan Kuchta'],
+  'Sydkorea':            ['Son Heung-min', 'Lee Kang-in', 'Cho Gue-sung'],
+  'Tjeckien':            ['Patrik Schick', 'Adam Hložek', 'Pavel Šulc'],
   'Sydafrika':           ['Percy Tau', 'Lyle Foster', 'Evidence Makgopa'],
 
   // ── Grupp B ──────────────────────────────────────────────────────────────────
   'Kanada':              ['Jonathan David', 'Alphonso Davies', 'Cyle Larin'],
-  'Schweiz':             ['Breel Embolo', 'Zeki Amdouni', 'Ruben Vargas'],
+  'Schweiz':             ['Breel Embolo', 'Zeki Amdouni', 'Dan Ndoye'],
   'Bosnien-H.':          ['Edin Džeko', 'Ermedin Demirović', 'Esmir Bajraktarević'],
   'Bosnien-Hercegovina': ['Edin Džeko', 'Ermedin Demirović', 'Esmir Bajraktarević'],
 
   // ── Grupp C ──────────────────────────────────────────────────────────────────
-  'Brasilien':           ['Vinícius Jr', 'Raphinha', 'Endrick'],
+  'Brasilien':           ['Vinícius Jr', 'Raphinha', 'Neymar'],
   'Marocko':             ['Youssef En-Nesyri', 'Ayoub El Kaabi', 'Brahim Diaz'],
-  'Skottland':           ['Che Adams', 'Lyndon Dykes', 'Scott McTominay'],
+  'Skottland':           ['Scott McTominay', 'Che Adams', 'Ross Stewart'],
 
   // ── Grupp D ──────────────────────────────────────────────────────────────────
   'USA':                 ['Christian Pulisic', 'Folarin Balogun', 'Ricardo Pepi'],
@@ -75,19 +75,19 @@ export const TEAM_SCORERS: Record<string, string[]> = {
 
   // ── Grupp E ──────────────────────────────────────────────────────────────────
   'Tyskland':            ['Florian Wirtz', 'Jamal Musiala', 'Kai Havertz'],
-  'Ecuador':             ['Kendry Páez', 'Gonzalo Plata', 'Enner Valencia'],
-  'Elfenbenskusten':     ['Simon Adingra', 'Sébastien Haller', 'Wilfried Zaha'],
+  'Ecuador':             ['Enner Valencia', 'Kendry Páez', 'Gonzalo Plata'],
+  'Elfenbenskusten':     ['Simon Adingra', 'Sébastien Haller', 'Nicolas Pépé'],
 
   // ── Grupp F ──────────────────────────────────────────────────────────────────
-  'Nederländerna':       ['Cody Gakpo', 'Donyell Malen', 'Brian Brobbey'],
+  'Nederländerna':       ['Cody Gakpo', 'Memphis Depay', 'Donyell Malen'],
   'Sverige':             ['Viktor Gyökeres', 'Alexander Isak', 'Lucas Bergvall'],
   'Japan':               ['Takefusa Kubo', 'Ayase Ueda', 'Daizen Maeda'],
-  'Tunisien':            ['Khalil Ayari', 'Elias Saad', 'Aïssa Laïdouni'],
+  'Tunisien':            ['Hannibal Mejbri', 'Khalil Ayari', 'Elias Saad'],
 
   // ── Grupp G ──────────────────────────────────────────────────────────────────
   'Belgien':             ['Romelu Lukaku', 'Kevin De Bruyne', 'Jeremy Doku'],
   'Egypten':             ['Mohamed Salah', 'Omar Marmoush', 'Mostafa Mohamed'],
-  'Iran':                ['Mehdi Taremi', 'Sardar Azmoun', 'Alireza Jahanbakhsh'],
+  'Iran':                ['Mehdi Taremi', 'Alireza Jahanbakhsh', 'Saman Ghoddos'],
 
   // ── Grupp H ──────────────────────────────────────────────────────────────────
   'Spanien':             ['Lamine Yamal', 'Nico Williams', 'Álvaro Morata'],
@@ -100,7 +100,7 @@ export const TEAM_SCORERS: Record<string, string[]> = {
 
   // ── Grupp J ──────────────────────────────────────────────────────────────────
   'Argentina':           ['Lautaro Martínez', 'Julián Álvarez', 'Lionel Messi'],
-  'Österrike':           ['Michael Gregoritsch', 'Marcel Sabitzer', 'Marko Arnautović'],
+  'Österrike':           ['Marko Arnautović', 'Michael Gregoritsch', 'Christoph Baumgartner'],
   'Algeriet':            ['Riyad Mahrez', 'Youcef Atal', 'Andy Delort'],
 
   // ── Grupp K ──────────────────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ export const TEAM_SCORERS: Record<string, string[]> = {
   // ── Grupp L ──────────────────────────────────────────────────────────────────
   'England':             ['Harry Kane', 'Jude Bellingham', 'Bukayo Saka'],
   'Kroatien':            ['Andrej Kramarić', 'Ante Budimir', 'Marko Livaja'],
-  'Ghana':               ['Mohammed Kudus', 'Antoine Semenyo', 'Jordan Ayew'],
+  'Ghana':               ['Mohammed Kudus', 'Inaki Williams', 'Antoine Semenyo'],
 }
 
 export function randomGroupScorer(teamNames: string[]): string {
