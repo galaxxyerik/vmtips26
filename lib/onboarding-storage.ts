@@ -43,11 +43,27 @@ export function loadDraft(): OnboardingDraft {
   }
 }
 
+// Write to localStorage only — no server push. Used when restoring from server.
+export function restoreDraft(draft: OnboardingDraft): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(ONBOARDING_KEY, JSON.stringify(draft))
+  } catch { /* ignore */ }
+}
+
 export function saveDraft(draft: OnboardingDraft): boolean {
   if (typeof window === 'undefined') return false
   try {
     draft.updatedAt = new Date().toISOString()
     localStorage.setItem(ONBOARDING_KEY, JSON.stringify(draft))
+    // Fire-and-forget server sync so the draft survives a device switch
+    if (draft.email) {
+      fetch('/api/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: draft.email.trim().toLowerCase(), draft }),
+      }).catch(() => {})
+    }
     return true
   } catch {
     return false
@@ -56,7 +72,20 @@ export function saveDraft(draft: OnboardingDraft): boolean {
 
 export function clearDraft(): void {
   if (typeof window === 'undefined') return
-  localStorage.removeItem(ONBOARDING_KEY)
+  try {
+    const raw = localStorage.getItem(ONBOARDING_KEY)
+    const email = raw ? (JSON.parse(raw) as Partial<OnboardingDraft>).email : undefined
+    localStorage.removeItem(ONBOARDING_KEY)
+    if (email) {
+      fetch('/api/draft', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      }).catch(() => {})
+    }
+  } catch {
+    localStorage.removeItem(ONBOARDING_KEY)
+  }
 }
 
 export function setStep(step: OnboardingStep): void {

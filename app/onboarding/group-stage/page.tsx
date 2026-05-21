@@ -35,14 +35,19 @@ export default function GroupStagePage() {
     })
   }
 
-  function handlePick(matchId: number, pick: Pick) {
+  function handlePick(matchId: number, pick: Pick | null) {
     const hadBracketPicks = Object.keys(draft?.bracketPicks ?? {}).length > 0
     update(d => {
-      const next = { ...d, matchPicks: { ...d.matchPicks, [matchId]: pick } }
+      const next = { ...d, matchPicks: { ...d.matchPicks } }
+      if (pick === null) {
+        delete next.matchPicks[matchId]
+      } else {
+        next.matchPicks[matchId] = pick
+      }
       const match = matches.find(m => m.id === matchId)
       if (!match?.group_label) return next
       const groupMatches = matches.filter(m => m.group_label === match.group_label)
-      const allPicked = groupMatches.every(m => m.id === matchId ? true : next.matchPicks[m.id])
+      const allPicked = groupMatches.every(m => next.matchPicks[m.id])
       if (allPicked) {
         const standings = computeGroupStandings(groupMatches, next.matchPicks)
         next.groupTableOrder = { ...next.groupTableOrder, [match.group_label]: standings.map(s => s.team) }
@@ -268,7 +273,7 @@ function GroupPanel({
   thirdPlaceSelected: boolean
   thirdPlaceDisabled: boolean
   scorer: string
-  onPick: (id: number, pick: Pick) => void
+  onPick: (id: number, pick: Pick | null) => void
   onReorder: (from: number, to: number) => void
   onThirdPlace: (checked: boolean) => void
   onScorer: (val: string) => void
@@ -408,7 +413,7 @@ function GroupPanel({
   )
 }
 
-function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null; onPick: (p: Pick) => void }) {
+function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null; onPick: (p: Pick | null) => void }) {
   const kickoff = new Date(match.kickoff)
   const dateStr = kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
   const timeStr = kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
@@ -421,7 +426,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
           {match.home_team}
         </span>
         {(['1', 'X', '2'] as Pick[]).map(opt => (
-          <button key={opt} onClick={() => onPick(opt)}
+          <button key={opt} onClick={() => onPick(pick === opt ? null : opt)}
             className={`w-8 h-7 text-xs font-display font-black border transition-colors flex-shrink-0 ${
               pick === opt
                 ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
