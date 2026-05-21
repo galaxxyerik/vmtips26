@@ -1254,15 +1254,15 @@ function FavoritesTab() {
         <div className="h-[2px] w-14 bg-swe-yellow" />
       </div>
 
-      <div className="grid gap-px bg-white/5 sm:grid-cols-3">
+      <div className="flex flex-wrap gap-1.5 sm:flex-none sm:grid sm:grid-cols-3 sm:gap-px sm:bg-white/5">
         {[
           ['Titelchans', 'Procenten är vår uppskattade chans att laget vinner hela VM.'],
           ['Modell', 'Truppkvalitet, gruppväg, tänkbar slutspelsväg och turneringsvana vägs ihop.'],
           ['Tolkning', 'Det är en ranking, inte bettingodds. Klicka på ett land för kort motivering.'],
         ].map(([label, text]) => (
-          <div key={label} className="bg-navy-950 px-4 py-3">
+          <div key={label} className="border border-white/10 px-2 py-1 sm:border-0 sm:bg-navy-950 sm:px-4 sm:py-3">
             <div className="label text-[9px] text-swe-yellow/70">{label}</div>
-            <p className="mt-1 text-xs leading-relaxed text-white/45">{text}</p>
+            <p className="mt-1 text-xs leading-relaxed text-white/45 hidden sm:block">{text}</p>
           </div>
         ))}
       </div>
@@ -1355,15 +1355,15 @@ function DarkHorsesTab() {
         <div className="h-[2px] w-14 bg-swe-yellow" />
       </div>
 
-      <div className="grid gap-px bg-white/5 sm:grid-cols-3">
+      <div className="flex flex-wrap gap-1.5 sm:flex-none sm:grid sm:grid-cols-3 sm:gap-px sm:bg-white/5">
         {[
           ['Inte titelchans', 'Skrällistan visar hur långt laget rimligen kan gå om turneringen faller rätt.'],
           ['Bedömning', 'Gruppväg, defensiv stabilitet, matchvinnare och erfarenhet i utslagsmatcher vägs ihop.'],
           ['Tolkning', 'Rimligt tak är maxnivån, inte prognosen. Klicka på laget för motiveringen.'],
         ].map(([label, text]) => (
-          <div key={label} className="bg-navy-950 px-4 py-3">
+          <div key={label} className="border border-white/10 px-2 py-1 sm:border-0 sm:bg-navy-950 sm:px-4 sm:py-3">
             <div className="label text-[9px] text-swe-yellow/70">{label}</div>
-            <p className="mt-1 text-xs leading-relaxed text-white/45">{text}</p>
+            <p className="mt-1 text-xs leading-relaxed text-white/45 hidden sm:block">{text}</p>
           </div>
         ))}
       </div>
