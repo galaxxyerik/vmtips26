@@ -87,12 +87,17 @@ export default function NavBar({ userName }: NavBarProps) {
           {navLink('/regler', 'Regler')}
           {isAdmin && navLink('/admin', 'Admin')}
           {!resolvedUserName && (
-            <Link
-              href="/"
-              className="ml-2 shrink-0 btn-primary h-8 px-4 text-xs"
-            >
-              Tippa nu →
-            </Link>
+            <div className="ml-2 flex items-center gap-2 shrink-0">
+              <Link href="/" className="btn-primary h-8 px-4 text-xs whitespace-nowrap">
+                Tippa nu →
+              </Link>
+              <Link
+                href="/login"
+                className="text-[11px] font-display font-black uppercase tracking-wider text-white/40 hover:text-white transition-colors whitespace-nowrap"
+              >
+                Logga in
+              </Link>
+            </div>
           )}
 
           {resolvedUserName && (

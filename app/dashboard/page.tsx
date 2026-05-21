@@ -233,6 +233,23 @@ export default async function DashboardPage({
               </div>
             </div>
 
+            {/* Login prompt for logged-out users who have already submitted */}
+            {!user && (
+              <div className="border border-white/10 px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="font-display font-black uppercase tracking-wide text-white text-sm">
+                    Har du redan tippat?
+                  </div>
+                  <div className="text-xs text-white/40 mt-0.5 leading-relaxed">
+                    Logga in för att följa ditt tips och göra ändringar — det går fram till VM-start den 11 juni.
+                  </div>
+                </div>
+                <Link href="/login" className="btn-primary text-sm px-5 h-9 flex items-center shrink-0">
+                  Logga in →
+                </Link>
+              </div>
+            )}
+
             {/* CTA */}
             <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-5 py-4 flex items-center justify-between gap-4">
               <div>
