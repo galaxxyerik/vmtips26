@@ -303,8 +303,13 @@ function GroupPanel({
         <p className="text-white/30 text-sm">Inga matcher inlagda ännu.</p>
       ) : (
         <div className="border border-white/10 divide-y divide-white/5">
-          <div className="px-2 py-1.5 text-[10px] text-white/25 text-center tracking-wider bg-navy-900/60">
-            1 = hemmaseger · X = oavgjort · 2 = bortaseger
+          <div className="flex items-center gap-4 px-3 py-1.5 bg-navy-900/60 border-b border-white/5">
+            {(['1', 'X', '2'] as const).map((key, i) => (
+              <div key={key} className="flex items-center gap-1.5">
+                <span className="w-5 h-[18px] flex items-center justify-center bg-navy-800 border border-white/10 text-[10px] font-display font-black text-white/50">{key}</span>
+                <span className="text-[10px] text-white/30">{['Hemmaseger', 'Oavgjort', 'Bortaseger'][i]}</span>
+              </div>
+            ))}
           </div>
           {matches.map(m => (
             <MatchRow key={m.id} match={m} pick={matchPicks[m.id] ?? null} onPick={p => onPick(m.id, p)} />
@@ -384,10 +389,10 @@ function GroupPanel({
               />
               <button
                 onClick={onRandomizeScorer}
-                className="text-xs text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2 py-1 flex-shrink-0"
-                title="Slumpa skyttekung"
+                className="flex-shrink-0 flex items-center gap-1 text-[10px] font-display font-black uppercase tracking-wide text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2.5 py-1"
+                title="Slumpa ett namnförslag"
               >
-                ↺
+                ↺ Slumpa
               </button>
             </div>
           </div>
