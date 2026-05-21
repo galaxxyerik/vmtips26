@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
+import SwishSection from './SwishSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,19 @@ export default async function ReglerPage() {
 
       <main className="mx-auto max-w-5xl px-4 lg:px-8 py-12">
         <div className="space-y-14">
+
+          {/* ── DEADLINE CALLOUT ── */}
+          <div className="border-l-4 border-swe-yellow pl-5 py-1">
+            <div className="font-display font-black uppercase text-swe-yellow leading-none" style={{ fontSize: 'clamp(32px, 6vw, 56px)' }}>
+              DEADLINE
+            </div>
+            <div className="font-mono font-bold text-white tnum mt-1" style={{ fontSize: 'clamp(18px, 3vw, 28px)' }}>
+              11 JUNI 2026 · KL 17:00
+            </div>
+            <p className="text-white/60 text-sm mt-2">Tips inlämnade efter detta datum gäller inte.</p>
+          </div>
+
+          {/* ── TURNERINGSFORMAT ── */}
           <Section title="Turneringsformat">
             <p className="text-white/60 leading-relaxed mb-4">
               FIFA VM 2026 spelas i USA, Kanada och Mexiko med <strong className="text-white">48 lag</strong> fördelade på <strong className="text-white">12 grupper</strong>.
@@ -41,85 +55,72 @@ export default async function ReglerPage() {
               <div className="border-l-2 border-swe-yellow/40 pl-4">
                 <div className="font-display font-black text-sm uppercase tracking-wider text-white/70 mb-1">Gruppspel</div>
                 <p className="text-white/50 text-sm leading-relaxed">
-                  Varje grupp har 4 lag som möter varandra en gång (6 matcher per grupp). Du tippar utfallet för varje match:
-                  <span className="text-white/75 font-medium"> 1 = hemmalaget vinner, X = oavgjort, 2 = bortalaget vinner.</span>
-                  {' '}De 2 bästa lagen i varje grupp går vidare automatiskt. Dessutom går de 8 bästa av de 12 tredjeplacerade vidare — du väljer vilka 8 du tror tar sig vidare.
+                  Varje grupp har 4 lag som möter varandra en gång (6 matcher per grupp). Du tippar utfallet:
+                  <span className="text-white/75 font-medium"> 1 = hemmalaget, X = oavgjort, 2 = bortalaget.</span>
+                  {' '}De 2 bästa i varje grupp går vidare. De 8 bästa tredjeplacerade går också vidare — du väljer vilka.
                 </p>
               </div>
               <div className="border-l-2 border-swe-yellow/40 pl-4">
                 <div className="font-display font-black text-sm uppercase tracking-wider text-white/70 mb-1">Slutspel</div>
                 <p className="text-white/50 text-sm leading-relaxed">
-                  32 lag möts i ett rent utslagsspel från sextondelsfinal till final. Du tippar vinnaren av varje match — förlorar ett lag är de ute. Det spelas också en bronsmatch om tredjeplats.
+                  32 lag i rent utslagsspel från sextondelsfinal till final. Du tippar vinnaren av varje match. Det spelas även bronsmatch.
                 </p>
               </div>
             </div>
           </Section>
 
-          <Section title="Deadline">
-            <p className="text-white/60 leading-relaxed">
-              Alla tips måste vara inlämnade och betalda senast{' '}
-              <strong className="text-white">11 juni 2026 kl 17:00</strong>{' '}
-              (innan turneringen startar). Tips som lämnas in efter detta datum gäller inte.
-            </p>
-          </Section>
-
+          {/* ── DELTAGANDE & BETALNING ── */}
           <Section title="Deltagande &amp; Betalning">
-            <p className="text-white/60 leading-relaxed mb-4">
-              Insatsen är <strong className="text-white">100 kr per person</strong>, betalas via Swish till:
+            <p className="text-white/60 leading-relaxed mb-5">
+              Insatsen är <strong className="text-white">100 kr per person</strong>.
+              Du är officiellt med när Erik bekräftat din betalning.
             </p>
-            <div className="border border-swe-yellow/30 bg-swe-yellow/5 px-6 py-5">
-              <div className="font-display font-black text-3xl sm:text-4xl text-swe-yellow tracking-wider leading-none">100 KR</div>
-              <div className="font-display font-black text-lg text-white/60 mt-2 uppercase tracking-wider">Erik Engstrand · 0768919007</div>
+            <SwishSection />
+          </Section>
+
+          {/* ── POÄNGSYSTEM — GRUPPSPEL ── */}
+          <Section title="Gruppspel">
+            <PointsGroup
+              rows={[
+                { pts: '1', label: 'Rätt matchutfall', desc: '1/X/2 korrekt · 36 matcher totalt · max 36 p' },
+                { pts: '2', label: 'Rätt lag, exakt rätt plats i grupptabell', desc: 'Exakt position 1–4 i gruppen' },
+                { pts: '1', label: 'Rätt lag, en plats fel i grupptabell', desc: '12 grupper × 4 lag · max 96 p totalt' },
+                { pts: '1', label: 'Rätt trea vidare', desc: '8 av 12 tredjeplacerade går vidare · max 8 p' },
+                { pts: '3', label: 'Rätt gruppskyttekung', desc: '12 grupper × 3 p · max 36 p' },
+              ]}
+            />
+          </Section>
+
+          {/* ── POÄNGSYSTEM — SLUTSPEL ── */}
+          <Section title="Slutspel">
+            <PointsGroup
+              rows={[
+                { pts: '2 / 1', label: 'Sextondelsfinal', desc: 'Rätt väg = 2 p · Annan väg = 1 p' },
+                { pts: '3 / 1,5', label: 'Åttondelsfinaler', desc: 'Rätt väg = 3 p · Annan väg = 1,5 p' },
+                { pts: '4 / 2', label: 'Kvartsfinaler', desc: 'Rätt väg = 4 p · Annan väg = 2 p' },
+                { pts: '5 / 2,5', label: 'Semifinaler', desc: 'Rätt väg = 5 p · Annan väg = 2,5 p' },
+                { pts: '3 / 1,5', label: 'Bronsmatch', desc: 'Rätt väg = 3 p · Annan väg = 1,5 p' },
+                { pts: '6 / 3', label: 'Final — rätt mästare', desc: 'Rätt väg = 6 p · Annan väg = 3 p' },
+              ]}
+            />
+
+            {/* Annan väg explainer */}
+            <div className="mt-8">
+              <div className="label mb-4">Vad betyder &ldquo;annan väg&rdquo;?</div>
+              <AnnanVagDiagram />
             </div>
-            <p className="text-white/40 text-xs mt-3 leading-relaxed">
-              Du är officiellt med i spelet när Erik bekräftat din betalning. Bekräftelse syns på din profilsida.
-            </p>
           </Section>
 
-          <Section title="Gruppspel — 1/X/2-tips">
-            <ScoreRow label="Rätt utfall (1, X eller 2)" points="1 poäng" />
-            <p className="text-white/30 text-xs mt-2">Totalt 36 matcher × 1 poäng = max 36 poäng</p>
+          {/* ── BONUS ── */}
+          <Section title="Bonus">
+            <PointsGroup
+              rows={[
+                { pts: '5', label: 'Turneringsskyttekung', desc: 'Rätt skyttekung för hela VM' },
+              ]}
+            />
           </Section>
 
-          <Section title="Grupptabeller">
-            <ScoreRow label="Rätt lag på exakt rätt plats (1:a–4:e)" points="2 poäng" />
-            <ScoreRow label="Rätt lag men en plats fel" points="1 poäng" />
-            <p className="text-white/30 text-xs mt-2">Totalt 12 grupper × 4 lag = max 96 poäng</p>
-          </Section>
-
-          <Section title="Tredjeplacerade som går vidare">
-            <ScoreRow label="Rätt gissat att ett trea-lag går vidare" points="1 poäng" />
-            <p className="text-white/30 text-xs mt-2">8 av 12 tredjeplacerade går vidare. Max 8 poäng.</p>
-          </Section>
-
-          <Section title="Gruppskyttekungar">
-            <ScoreRow label="Rätt skyttekung i en grupp" points="3 poäng" />
-            <p className="text-white/30 text-xs mt-2">12 grupper × 3 poäng = max 36 poäng</p>
-          </Section>
-
-          <Section title="Slutspelet — Brackettips">
-            <p className="text-white/60 leading-relaxed mb-3">
-              Poäng ges för varje match i slutspelet där du gissar rätt vinnare.
-            </p>
-            <div>
-              <ScoreRow label="Sextondelsfinal — rätt lag, rätt plats" points="2 poäng" />
-              <ScoreRow label="Sextondelsfinal — rätt lag, annan väg" points="1 poäng" />
-              <ScoreRow label="Åttondelsfinaler — rätt/annan väg" points="3 / 1,5 poäng" />
-              <ScoreRow label="Kvartsfinaler — rätt/annan väg" points="4 / 2 poäng" />
-              <ScoreRow label="Semifinaler — rätt/annan väg" points="5 / 2,5 poäng" />
-              <ScoreRow label="Bronsmatch — rätt/annan väg" points="3 / 1,5 poäng" />
-              <ScoreRow label="Final — rätt vinnare, rätt path" points="6 poäng" />
-              <ScoreRow label="Final — rätt vinnare, annan väg" points="3 poäng" />
-            </div>
-            <p className="text-white/30 text-xs mt-2 leading-relaxed">
-              <strong className="text-white/50">&ldquo;Annan väg&rdquo;</strong> = laget nådde den rundan men via en annan bracket-gren (halvt poäng).
-            </p>
-          </Section>
-
-          <Section title="Turneringsskyttekung (bonus)">
-            <ScoreRow label="Rätt skyttekung för hela VM" points="5 poäng" />
-          </Section>
-
+          {/* ── SEEDNING ── */}
           <Section title="Hur seedningen fungerar">
             <p className="text-white/60 leading-relaxed">
               Slutspelsbracket byggs automatiskt från dina grupptabeller enligt FIFA:s officiella Annex C-regler.
@@ -127,6 +128,7 @@ export default async function ReglerPage() {
               Om du ändrar din grupptabell-ordning påverkar det vilka lag du möter i slutspelet.
             </p>
           </Section>
+
         </div>
       </main>
 
@@ -135,25 +137,165 @@ export default async function ReglerPage() {
   )
 }
 
+// ── Section wrapper ────────────────────────────────────────────────────────────
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl uppercase tracking-tight text-white leading-none mb-2">
-        {title}
-      </h2>
-      <div className="h-[2px] w-10 bg-swe-yellow mb-6" />
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-1 shrink-0 self-stretch bg-swe-yellow" />
+        <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl uppercase tracking-tight text-white leading-none">
+          {title}
+        </h2>
+      </div>
       <div>{children}</div>
     </div>
   )
 }
 
-function ScoreRow({ label, points }: { label: string; points: string }) {
+// ── Points group — scannable grid ─────────────────────────────────────────────
+
+function PointsGroup({ rows }: { rows: { pts: string; label: string; desc: string }[] }) {
   return (
-    <div className="flex items-center gap-5 py-3.5 border-b border-white/8 last:border-0">
-      <div className="w-44 shrink-0">
-        <span className="font-display font-black text-xl lg:text-2xl text-swe-yellow leading-none whitespace-nowrap">{points}</span>
-      </div>
-      <span className="text-white/55 text-sm leading-relaxed">{label}</span>
+    <div>
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          className="flex items-start gap-5 py-4 border-b last:border-0"
+          style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+        >
+          <div className="w-20 shrink-0">
+            <span className="font-mono font-bold tnum text-swe-yellow leading-none" style={{ fontSize: '40px' }}>
+              {r.pts}
+            </span>
+            <span className="block text-[10px] font-display font-black uppercase tracking-widest text-swe-yellow/50 mt-0.5">
+              poäng
+            </span>
+          </div>
+          <div className="pt-1">
+            <div className="font-display font-black text-xl uppercase tracking-wide text-white leading-tight">{r.label}</div>
+            <p className="text-white/50 text-sm mt-1 leading-relaxed">{r.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Annan väg SVG bracket diagram ─────────────────────────────────────────────
+
+function AnnanVagDiagram() {
+  const yellow = '#FFC000'
+  const dim = 'rgba(255,255,255,0.15)'
+  const textDim = 'rgba(255,255,255,0.45)'
+  const textFaint = 'rgba(255,255,255,0.25)'
+
+  return (
+    <div className="border border-white/10 bg-navy-900 px-4 py-6 overflow-x-auto">
+      <svg viewBox="0 0 640 200" className="w-full max-w-xl" style={{ minWidth: '320px' }}>
+
+        {/* ── LEFT SIDE: Rätt väg ──────────────────────── */}
+        {/* Label */}
+        <text x="8" y="16" fill={yellow} fontSize="11" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="start" letterSpacing="1">
+          RÄTT VÄG = FULL POÄNG
+        </text>
+
+        {/* R16 match box — top path */}
+        <rect x="8" y="28" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="44" y="44" fill="white" fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag A</text>
+
+        <rect x="8" y="56" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="44" y="72" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag B</text>
+
+        {/* connector right */}
+        <line x1="80" y1="40" x2="96" y2="40" stroke={dim} strokeWidth="1" />
+        <line x1="80" y1="68" x2="96" y2="68" stroke={dim} strokeWidth="1" />
+        <line x1="96" y1="40" x2="96" y2="68" stroke={dim} strokeWidth="1" />
+        <line x1="96" y1="54" x2="112" y2="54" stroke={dim} strokeWidth="1" />
+
+        {/* QF match box — top path */}
+        <rect x="112" y="40" width="72" height="24" fill="none" stroke={yellow} strokeWidth="1.5" />
+        <text x="148" y="56" fill={yellow} fontSize="10" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="middle">Lag A</text>
+
+        {/* R16 match box — bottom path (same side) */}
+        <rect x="8" y="104" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="44" y="120" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag C</text>
+
+        <rect x="8" y="132" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="44" y="148" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag D</text>
+
+        <line x1="80" y1="116" x2="96" y2="116" stroke={dim} strokeWidth="1" />
+        <line x1="80" y1="144" x2="96" y2="144" stroke={dim} strokeWidth="1" />
+        <line x1="96" y1="116" x2="96" y2="144" stroke={dim} strokeWidth="1" />
+        <line x1="96" y1="130" x2="112" y2="130" stroke={dim} strokeWidth="1" />
+
+        <rect x="112" y="116" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="148" y="132" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag E</text>
+
+        {/* SF connector */}
+        <line x1="184" y1="52" x2="200" y2="52" stroke={yellow} strokeWidth="1.5" />
+        <line x1="184" y1="128" x2="200" y2="128" stroke={dim} strokeWidth="1" />
+        <line x1="200" y1="52" x2="200" y2="128" stroke={dim} strokeWidth="1" />
+        <line x1="200" y1="90" x2="216" y2="90" stroke={dim} strokeWidth="1" />
+
+        {/* SF box */}
+        <rect x="216" y="76" width="72" height="24" fill="none" stroke={yellow} strokeWidth="2" />
+        <text x="252" y="92" fill={yellow} fontSize="10" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="middle">Lag A ✓</text>
+
+        <text x="8" y="190" fill={textDim} fontSize="9" fontFamily="Inter" textAnchor="start">
+          Lag A följde din tippade bracket-väg → full poäng
+        </text>
+
+        {/* ── RIGHT SIDE: Annan väg ──────────────────────── */}
+        {/* Label */}
+        <text x="348" y="16" fill={textDim} fontSize="11" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="start" letterSpacing="1">
+          ANNAN VÄG = HALVT POÄNG
+        </text>
+
+        {/* Top bracket — Lag A knocked out early */}
+        <rect x="348" y="28" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="384" y="44" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag X</text>
+
+        <rect x="348" y="56" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="384" y="72" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag A</text>
+
+        <line x1="420" y1="40" x2="436" y2="40" stroke={dim} strokeWidth="1" />
+        <line x1="420" y1="68" x2="436" y2="68" stroke={dim} strokeWidth="1" />
+        <line x1="436" y1="40" x2="436" y2="68" stroke={dim} strokeWidth="1" />
+        <line x1="436" y1="54" x2="452" y2="54" stroke={dim} strokeWidth="1" />
+
+        <rect x="452" y="40" width="72" height="24" fill="none" stroke={yellow} strokeWidth="1.5" />
+        <text x="488" y="56" fill={yellow} fontSize="10" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="middle">Lag A</text>
+
+        {/* Bottom bracket — Lag A comes through other side */}
+        <rect x="348" y="104" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="384" y="120" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag F</text>
+
+        <rect x="348" y="132" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="384" y="148" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag G</text>
+
+        <line x1="420" y1="116" x2="436" y2="116" stroke={dim} strokeWidth="1" />
+        <line x1="420" y1="144" x2="436" y2="144" stroke={dim} strokeWidth="1" />
+        <line x1="436" y1="116" x2="436" y2="144" stroke={dim} strokeWidth="1" />
+        <line x1="436" y1="130" x2="452" y2="130" stroke={dim} strokeWidth="1" />
+
+        <rect x="452" y="116" width="72" height="24" fill="none" stroke={dim} strokeWidth="1" />
+        <text x="488" y="132" fill={textFaint} fontSize="10" fontFamily="Barlow Condensed" fontWeight="700" textAnchor="middle">Lag H</text>
+
+        {/* SF connector */}
+        <line x1="524" y1="52" x2="540" y2="52" stroke={yellow} strokeWidth="1.5" />
+        <line x1="524" y1="128" x2="540" y2="128" stroke={dim} strokeWidth="1" />
+        <line x1="540" y1="52" x2="540" y2="128" stroke={dim} strokeWidth="1" />
+        <line x1="540" y1="90" x2="556" y2="90" stroke={dim} strokeWidth="1" />
+
+        {/* SF — Lag A wins but via different path than tipped */}
+        <rect x="556" y="76" width="72" height="24" fill="none" stroke={yellow} strokeWidth="2" strokeDasharray="4 2" />
+        <text x="592" y="92" fill={yellow} fontSize="10" fontFamily="Barlow Condensed" fontWeight="900" textAnchor="middle">Lag A ½</text>
+
+        <text x="348" y="190" fill={textDim} fontSize="9" fontFamily="Inter" textAnchor="start">
+          Lag A nådde samma runda men via fel bracket-gren → halvt
+        </text>
+      </svg>
     </div>
   )
 }

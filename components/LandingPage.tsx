@@ -208,6 +208,11 @@ export default function LandingPage({ userName }: LandingPageProps) {
             <button type="submit" disabled={!canStart || isStarting} className="btn-primary w-full text-base">
               {isStarting ? 'Kollar...' : 'Påbörja ditt tips →'}
             </button>
+            <p className="text-center text-sm mt-1">
+              <a href="/login" className="text-white/50 hover:text-white/80 transition-colors">
+                Redan anmäld? Logga in här →
+              </a>
+            </p>
             <p className="text-xs text-white/35 leading-relaxed">
               Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar.
             </p>

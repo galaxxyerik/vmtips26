@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import NavBar from '@/components/NavBar'
@@ -333,6 +333,7 @@ export default function WorldCupGuidePage() {
   const [tab, setTab] = useState<Tab>('grupper')
   const [playerStats, setPlayerStats] = useState<Record<string, PlayerStatRow>>({})
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
   useEffect(() => {
     setPlayerStats(VERIFIED_PLAYER_STATS)
@@ -417,14 +418,22 @@ export default function WorldCupGuidePage() {
       {/* Tab bar */}
       <div className="sticky top-14 z-40 bg-navy-950 border-b border-white/10">
         <div className="mx-auto max-w-7xl">
-          <div className="flex overflow-x-auto scrollbar-hide px-4 lg:px-8">
+          <div
+            className="flex overflow-x-auto scrollbar-hide px-4 lg:px-8"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
             {TABS.map(t => (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`relative flex-shrink-0 px-4 py-3.5 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap ${
-                  tab === t.id ? 'text-white' : 'text-white/35 hover:text-white/70'
+                ref={el => { tabRefs.current[t.id] = el }}
+                onClick={() => {
+                  setTab(t.id)
+                  tabRefs.current[t.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+                }}
+                className={`relative flex-shrink-0 min-h-[44px] px-4 py-2 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap ${
+                  tab === t.id ? 'text-white' : 'text-white/50 hover:text-white/70'
                 }`}
+                style={{ scrollSnapAlign: 'start' }}
               >
                 {t.label}
                 {tab === t.id && (

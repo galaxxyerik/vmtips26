@@ -4,24 +4,48 @@ import Footer from '@/components/Footer'
 import Image from 'next/image'
 import Link from 'next/link'
 import LiveMatches from './LiveMatches'
+import SubmittedBanner from './SubmittedBanner'
 
 export const dynamic = 'force-dynamic'
 
-// June 11 2026 at 21:00 Swedish summer time (UTC+2) = 19:00 UTC
+// VM opens for scoring on June 11 at 21:00 CEST = 19:00 UTC
 const OPENS_AT = new Date('2026-06-11T19:00:00Z')
+// Sweden vs Tunisia: June 15 at 04:00 CEST = 02:00 UTC
+const SWEDEN_VS_TUNISIA = new Date('2026-06-15T02:00:00Z')
 
-export default async function DashboardPage() {
+function nameInitial(name: string): string {
+  return name.trim().charAt(0).toUpperCase()
+}
+
+function nameColor(name: string): string {
+  const palette = ['#1c3a7e', '#1e2f6e', '#0f2660', '#243d8f', '#162d7a', '#0d2455', '#2a3d8c']
+  let h = 0
+  for (const c of name) h = ((h << 5) - h + c.charCodeAt(0)) | 0
+  return palette[Math.abs(h) % palette.length]
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ submitted?: string }>
+}) {
+  const params = await searchParams
+  const showBanner = params.submitted === 'true'
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   const now = new Date()
   const isOpen = now >= OPENS_AT
 
-  // Always fetch participant count
   const service = createServiceClient()
-  const { count: totalParticipants } = await service
+
+  // All participants for participant list (pre-tournament)
+  const { data: allParticipants } = await service
     .from('vmt_submissions')
-    .select('id', { count: 'exact', head: true })
+    .select('id, name, confirmed')
+    .order('submitted_at', { ascending: true })
+
   const { count: confirmedParticipants } = await service
     .from('vmt_submissions')
     .select('id', { count: 'exact', head: true })
@@ -50,12 +74,14 @@ export default async function DashboardPage() {
 
   const ranked = submissions.map((s, i) => ({ ...s, rank: i + 1 }))
   const pot = (confirmedParticipants ?? 0) * 100
+
   const { data: liveCandidateMatches } = await service
     .from('vmt_matches')
     .select('id, match_number, home_team, away_team, kickoff, home_score, away_score, home_goal_scorers, away_goal_scorers, status')
     .gte('kickoff', new Date(now.getTime() - 130 * 60 * 1000).toISOString())
     .lte('kickoff', new Date(now.getTime() + 5 * 60 * 1000).toISOString())
     .order('kickoff')
+
   const { data: myGroupPicks } = mySubmission
     ? await service
         .from('vmt_group_picks')
@@ -65,15 +91,22 @@ export default async function DashboardPage() {
   const userPicks = Object.fromEntries((myGroupPicks ?? []).map(row => [row.match_id, row.pick]))
 
   // Countdown
-  const msLeft = OPENS_AT.getTime() - now.getTime()
-  const daysLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24)))
-  const hoursLeft = Math.max(0, Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)))
+  const msToOpen = OPENS_AT.getTime() - now.getTime()
+  const daysLeft = Math.max(0, Math.floor(msToOpen / (1000 * 60 * 60 * 24)))
+  const msToTunisia = SWEDEN_VS_TUNISIA.getTime() - now.getTime()
+  const daysToTunisia = Math.max(0, Math.ceil(msToTunisia / (1000 * 60 * 60 * 24)))
+
+  const participants = allParticipants ?? []
+  const totalCount = participants.length
 
   return (
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={user?.email ?? null} />
 
-      {/* Hero — full-bleed countdown */}
+      {/* Post-submission banner */}
+      {showBanner && <SubmittedBanner />}
+
+      {/* Hero — full-bleed countdown (hidden once tournament starts) */}
       {!isOpen && (
         <div className="relative overflow-hidden" style={{ minHeight: '62vh' }}>
           <Image
@@ -89,14 +122,17 @@ export default async function DashboardPage() {
           <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-12">
             <div className="label text-swe-yellow/60 mb-3">VM-TIPS 26 · Poängtavlan öppnar om</div>
             <div
-              className="font-display font-black leading-none text-white"
-              style={{ fontSize: 'clamp(72px, 14vw, 190px)' }}
+              className="font-mono font-bold leading-none text-white tnum"
+              style={{ fontSize: 'clamp(80px, 16vw, 160px)' }}
             >
-              {daysLeft}<span className="text-swe-yellow">d</span>
-              {' '}
-              {hoursLeft}<span className="text-swe-yellow">h</span>
+              {daysLeft}
             </div>
-            <div className="text-white/40 text-base mt-4">11 juni 2026 · kl 21:00 (CEST)</div>
+            <div className="text-white/60 mt-2" style={{ fontSize: '13px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+              dagar till VM-start
+            </div>
+            <div className="font-display font-black text-swe-yellow uppercase tracking-wide mt-3" style={{ fontSize: '18px' }}>
+              SVERIGE MÖTER TUNISIEN OM {daysToTunisia} DAGAR · 15 JUNI · 04:00 CEST
+            </div>
           </div>
         </div>
       )}
@@ -116,22 +152,22 @@ export default async function DashboardPage() {
 
         {!isOpen ? (
           <div className="space-y-6">
-            {/* Stats — big numbers */}
+            {/* Stats — big mono numbers */}
             <div className="grid grid-cols-2 border border-white/10">
               <div className="px-6 lg:px-10 py-8 border-r border-white/10">
                 <div className="label mb-3">Anmälda deltagare</div>
                 <div
-                  className="font-display font-black leading-none text-white"
+                  className="font-mono font-bold leading-none text-white tnum"
                   style={{ fontSize: 'clamp(56px, 9vw, 100px)' }}
                 >
-                  {totalParticipants ?? 0}
+                  {totalCount}
                 </div>
                 <div className="text-white/25 text-xs uppercase tracking-wider mt-2">st</div>
               </div>
               <div className="px-6 lg:px-10 py-8">
                 <div className="label mb-3">Bekräftad pott</div>
                 <div
-                  className="font-display font-black leading-none text-swe-yellow"
+                  className="font-mono font-bold leading-none text-swe-yellow tnum"
                   style={{ fontSize: 'clamp(56px, 9vw, 100px)' }}
                 >
                   {pot.toLocaleString('sv-SE')}
@@ -139,6 +175,41 @@ export default async function DashboardPage() {
                 <div className="text-swe-yellow/30 text-xs uppercase tracking-wider mt-2">kronor</div>
               </div>
             </div>
+
+            {/* Participant list */}
+            {participants.length > 0 && (
+              <div className="border border-white/10">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-navy-900">
+                  <div className="w-1 h-5 bg-swe-yellow shrink-0" />
+                  <span className="font-display font-black uppercase text-[11px] tracking-[0.18em] text-white">DELTAGARE</span>
+                  <span className="ml-auto font-mono text-xs text-white/30 tnum">{totalCount} st</span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {participants.map(p => (
+                    <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div
+                        className="w-8 h-8 flex items-center justify-center shrink-0 font-display font-black text-sm text-white"
+                        style={{ backgroundColor: nameColor(p.name) }}
+                      >
+                        {nameInitial(p.name)}
+                      </div>
+                      <span className="flex-1 font-display font-black uppercase tracking-wide text-sm text-white/80">
+                        {p.name}
+                      </span>
+                      {p.confirmed ? (
+                        <span className="text-[10px] font-display font-black uppercase tracking-wider border border-swe-yellow/40 text-swe-yellow px-2 py-0.5 shrink-0">
+                          Tips inlagt ✓
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-display font-black uppercase tracking-wider border border-white/15 text-white/40 px-2 py-0.5 shrink-0">
+                          Inväntar tips
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Sverige info */}
             <div className="border border-white/10">
@@ -163,20 +234,43 @@ export default async function DashboardPage() {
             </div>
 
             {/* CTA */}
-            <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-5 py-4 flex items-center justify-between">
+            <div className="border border-swe-yellow/20 bg-swe-yellow/5 px-5 py-4 flex items-center justify-between gap-4">
               <div>
                 <div className="font-display font-black uppercase tracking-wide text-white text-sm">
                   Inte lagt in ditt tips ännu?
                 </div>
                 <div className="text-xs text-white/40 mt-0.5">Sista chansen innan 11 juni.</div>
               </div>
-              <Link href="/" className="btn-primary text-sm px-5 h-9 flex items-center">
+              <Link href="/" className="btn-primary text-sm px-5 h-9 flex items-center shrink-0">
                 Tippa nu →
               </Link>
+            </div>
+
+            {/* Leaderboard placeholder */}
+            <div className="border border-white/10">
+              <div className="grid grid-cols-12 px-4 h-9 items-center bg-navy-900 border-b border-white/10">
+                <div className="col-span-1 label mb-0">#</div>
+                <div className="col-span-9 label mb-0">Spelare</div>
+                <div className="col-span-2 text-right label mb-0">Poäng</div>
+              </div>
+              <div className="py-12 text-center">
+                <p className="font-display font-black uppercase tracking-wide text-white/20 text-sm">
+                  Turneringen börjar 11 juni — tabellen uppdateras live.
+                </p>
+              </div>
             </div>
           </div>
         ) : (
           <>
+            {/* Logged-out prompt when tournament is live */}
+            {!user && (
+              <div className="mb-6 border border-white/10 px-6 py-8 text-center">
+                <h2 className="font-display font-black uppercase text-3xl text-white leading-none">SE TABELLEN</h2>
+                <p className="text-white/55 text-sm mt-3">Logga in för att se poängtabellen och ditt tips.</p>
+                <Link href="/login" className="btn-primary mt-5 inline-flex">LOGGA IN →</Link>
+              </div>
+            )}
+
             {mySubmission && (
               <div className={`mb-6 border px-4 py-3 text-sm ${
                 mySubmission.confirmed
@@ -196,16 +290,19 @@ export default async function DashboardPage() {
             ) : (
               <div className="border border-white/10">
                 <div className="grid grid-cols-12 px-4 h-8 items-center bg-navy-900 border-b border-white/10">
-                  <div className="col-span-1 font-display font-black uppercase text-[9px] tracking-[0.16em] text-white/40">#</div>
-                  <div className="col-span-9 font-display font-black uppercase text-[9px] tracking-[0.16em] text-white/40">Spelare</div>
-                  <div className="col-span-2 text-right font-display font-black uppercase text-[9px] tracking-[0.16em] text-white/40">Poäng</div>
+                  <div className="col-span-1 label mb-0">#</div>
+                  <div className="col-span-9 label mb-0">Spelare</div>
+                  <div className="col-span-2 text-right label mb-0">Poäng</div>
                 </div>
                 {ranked.map((entry) => (
-                  <div key={entry.id} className={`grid grid-cols-12 items-center px-4 h-11 border-b border-white/5 last:border-0 ${
-                    entry.user_id === user?.id ? 'bg-swe-yellow/8 border-l-2 border-l-swe-yellow' : ''
-                  }`}>
+                  <div
+                    key={entry.id}
+                    className={`grid grid-cols-12 items-center px-4 h-11 border-b border-white/5 last:border-0 ${
+                      entry.rank === 1 ? 'border-l-2 border-l-swe-yellow' : ''
+                    } ${entry.user_id === user?.id ? 'bg-swe-yellow/[0.06]' : ''}`}
+                  >
                     <div className="col-span-1">
-                      <span className={`font-display font-black tnum text-lg ${
+                      <span className={`font-mono font-bold tnum text-lg ${
                         entry.rank === 1 ? 'text-swe-yellow' :
                         entry.rank === 2 ? 'text-white/70' :
                         entry.rank === 3 ? 'text-amber-600' : 'text-white/25'
@@ -213,14 +310,22 @@ export default async function DashboardPage() {
                         {String(entry.rank).padStart(2, '0')}
                       </span>
                     </div>
-                    <div className="col-span-9">
-                      <span className="font-display font-bold uppercase tracking-wider text-[13px] text-white/80">
+                    <div className="col-span-9 flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-6 h-6 flex items-center justify-center shrink-0 font-display font-black text-[11px] text-white"
+                        style={{ backgroundColor: nameColor(entry.name) }}
+                      >
+                        {nameInitial(entry.name)}
+                      </div>
+                      <span className="font-display font-bold uppercase tracking-wider text-[13px] text-white/80 truncate">
                         {entry.name}
-                        {entry.user_id === user?.id && <span className="ml-2 text-[10px] text-swe-yellow">DU</span>}
                       </span>
+                      {entry.user_id === user?.id && (
+                        <span className="text-[10px] text-swe-yellow font-display font-black shrink-0">DU</span>
+                      )}
                     </div>
                     <div className="col-span-2 text-right">
-                      <span className="font-display font-black tnum text-lg text-swe-yellow">{entry.total_points ?? 0}</span>
+                      <span className="font-mono font-bold tnum text-lg text-swe-yellow">{entry.total_points ?? 0}</span>
                     </div>
                   </div>
                 ))}
@@ -228,12 +333,6 @@ export default async function DashboardPage() {
             )}
           </>
         )}
-
-        <div className="mt-8 text-center">
-          <Link href="/" className="btn-primary">
-            Lämna in tips →
-          </Link>
-        </div>
       </main>
 
       <Footer userName={user?.email ?? null} />

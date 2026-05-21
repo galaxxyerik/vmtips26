@@ -47,15 +47,28 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 bg-navy-950">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-8">
+
+        {/* Logo */}
         <div className="text-center">
           <Link href="/" className="font-display font-black text-2xl uppercase tracking-[0.06em] text-white">
             VM<span className="text-swe-yellow">-TIPS 26</span>
           </Link>
-          <p className="text-white/40 text-sm mt-2">Logga in för att se ditt tips</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-4">
+        {/* Heading */}
+        <div>
+          <h1 className="font-display font-black text-5xl sm:text-6xl uppercase tracking-tight text-white leading-none">
+            LOGGA IN
+          </h1>
+          <div className="h-[2px] w-10 bg-swe-yellow mt-3" />
+          <p className="text-white/60 text-sm mt-3 leading-relaxed">
+            Skriv din e-post och ditt lösenord för att se ditt tips och tabellen.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="label" htmlFor="email">E-post</label>
             <input
@@ -90,12 +103,12 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Loggar in...' : 'Logga in'}
+          <button type="submit" className="btn-primary w-full text-base mt-1" disabled={loading}>
+            {loading ? 'Loggar in...' : 'LOGGA IN →'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-white/30 leading-relaxed">
+        <p className="text-xs text-white/30 leading-relaxed text-center">
           Konto skapas automatiskt om du fyllde i lösenord när du skickade in tipset.
         </p>
 

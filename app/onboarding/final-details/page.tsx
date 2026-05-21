@@ -60,7 +60,7 @@ export default function FinalDetailsPage() {
     }
 
     clearDraft()
-    router.push('/onboarding/success')
+    router.push('/dashboard?submitted=true')
   }
 
   const canSubmit = swishChecked && !submitting
