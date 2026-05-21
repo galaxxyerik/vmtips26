@@ -3,6 +3,7 @@ import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import { ContentProvider } from '@/contexts/AdminEditContext'
 import AdminEditBar from '@/components/AdminEditBar'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: 'VM-tips 26',
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ContentProvider initialContent={content} isAdmin={isAdmin}>
           {children}
           <AdminEditBar />
+          <SpeedInsights />
         </ContentProvider>
       </body>
     </html>
