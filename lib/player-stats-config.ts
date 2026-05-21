@@ -1,1 +1,2 @@
 export const PLAYER_STATS_SEASON = 2025
+export const PLAYER_STATS_SYNC_TTL_HOURS = 24

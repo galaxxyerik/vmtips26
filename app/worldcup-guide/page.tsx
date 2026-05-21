@@ -7,39 +7,26 @@ import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { PLAYER_NAME_ALIASES } from '@/lib/player-registry'
-import { STATIC_PLAYER_STATS } from '@/data/player-stats'
+import { VERIFIED_PLAYER_STATS, VERIFIED_PLAYER_STATS_UPDATED_AT } from '@/data/player-stats'
 import { PLAYER_STATS_SEASON } from '@/lib/player-stats-config'
+import type { PlayerStatRecord } from '@/lib/player-stats-types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Player {
   name: string; country: string; flag: string; club: string; position: string
   age: number; why: string; style: string; stat: string; statLabel: string; rating: number
+  imageUrl?: string
 }
-interface DarkHorse { country: string; flag: string; maxFinish: string; why: string; keyPlayer: string; strength: number }
+interface DarkHorse { country: string; flag: string; maxFinish: string; why: string; keyPlayer: string; strength: number; imageUrl?: string }
 interface GroupTeam { name: string; flag: string; prediction: 'W' | 'Q' | 'E' }
-interface Group { letter: string; teams: GroupTeam[]; analysis: string; hotMatch: string }
+interface Group { letter: string; teams: GroupTeam[]; analysis: string; hotMatch: string; imageUrl?: string; imageAlt?: string }
+interface Favorite { country: string; flag: string; pct: number; imageUrl?: string }
 interface SwedenPlayer {
   name: string; club: string; position: string; age: number; caps: number
   season: string; role: string; keyStrength: string; rating: number
 }
-interface PlayerStatRow {
-  player_name: string
-  season: number | null
-  club: string | null
-  league: string | null
-  goals_club: number | null
-  assists_club: number | null
-  minutes_club: number | null
-  clean_sheets: number | null
-  goals_national: number | null
-  caps_national: number | null
-  updated_at: string | null
-}
-
-const MANUAL_PLAYER_STAT_SUMMARIES: Record<string, string> = {
-  'Viktor Gyökeres': '20 mål för Arsenal 25/26 · officiellt bekräftat 2 maj 2026',
-}
+type PlayerStatRow = PlayerStatRecord
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -93,16 +80,16 @@ const TALENTS: Player[] = [
   { name: 'Takefusa Kubo', country: 'Japan', flag: '🇯🇵', club: 'Real Sociedad', position: 'Högerytter', age: 25, why: 'Japans tekniskt mest begåvade spelare sedan Shunsuke Nakamura — bevisat i La Liga, redo att visa hela världen.', style: 'Elektrisk i 1-mot-1, med en teknik och kreativitet som hör hemma bland La Ligas absoluta elit.', stat: '18 mål · 11 assist', statLabel: 'La Liga 25/26', rating: 8 },
   { name: 'Estêvão Willian', country: 'Brasilien', flag: '🇧🇷', club: 'Chelsea', position: 'Högerytter', age: 18, why: 'Nästa brasilianska fenomen. Lämnade Palmeiras för Chelsea och tog Premier League med storm — Ronaldinho-vibbar med modern intelligens.', style: 'Intuitivt och lekfullt — bollar tycks dyka upp på hans fot av sig självt.', stat: '16 mål', statLabel: 'Premier League 25/26', rating: 8 },
   { name: 'Sverre Nypan', country: 'Norge', flag: '🇳🇴', club: 'Manchester City', position: 'Mittfältare', age: 19, why: 'Rosenborgs produkt som nu tränar med Pep Guardiola — Norges unga stjärna. I skuggan av Haaland kan han blomstra.', style: 'Teknisk med en elegans i passningsspelet som påminner om en ung David Silva — med nordisk råstyrka.', stat: '8 mål · 14 assist', statLabel: 'Premier League 25/26', rating: 7 },
-  { name: 'Kendry Páez', country: 'Ecuador', flag: '🇪🇨', club: 'Chelsea', position: 'Mittfältare', age: 18, why: 'Chelsea betalade för hans framtid och framtiden är redan nu. Ecuadors kreativa motor — vid 18 år spelar han med veteraners lugn.', style: 'Intelligent i smala utrymmen, med passningsförmåga och avslut som gör honom till matchvinnare.', stat: '7 mål · 10 assist', statLabel: 'Premier League 25/26', rating: 7 },
+  { name: 'Kendry Páez', country: 'Ecuador', flag: '🇪🇨', club: 'Strasbourg', position: 'Mittfältare', age: 18, why: 'Chelsea betalade för hans framtid och framtiden är redan nu. Ecuadors kreativa motor — vid 18 år spelar han med veteraners lugn.', style: 'Intelligent i smala utrymmen, med passningsförmåga och avslut som gör honom till matchvinnare.', stat: '1 mål', statLabel: 'Ligue 1 25/26', rating: 7 },
   { name: 'Warren Zaïre-Emery', country: 'Frankrike', flag: '🇫🇷', club: 'Paris Saint-Germain', position: 'Defensiv mittfältare', age: 20, why: 'PSG-produkten som redan spelar som om han hade 30 år av erfarenhet. Zaïre-Emery är Frankrikes hjärta i mitten.', style: 'Lugn under press, elegant i passningsspelet och defensivt läsande av spelet som är osannolikt för hans ålder.', stat: '8 mål · 12 assist', statLabel: 'Ligue 1 25/26', rating: 8 },
 ]
 
 const DARK_HORSES: DarkHorse[] = [
-  { country: 'Marocko', flag: '', maxFinish: 'Semifinal', why: 'Marocko visade 2022 att de inte är en gissning längre — de är ett faktum. Hakimi i världsklass, ett kompakt defensivsystem och fanatiska fans. Grupp C med Brasilien är hård, men överlever de den är de farliga hela vägen.', keyPlayer: 'Achraf Hakimi', strength: 8 },
-  { country: 'Colombia', flag: '', maxFinish: 'Semifinal', why: 'Colombia möter Portugal och Uzbekistan i Grupp K — en grupp de kan vinna. Med James Rodríguez som spelande tränare på planen och Jhon Durán som joker kan de gå längre än vad oddsen visar.', keyPlayer: 'James Rodríguez', strength: 8 },
-  { country: 'Uruguay', flag: '', maxFinish: 'Kvartsfinal', why: 'Grupp H med Spanien är hård — men Uruguay spelar aldrig vackert och de vinner matcher de inte borde vinna. Valverde och Núñez är ett av VM:s farligaste anfallspar och defensiven är stenhård.', keyPlayer: 'Federico Valverde', strength: 7 },
-  { country: 'Kroatien', flag: '', maxFinish: 'Kvartsfinal', why: 'Modrić säger att detta är hans sista VM och det räcker som motivation. Grupp L med England är möjlig att klara — och Kroatien levererar alltid på storscenen: semifinal 2018, final 2022.', keyPlayer: 'Luka Modrić', strength: 7 },
-  { country: 'Skottland', flag: '', maxFinish: 'Åttondel', why: 'Första VM sedan 1998 och de är inte med för att åka hem tidigt. Grupp C med Brasilien och Marocko är brutal — men Robertson och McTominay kan ta poäng mot vem som helst på en bra dag.', keyPlayer: 'Andrew Robertson', strength: 6 },
+  { country: 'Marocko', flag: '🇲🇦', maxFinish: 'Semifinal', why: 'Marocko visade 2022 att de inte är en gissning längre — de är ett faktum. Hakimi i världsklass, ett kompakt defensivsystem och fanatiska fans. Grupp C med Brasilien är hård, men överlever de den är de farliga hela vägen.', keyPlayer: 'Achraf Hakimi', strength: 8 },
+  { country: 'Colombia', flag: '🇨🇴', maxFinish: 'Semifinal', why: 'Colombia möter Portugal och Uzbekistan i Grupp K — en grupp de kan vinna. Med James Rodríguez som spelande tränare på planen och Jhon Durán som joker kan de gå längre än vad oddsen visar.', keyPlayer: 'James Rodríguez', strength: 8, imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Uruguay', flag: '🇺🇾', maxFinish: 'Kvartsfinal', why: 'Grupp H med Spanien är hård — men Uruguay spelar aldrig vackert och de vinner matcher de inte borde vinna. Valverde och Núñez är ett av VM:s farligaste anfallspar och defensiven är stenhård.', keyPlayer: 'Federico Valverde', strength: 7, imageUrl: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Kroatien', flag: '🇭🇷', maxFinish: 'Kvartsfinal', why: 'Modrić säger att detta är hans sista VM och det räcker som motivation. Grupp L med England är möjlig att klara — och Kroatien levererar alltid på storscenen: semifinal 2018, final 2022.', keyPlayer: 'Luka Modrić', strength: 7, imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Skottland', flag: '🏴', maxFinish: 'Åttondel', why: 'Första VM sedan 1998 och de är inte med för att åka hem tidigt. Grupp C med Brasilien och Marocko är brutal — men Robertson och McTominay kan ta poäng mot vem som helst på en bra dag.', keyPlayer: 'Andrew Robertson', strength: 6, imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80' },
 ]
 
 const GROUPS: Group[] = [
@@ -111,7 +98,7 @@ const GROUPS: Group[] = [
   { letter: 'C', teams: [{ name: 'Brasilien', flag: '', prediction: 'W' }, { name: 'Marocko', flag: '', prediction: 'Q' }, { name: 'Skottland', flag: '', prediction: 'E' }, { name: 'Haiti', flag: '', prediction: 'E' }], analysis: 'Turneringens tuffaste grupp utanför F. Brasilien och Marocko är favoriter — men Skottland kan chockera. Mötet Brasilien–Marocko avgör gruppsegern.', hotMatch: 'Brasilien vs. Marocko' },
   { letter: 'D', teams: [{ name: 'USA', flag: '', prediction: 'W' }, { name: 'Turkiet', flag: '', prediction: 'Q' }, { name: 'Australien', flag: '', prediction: 'E' }, { name: 'Paraguay', flag: '', prediction: 'E' }], analysis: 'USA på hemmaplan i LA och Seattle — supportrarna är med från kick-off. Turkiet med Güler är farliga och tar andraplatsen. Paraguay och Australien brottas om tredjeplatsen.', hotMatch: 'USA vs. Turkiet' },
   { letter: 'E', teams: [{ name: 'Tyskland', flag: '', prediction: 'W' }, { name: 'Ecuador', flag: '', prediction: 'Q' }, { name: 'Elfenbenskusten', flag: '', prediction: 'E' }, { name: 'Curaçao', flag: '', prediction: 'E' }], analysis: 'Tyskland vinner sin grupp men inte utan svettningar — Ecuador med Páez är ett lag som kan ta poäng mot alla. Elfenbenskusten är VM-debutant och kan bli turneringens joker.', hotMatch: 'Tyskland vs. Ecuador' },
-  { letter: 'F', teams: [{ name: 'Nederländerna', flag: '', prediction: 'W' }, { name: 'Sverige', flag: '', prediction: 'Q' }, { name: 'Japan', flag: '', prediction: 'E' }, { name: 'Tunisien', flag: '', prediction: 'E' }], analysis: 'Dödsgruppen lever upp till sitt namn. Nederländerna är favoriter men Sverige och Japan är klara utmanare. Tunisien kan ta poäng mot vem som helst.', hotMatch: 'Nederländerna vs. Sverige' },
+  { letter: 'F', teams: [{ name: 'Nederländerna', flag: '', prediction: 'W' }, { name: 'Sverige', flag: '', prediction: 'Q' }, { name: 'Japan', flag: '', prediction: 'E' }, { name: 'Tunisien', flag: '', prediction: 'E' }], analysis: 'Dödsgruppen lever upp till sitt namn. Nederländerna är favoriter men Sverige och Japan är klara utmanare. Tunisien kan ta poäng mot vem som helst.', hotMatch: 'Nederländerna vs. Sverige', imageUrl: '/images/nrg-stadium-interior.jpg', imageAlt: 'NRG Stadium i Houston, där Sverige möter Nederländerna' },
   { letter: 'G', teams: [{ name: 'Belgien', flag: '', prediction: 'W' }, { name: 'Egypten', flag: '', prediction: 'Q' }, { name: 'Iran', flag: '', prediction: 'E' }, { name: 'Nya Zeeland', flag: '', prediction: 'E' }], analysis: 'Belgien är fortfarande starka trots att de "gyllene generationen" är borta. De Bruyne leder ett nytt gäng. Egypten med Salah (om han är med) kan chockera.', hotMatch: 'Belgien vs. Egypten' },
   { letter: 'H', teams: [{ name: 'Spanien', flag: '', prediction: 'W' }, { name: 'Uruguay', flag: '', prediction: 'Q' }, { name: 'Saudiarabien', flag: '', prediction: 'E' }, { name: 'Kap Verde', flag: '', prediction: 'E' }], analysis: 'Spanien vinner komfortabelt med Yamal och Pedri i toppform. Uruguay med Valverde och Núñez är alltid svåra att slå — de tar andraplatsen på viljestyrka.', hotMatch: 'Spanien vs. Uruguay' },
   { letter: 'I', teams: [{ name: 'Frankrike', flag: '', prediction: 'W' }, { name: 'Norge', flag: '', prediction: 'Q' }, { name: 'Senegal', flag: '', prediction: 'E' }, { name: 'Irak', flag: '', prediction: 'E' }], analysis: 'Frankrike vinner utan drama. Men Norge med Haaland på sitt första VM är den grupp I-sensationen — Haaland mot Frankrike är en match som skriver historia.', hotMatch: 'Frankrike vs. Norge' },
@@ -148,8 +135,8 @@ const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
   'img.player.isak':     '/images/isak-action-lfc.webp',
   'img.player.lindelof': '/images/lindelof-action.jpg',
   'img.player.bergvall': '/images/bergvall-action.jpg',
+  'img.player.ayari':    getFotMobImageUrl(1168311),
   'img.player.elanga':   '/images/elanga-action.jpg',
-  // Ayari: no local image — ghost-name fallback by design
 }
 
 interface SquadPlayer { name: string; club: string; pos: string }
@@ -201,19 +188,56 @@ const GROUP_F_NOTABLES: Player[] = [
   { name: 'Ritsu Doan', country: 'Japan', flag: '🇯🇵', club: 'Eintracht Frankfurt', position: 'Högermittfältare', age: 27, why: 'Doan är en bevisad turneringsspelare och väntas ta ännu större ansvar när Japan saknar sina stora offensiva namn. Hans vänsterfot och tajming gör honom farlig i varje omställning.', style: 'Direkt, smart i presspelet och vass när han får kliva in från kanten mot sin starka fot.', stat: '', statLabel: '', rating: 8 },
   { name: 'Daichi Kamada', country: 'Japan', flag: '🇯🇵', club: 'Crystal Palace', position: 'Mittfältare', age: 29, why: 'Teknisk mittfältare med internationell rutin och smart positionering.', style: 'Lugn med boll, bra blick och hot från andra våg.', stat: '', statLabel: '', rating: 7 },
   { name: 'Youssef Msakni', country: 'Tunisien', flag: '🇹🇳', club: 'Al Arabi', position: 'Anfallare', age: 35, why: 'Tunisiens stora profil, erfaren nog att straffa varje misstag.', style: 'Fin teknik, bra avslut och naturlig känsla för avgörande lägen.', stat: '', statLabel: '', rating: 7 },
-  { name: 'Wahbi Khazri', country: 'Tunisien', flag: '🇹🇳', club: 'Montpellier', position: 'Anfallare', age: 35, why: 'Rutinerad avslutare med fast situationer och distansskott som specialitet.', style: 'Smart, cynisk och farlig så fort han får vända upp.', stat: '', statLabel: '', rating: 7 },
+  { name: 'Wahbi Khazri', country: 'Tunisien', flag: '🇹🇳', club: 'Klubblös', position: 'Anfallare', age: 35, why: 'Rutinerad avslutare med fast situationer och distansskott som specialitet.', style: 'Smart, cynisk och farlig så fort han får vända upp.', stat: '', statLabel: '', rating: 7 },
 ]
 
-const FAVORITES = [
-  { country: 'Frankrike', flag: '🇫🇷', pct: 19 },
-  { country: 'Brasilien', flag: '🇧🇷', pct: 16 },
-  { country: 'Spanien', flag: '🇪🇸', pct: 14 },
+const FAVORITES: Favorite[] = [
+  { country: 'Frankrike', flag: '🇫🇷', pct: 19, imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Brasilien', flag: '🇧🇷', pct: 16, imageUrl: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Spanien', flag: '🇪🇸', pct: 14, imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1400&q=80' },
   { country: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', pct: 13 },
-  { country: 'Argentina', flag: '🇦🇷', pct: 11 },
-  { country: 'Portugal', flag: '🇵🇹', pct: 9 },
-  { country: 'Tyskland', flag: '🇩🇪', pct: 8 },
-  { country: 'Marocko', flag: '🇲🇦', pct: 6 },
+  { country: 'Argentina', flag: '🇦🇷', pct: 11, imageUrl: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Portugal', flag: '🇵🇹', pct: 9, imageUrl: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Tyskland', flag: '🇩🇪', pct: 8, imageUrl: 'https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Marocko', flag: '🇲🇦', pct: 6, imageUrl: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1400&q=80' },
 ]
+
+function getFotMobImageUrl(playerId: number): string {
+  return `https://images.fotmob.com/image_resources/playerimages/${playerId}.png`
+}
+
+const SWEDISH_SQUAD_FOTMOB_IDS: Record<string, number> = {
+  'Viktor Johansson': 546252,
+  'Kristoffer Nordfeldt': 73462,
+  'Jacob Widell Zetterström': 1014602,
+  'Victor Nilsson Lindelöf': 258269,
+  'Isak Hien': 939780,
+  'Carl Starfelt': 497662,
+  'Gustaf Lagerbielke': 919848,
+  'Emil Holm': 1014630,
+  'Hjalmar Ekdal': 831044,
+  'Gabriel Gudmundsson': 744494,
+  'Eric Smith': 531327,
+  'Elliot Stroud': 1272349,
+  'Lucas Bergvall': 1386775,
+  'Mattias Svanberg': 647900,
+  'Yasin Ayari': 1168311,
+  'Daniel Svensson': 1209228,
+  'Jesper Karlström': 322003,
+  'Ken Sema': 5236,
+  'Taha Abdi Ali': 1135782,
+  'Besfort Zeneli': 1338361,
+  'Viktor Gyökeres': 664500,
+  'Alexander Isak': 690107,
+  'Anthony Elanga': 1050166,
+  'Gustaf Nilsson': 118241,
+  'Alexander Bernhardsson': 1014688,
+  'Benjamin Nygren': 931605,
+}
+
+const TEAM_IMAGE_FALLBACKS: Record<string, string> = {
+  England: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80',
+}
 
 // ── Player photos ─────────────────────────────────────────────────────────────
 // Local files take priority. Add /images/players/<name>.jpg to upgrade any entry.
@@ -222,29 +246,33 @@ const FAVORITES = [
 const PLAYER_PHOTOS: Record<string, string> = {
   // ── Local files (high quality) ────────────────────────────────────────────
   'Viktor Gyökeres':        '/images/gyokeres-arsenal-portrait.jpg',
+  'Kylian Mbappé':          '/images/worldcup-guide/players/kylian-mbappe.jpg',
+  'Vinicius Jr':            '/images/worldcup-guide/players/vinicius-jr.jpg',
+  'Jude Bellingham':        '/images/worldcup-guide/players/jude-bellingham.jpg',
+  'Lamine Yamal':           '/images/worldcup-guide/players/lamine-yamal.jpg',
+  'Erling Haaland':         '/images/worldcup-guide/players/erling-haaland.jpg',
+  'Kendry Páez':            '/images/worldcup-guide/players/kendry-paez.png',
   'Virgil van Dijk':        '/images/van-dijk-portrait.jpg',
+  'Daichi Kamada':          '/images/worldcup-guide/players/daichi-kamada.png',
+  'Youssef Msakni':         '/images/worldcup-guide/players/youssef-msakni.png',
+  'Wahbi Khazri':           '/images/worldcup-guide/players/wahbi-khazri.png',
 
-  // ── Internationella stjärnor (Wikipedia — lägg lokala filer för att uppgradera)
-  'Kylian Mbappé':          'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg/800px-Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg',
-  'Vinicius Jr':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg/800px-2023_05_06_Final_de_la_Copa_del_Rey_-_52879242230_%28cropped%29.jpg',
-  'Jude Bellingham':        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg/800px-25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Jude_Bellingham_-_240422_190551-2_%28cropped%29.jpg',
-  'Lamine Yamal':           'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Lamine_Yamal_in_2025.jpg/800px-Lamine_Yamal_in_2025.jpg',
-  'Erling Haaland':         'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Erling_Haaland_June_2025.jpg/800px-Erling_Haaland_June_2025.jpg',
-  'Pedri':                  'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Pedri.jpg/800px-Pedri.jpg',
-  'Jamal Musiala':          'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Jamal_Musiala_2022_%28cropped%29.jpg/800px-Jamal_Musiala_2022_%28cropped%29.jpg',
-  'Bukayo Saka':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/1_bukayo_saka_arsenal_2025_%28cropped%29.jpg/800px-1_bukayo_saka_arsenal_2025_%28cropped%29.jpg',
-  'Achraf Hakimi':          'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Achraf_Hakimi_%28cropped%29.jpg/800px-Achraf_Hakimi_%28cropped%29.jpg',
-  'Julián Álvarez':         'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg/800px-Argentina_national_football_team_-_2_-_2022_%28Juli%C3%A1n_%C3%81lvarez%29.jpg',
-  'Endrick':                'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Endrick-Palmeiras-Liverpool-abr24.jpg/800px-Endrick-Palmeiras-Liverpool-abr24.jpg',
-  'Arda Güler':             'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg/800px-Derbide_Fenerbah%C3%A7e_Yedek_Oyuncu_Arda_G%C3%BCler_%282021-22_S%C3%BCper_Lig_-_Cropped%29.jpg',
-  'Takefusa Kubo':          'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Takefusa_Kubo_2019.png/800px-Takefusa_Kubo_2019.png',
-  'Estêvão Willian':        'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg/800px-Estevao-Palmeiras-Liverpool-abr24_%28cropped%29.jpg',
-  'Sverre Nypan':           'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg/800px-Str%C3%B8msgodset_v_Rosenborg_BK%2C_29_March_2025_%2848%29_%28Sverre_Nypan%29.jpg',
-  'Warren Zaïre-Emery':     'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Zaire_asse_psg_2425.png/800px-Zaire_asse_psg_2425.png',
-  'Frenkie de Jong':        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Frenkie_de_Jong_2019.jpg/800px-Frenkie_de_Jong_2019.jpg',
-  'Tijjani Reijnders':      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Reijnders_arriva_in_albergo_%28cropped%29.jpg/800px-Reijnders_arriva_in_albergo_%28cropped%29.jpg',
-  'Cody Gakpo':             'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg/800px-Cody_Gakpo_06042025_%282%29_%28cropped%29.jpg',
-  // Ritsu Doan, Daichi Kamada, Msakni, Khazri → ghost-name fallback
+  // ── FotMob CDN fallbacks for reliable portraits ───────────────────────────
+  'Pedri':                  getFotMobImageUrl(1083323),
+  'Jamal Musiala':          getFotMobImageUrl(1156141),
+  'Bukayo Saka':            getFotMobImageUrl(961995),
+  'Achraf Hakimi':          getFotMobImageUrl(770881),
+  'Cody Gakpo':             getFotMobImageUrl(806552),
+  'Julián Álvarez':         getFotMobImageUrl(974753),
+  'Endrick':                getFotMobImageUrl(1406729),
+  'Arda Güler':             getFotMobImageUrl(1253890),
+  'Takefusa Kubo':          getFotMobImageUrl(848289),
+  'Estêvão Willian':        getFotMobImageUrl(1356901),
+  'Sverre Nypan':           getFotMobImageUrl(1355509),
+  'Warren Zaïre-Emery':     getFotMobImageUrl(1367615),
+  'Frenkie de Jong':        getFotMobImageUrl(638622),
+  'Tijjani Reijnders':      getFotMobImageUrl(868344),
+  'Ritsu Doan':             getFotMobImageUrl(629805),
 }
 
 const COUNTRY_COLORS: Record<string, string> = {
@@ -293,15 +321,14 @@ export default function WorldCupGuidePage() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   useEffect(() => {
-    // Seed with static data so stats show immediately (no "inväntar API")
-    setPlayerStats(STATIC_PLAYER_STATS as Record<string, PlayerStatRow>)
-    setLastUpdated(STATIC_PLAYER_STATS['Viktor Gyökeres']?.updated_at ?? null)
+    setPlayerStats(VERIFIED_PLAYER_STATS)
+    setLastUpdated(VERIFIED_PLAYER_STATS_UPDATED_AT)
 
     // Try to override with live Supabase rows if available
     const supabase = createClient()
     supabase
       .from('player_stats')
-      .select('player_name, season, club, league, goals_club, assists_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at')
+      .select('player_id, player_name, season, club, league, goals_club, assists_club, appearances_club, starts_club, minutes_club, clean_sheets, goals_national, caps_national, updated_at, data_source, verified_at, source_note')
       .eq('season', PLAYER_STATS_SEASON)
       .then(({ data }) => {
         const rows = (data ?? []) as PlayerStatRow[]
@@ -394,7 +421,7 @@ export default function WorldCupGuidePage() {
       <main className="mx-auto max-w-7xl px-4 lg:px-8 py-8">
         {tab === 'grupper' && <GroupsTab />}
         {tab === 'stjärnor' && <PlayersTab players={STARS} title="Världsstjärnor" subtitle="De 12 bästa spelarna i VM 2026" stats={playerStats} />}
-        {tab === 'talanger' && <PlayersTab players={TALENTS} title="Talanger att bevaka" subtitle="Unga spelare som kan chockera världen" />}
+        {tab === 'talanger' && <PlayersTab players={TALENTS} title="Talanger att bevaka" subtitle="Unga spelare som kan chockera världen" stats={playerStats} />}
         {tab === 'sverige' && <SwedenTab stats={playerStats} />}
         {tab === 'favoriter' && <FavoritesTab />}
         {tab === 'mörkhästar' && <DarkHorsesTab />}
@@ -509,6 +536,18 @@ function GroupsTab() {
               g.letter === 'F' ? 'border border-swe-yellow/30' : ''
             }`}
           >
+            {g.imageUrl && (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={g.imageUrl}
+                  alt={g.imageAlt ?? `Grupp ${g.letter}`}
+                  className="absolute inset-0 h-full w-full object-cover opacity-45"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/75 to-navy-950/25" />
+              </>
+            )}
             {/* Giant background letter */}
             <div className="absolute inset-0 flex items-center justify-end pr-4 pointer-events-none overflow-hidden">
               <span
@@ -583,6 +622,184 @@ function statFor(stats: Record<string, PlayerStatRow>, name: string) {
   return stat?.season === PLAYER_STATS_SEASON ? stat : undefined
 }
 
+function statSource(stat: PlayerStatRow | undefined, playerName?: string) {
+  return stat ?? (playerName ? VERIFIED_PLAYER_STATS[playerName] : undefined)
+}
+
+function formatCompactStat(value: number | null | undefined, suffix = '') {
+  if (value == null) return '–'
+  return `${value}${suffix}`
+}
+
+function statSourceLabel(stat?: PlayerStatRow) {
+  if (!stat) return null
+  if (stat.data_source === 'verified_static+api_football') return 'Verifierad 25/26 + live'
+  if (stat.data_source === 'verified_static') return 'Verifierad 25/26'
+  if (stat.data_source === 'api_football') return 'Live 25/26'
+  return null
+}
+
+type PlayerRole = 'goalkeeper' | 'defender' | 'defensive-midfielder' | 'midfielder' | 'forward'
+
+function roleForPosition(position: string, isGoalkeeper = false): PlayerRole {
+  if (isGoalkeeper) return 'goalkeeper'
+  const normalized = position.toLowerCase()
+  if (normalized.includes('målvakt') || normalized.includes('keeper')) return 'goalkeeper'
+  if (
+    normalized.includes('mittback') ||
+    normalized.includes('back') ||
+    normalized.includes('försvar') ||
+    normalized.includes('cb') ||
+    normalized.includes('lb') ||
+    normalized.includes('rb')
+  ) return 'defender'
+  if (
+    normalized.includes('defensiv') ||
+    normalized.includes('dm') ||
+    normalized.includes('holding')
+  ) return 'defensive-midfielder'
+  if (
+    normalized.includes('anfall') ||
+    normalized.includes('ytter') ||
+    normalized.includes('forward') ||
+    normalized.includes('wing') ||
+    normalized.includes('st')
+  ) return 'forward'
+  return 'midfielder'
+}
+
+function statHighlightsForPlayer(position: string, stat?: PlayerStatRow, isGoalkeeper = false) {
+  const role = roleForPosition(position, isGoalkeeper)
+  const goalInvolvements = (stat?.goals_club ?? 0) + (stat?.assists_club ?? 0)
+  const startsOrApps = stat?.starts_club ?? stat?.appearances_club
+
+  switch (role) {
+    case 'goalkeeper':
+      return [
+        {
+          label: stat?.clean_sheets != null ? 'Hållna nollor' : 'Matcher',
+          value: stat?.clean_sheets != null
+            ? formatCompactStat(stat?.clean_sheets)
+            : formatCompactStat(stat?.appearances_club),
+        },
+        {
+          label: stat?.starts_club != null ? 'Starter' : 'Minuter',
+          value: stat?.starts_club != null
+            ? formatCompactStat(stat?.starts_club)
+            : formatCompactStat(stat?.minutes_club),
+        },
+      ]
+    case 'defender':
+      return [
+        {
+          label: stat?.clean_sheets != null ? 'Hållna nollor' : startsOrApps != null ? 'Starter' : 'Minuter',
+          value: stat?.clean_sheets != null
+            ? formatCompactStat(stat.clean_sheets)
+            : startsOrApps != null
+            ? formatCompactStat(startsOrApps)
+            : formatCompactStat(stat?.minutes_club),
+        },
+        {
+          label: goalInvolvements > 0 ? 'Målpoäng' : 'Landskamper',
+          value: goalInvolvements > 0
+            ? formatCompactStat(goalInvolvements)
+            : formatCompactStat(stat?.caps_national),
+        },
+      ]
+    case 'defensive-midfielder':
+      return [
+        {
+          label: stat?.starts_club != null ? 'Starter' : stat?.appearances_club != null ? 'Matcher' : 'Minuter',
+          value: stat?.starts_club != null
+            ? formatCompactStat(stat.starts_club)
+            : stat?.appearances_club != null
+            ? formatCompactStat(stat.appearances_club)
+            : formatCompactStat(stat?.minutes_club),
+        },
+        {
+          label: stat?.caps_national != null && stat.caps_national > 0
+            ? 'Landskamper'
+            : stat?.assists_club != null && stat.assists_club > 0
+            ? 'Assist'
+            : 'Målpoäng',
+          value: stat?.caps_national != null && stat.caps_national > 0
+            ? formatCompactStat(stat.caps_national)
+            : stat?.assists_club != null && stat.assists_club > 0
+            ? formatCompactStat(stat.assists_club)
+            : formatCompactStat(goalInvolvements),
+        },
+      ]
+    case 'midfielder':
+      return [
+        { label: 'Målpoäng', value: formatCompactStat(goalInvolvements) },
+        {
+          label: stat?.starts_club != null ? 'Starter' : stat?.appearances_club != null ? 'Matcher' : 'Minuter',
+          value: stat?.starts_club != null
+            ? formatCompactStat(stat.starts_club)
+            : stat?.appearances_club != null
+            ? formatCompactStat(stat.appearances_club)
+            : formatCompactStat(stat?.minutes_club),
+        },
+      ]
+    case 'forward':
+    default:
+      return [
+        { label: 'Mål', value: formatCompactStat(stat?.goals_club) },
+        {
+          label: stat?.assists_club != null ? 'Assist' : stat?.appearances_club != null ? 'Matcher' : 'Minuter',
+          value: stat?.assists_club != null
+            ? formatCompactStat(stat?.assists_club)
+            : stat?.appearances_club != null
+            ? formatCompactStat(stat.appearances_club)
+            : formatCompactStat(stat?.minutes_club),
+        },
+      ]
+  }
+}
+
+function PlayerStatHighlights({
+  position,
+  stat,
+  playerName,
+  isGoalkeeper = false,
+  accentColor,
+}: {
+  position: string
+  stat?: PlayerStatRow
+  playerName?: string
+  isGoalkeeper?: boolean
+  accentColor: string
+}) {
+  const source = statSource(stat, playerName)
+  if (!source) return null
+  const highlights = statHighlightsForPlayer(position, source, isGoalkeeper)
+  const sourceLabel = statSourceLabel(source)
+
+  return (
+    <div className="mt-3">
+      <div className="grid grid-cols-2 gap-2">
+        {highlights.map(item => (
+          <div
+            key={item.label}
+            className="rounded-sm border bg-black/45 px-2.5 py-2"
+            style={{ borderColor: `${accentColor}40` }}
+          >
+            <div className="text-[9px] uppercase tracking-[0.18em] text-white/45">{item.label}</div>
+            <div className="mt-1 font-mono text-[18px] font-bold leading-none" style={{ color: accentColor }}>
+              {item.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      {sourceLabel && (
+        <div className="mt-2 inline-flex items-center rounded-full border border-white/10 bg-black/35 px-2 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-white/45">
+          {sourceLabel}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PlayerStatsLine({
   stat,
   isGoalkeeper = false,
@@ -595,13 +812,28 @@ function PlayerStatsLine({
   playerName?: string
 }) {
   if (!stat) {
-    const manualSummary = playerName ? MANUAL_PLAYER_STAT_SUMMARIES[playerName] : null
-    if (manualSummary) return <span>{manualSummary}</span>
+    const verified = playerName ? VERIFIED_PLAYER_STATS[playerName] : null
+    if (verified) {
+      const appearancePart = verified.starts_club != null
+        ? `${verified.starts_club} starter`
+        : verified.appearances_club != null
+        ? `${verified.appearances_club} matcher`
+        : `${verified.minutes_club ?? '–'} min`
+      const clubPart = isGoalkeeper
+        ? `${verified.clean_sheets ?? '–'} hållna nollor · ${appearancePart}`
+        : `${verified.goals_club ?? '–'} mål · ${verified.assists_club ?? '–'} assist · ${appearancePart}`
+      return <span>{clubPart} · Landslag: {verified.caps_national ?? '–'} matcher / {verified.goals_national ?? '–'} mål</span>
+    }
     return <span>Klubb: {fallbackClub ?? 'inväntar verifiering'} · 25/26-statistik inväntar verifiering</span>
   }
+  const appearancePart = stat.starts_club != null
+    ? `${stat.starts_club} starter`
+    : stat.appearances_club != null
+    ? `${stat.appearances_club} matcher`
+    : `${stat.minutes_club ?? '–'} min`
   const clubPart = isGoalkeeper
-    ? `${stat.clean_sheets ?? '–'} hållna nollor · ${stat.minutes_club ?? '–'} min`
-    : `${stat.goals_club ?? '–'} mål · ${stat.assists_club ?? '–'} assist · ${stat.minutes_club ?? '–'} min`
+    ? `${stat.clean_sheets ?? '–'} hållna nollor · ${appearancePart}`
+    : `${stat.goals_club ?? '–'} mål · ${stat.assists_club ?? '–'} assist · ${appearancePart}`
   return (
     <span>
       {clubPart} · Landslag: {stat.caps_national ?? '–'} matcher / {stat.goals_national ?? '–'} mål
@@ -640,7 +872,8 @@ function PlayersTab({
           const nameParts = p.name.split(' ')
           const lastName = nameParts.at(-1) ?? p.name
           const firstNames = nameParts.slice(0, -1).join(' ')
-          const photo = PLAYER_PHOTOS[p.name]
+          const photo = p.imageUrl ?? PLAYER_PHOTOS[p.name]
+          const sourceStat = statSource(stat, p.name)
           return (
             <div
               key={p.name}
@@ -648,6 +881,9 @@ function PlayersTab({
               style={isExpanded ? { minHeight: '520px' } : { aspectRatio: '2/3' }}
               onClick={() => setExpanded(isExpanded ? null : p.name)}
             >
+              <div className="absolute inset-0 flex items-center justify-center bg-[#050b16] text-7xl opacity-50">
+                {p.flag}
+              </div>
               {/* Photo */}
               {photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -658,10 +894,11 @@ function PlayersTab({
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-end justify-end overflow-hidden pointer-events-none select-none">
+                <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none bg-[#050b16]">
+                  <span className="text-7xl opacity-55">{p.flag}</span>
                   <span
-                    className="font-display font-black text-white leading-none"
-                    style={{ fontSize: '140px', opacity: 0.06, letterSpacing: '-0.04em', paddingRight: '8px', paddingBottom: '4px' }}
+                    className="absolute bottom-1 right-2 font-display font-black text-white leading-none"
+                    style={{ fontSize: '120px', opacity: 0.06, letterSpacing: '-0.04em' }}
                   >
                     {lastName.toUpperCase()}
                   </span>
@@ -709,7 +946,13 @@ function PlayersTab({
                 <div className="text-white/35 text-[11px] uppercase tracking-wider mt-1.5">
                   {p.position} · {p.club} · {p.age} år
                 </div>
-                <div className="text-white/20 text-[10px] font-mono mt-1">
+                <PlayerStatHighlights
+                  position={p.position}
+                  stat={sourceStat}
+                  playerName={p.name}
+                  accentColor={accentColor}
+                />
+                <div className="text-white/30 text-[10px] font-mono mt-2">
                   <PlayerStatsLine stat={stat} fallbackClub={p.club} playerName={p.name} />
                 </div>
                 {isExpanded && (
@@ -867,6 +1110,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                 style={isExpanded ? { minHeight: '380px' } : { aspectRatio: '3/4' }}
                 onClick={() => setExpandedPlayer(isExpanded ? null : p.name)}
               >
+                <div className="absolute inset-0 flex items-center justify-center bg-[#07111f] text-7xl opacity-45">🇸🇪</div>
                 {/* Photo */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -916,21 +1160,39 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
       </div>
 
       {/* ── Full squad ── */}
-      <div className="border border-white/10 border-t-0">
-        <div className="px-4 py-2.5 bg-navy-950 border-b border-white/10">
-          <div className="label">Hela truppen · 26 spelare</div>
+      <div className="border border-white/10 border-t-0 bg-navy-950">
+        <div className="px-4 py-3 bg-navy-950 border-b border-white/10 flex items-end justify-between gap-4">
+          <div>
+            <div className="label text-swe-yellow/70">Hela truppen · 26 spelare</div>
+            <p className="mt-1 text-xs text-white/35">FotMob-porträtt, klubbform och roll i blågult.</p>
+          </div>
+          <img src="/images/flag-se.svg" alt="Sverige" className="h-7 w-10 object-cover opacity-80" />
         </div>
         {Object.entries(SQUAD).map(([pos, players]) => (
           <div key={pos} className="border-b border-white/5 last:border-0">
-            <div className="px-4 py-1.5 bg-navy-900/50">
-              <span className="text-[10px] font-display font-black uppercase tracking-widest text-white/30">{pos}</span>
+            <div className="px-4 py-2 bg-navy-900/70">
+              <span className="text-[11px] font-display font-black uppercase tracking-widest text-swe-yellow/70">{pos}</span>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y divide-white/5 md:divide-y-0 md:gap-px md:bg-white/5">
               {players.map(p => (
-                <div key={p.name} className="flex items-center gap-3 px-4 py-2 hover:bg-navy-900/30 transition-colors">
-                  <span className="w-7 text-center text-[10px] font-display font-black text-white/20 border border-white/10 py-0.5">{p.pos}</span>
+                <div key={p.name} className="flex items-center gap-3 bg-navy-950 px-4 py-3 hover:bg-navy-900/55 transition-colors">
+                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-swe-yellow/25 bg-[#07111f]">
+                    {SWEDISH_SQUAD_FOTMOB_IDS[p.name] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getFotMobImageUrl(SWEDISH_SQUAD_FOTMOB_IDS[p.name])}
+                        alt={p.name}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-2xl">🇸🇪</span>
+                    )}
+                  </div>
+                  <span className="w-8 text-center text-[10px] font-display font-black text-swe-yellow/75 border border-swe-yellow/20 bg-swe-yellow/5 py-0.5">{p.pos}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white/80 font-medium">{p.name}</div>
+                    <div className="text-base text-white font-display font-black uppercase tracking-wide leading-tight">{p.name}</div>
                     <div className="text-[10px] text-white/35">
                       <PlayerStatsLine
                         stat={statFor(stats, p.name)}
@@ -940,7 +1202,7 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
                       />
                     </div>
                   </div>
-                  <span className="text-xs text-white/30">{statFor(stats, p.name)?.club ?? p.club}</span>
+                  <span className="hidden sm:block text-xs text-white/30 text-right">{statFor(stats, p.name)?.club ?? p.club}</span>
                 </div>
               ))}
             </div>
@@ -972,17 +1234,37 @@ function FavoritesTab() {
         <p className="text-white/40 text-sm mt-3">Oddsbaserade vinstchanser för de starkaste lagen.</p>
       </div>
 
-      <div className="divide-y divide-white/5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
         {FAVORITES.map((f, i) => (
-          <div key={f.country} className="flex items-center gap-4 py-4">
-            <div className="w-8 font-mono text-white/20 text-sm flex-shrink-0">{String(i + 1).padStart(2, '0')}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-baseline mb-2">
-                <span className="font-display font-black uppercase tracking-wide text-xl text-white">{f.country}</span>
-                <span className="font-mono font-bold text-4xl text-swe-yellow leading-none">{f.pct}<span className="text-white/25 text-lg">%</span></span>
+          <div key={f.country} className="relative min-h-[230px] overflow-hidden bg-[#07111f]">
+            <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-45">{f.flag}</div>
+            {(f.imageUrl ?? TEAM_IMAGE_FALLBACKS[f.country]) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={f.imageUrl ?? TEAM_IMAGE_FALLBACKS[f.country]}
+                alt={f.country}
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-swe-yellow" />
+            <div className="relative z-10 flex h-full min-h-[230px] flex-col justify-between p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="font-mono text-white/40 text-sm">{String(i + 1).padStart(2, '0')}</div>
+                <div className="text-right leading-none">
+                  <span className="font-mono font-bold text-5xl text-swe-yellow">{f.pct}</span>
+                  <span className="text-white/35 text-lg">%</span>
+                </div>
               </div>
-              <div className="h-[2px] bg-white/8 overflow-hidden">
-                <div className="h-full bg-swe-yellow" style={{ width: `${(f.pct / 19) * 100}%` }} />
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-lg">{f.flag}</span>
+                  <span className="font-display font-black uppercase tracking-wide text-2xl text-white">{f.country}</span>
+                </div>
+                <div className="h-[2px] bg-white/20 overflow-hidden">
+                  <div className="h-full bg-swe-yellow" style={{ width: `${(f.pct / 19) * 100}%` }} />
+                </div>
               </div>
             </div>
           </div>
@@ -1032,13 +1314,25 @@ function DarkHorsesTab() {
         <p className="text-white/40 text-sm mt-3">Lag som kan gå längre än de flesta tror.</p>
       </div>
 
-      <div className="divide-y divide-white/8">
+      <div className="grid grid-cols-1 gap-px bg-white/5">
         {DARK_HORSES.map(d => (
-          <div key={d.country} className="py-6">
+          <div key={d.country} className="relative min-h-[260px] overflow-hidden bg-[#07111f]">
+            <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-45">{d.flag}</div>
+            {d.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={d.imageUrl}
+                alt={d.country}
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-transparent" />
+            <div className="relative z-10 flex min-h-[260px] flex-col justify-end p-5">
             <div className="flex items-start gap-4 mb-3">
               <div className="flex-1 min-w-0">
                 <div className="font-display font-black uppercase tracking-wide text-white text-2xl leading-none mb-1">
-                  {d.country}
+                  {d.flag} {d.country}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow px-1.5 py-0.5">
@@ -1056,6 +1350,7 @@ function DarkHorsesTab() {
               <div className="h-full bg-swe-yellow" style={{ width: `${(d.strength / 10) * 100}%` }} />
             </div>
             <p className="text-sm text-white/50 leading-relaxed">{d.why}</p>
+            </div>
           </div>
         ))}
       </div>
