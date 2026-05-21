@@ -308,12 +308,12 @@ function GroupInsightsPanel({ group }: { group: string }) {
           <p className="text-white/80 leading-relaxed">{insight.prognos}</p>
         </div>
         <div className="border-t border-white/5 pt-3">
-          <p className="text-xs font-display font-black uppercase tracking-wider text-white/60 mb-1">Storstjarna</p>
-          <p className="text-white/80 leading-relaxed">{insight.storstjarna}</p>
+          <p className="text-xs font-display font-black uppercase tracking-wider text-white/60 mb-1">Storstjärna</p>
+          <p className="text-white/90 leading-relaxed">{insight.storstjarna}</p>
         </div>
         <div className="border-t border-white/5 pt-3">
-          <p className="text-xs font-display font-black uppercase tracking-wider text-swe-yellow/80 mb-1">Varning</p>
-          <p className="text-white/85 leading-relaxed">{insight.varning}</p>
+          <p className="text-xs font-display font-black uppercase tracking-wider text-swe-yellow mb-1">Varning</p>
+          <p className="text-white/90 leading-relaxed">{insight.varning}</p>
         </div>
       </div>
       <p className="text-xs text-white/35 italic border-t border-white/5 pt-3">Redaktionell prognos — inte garantier.</p>
@@ -449,7 +449,7 @@ function GroupPanel({
               />
               <button
                 onClick={onRandomizeScorer}
-                className="flex-shrink-0 flex items-center gap-1 text-xs font-display font-black uppercase tracking-wide text-white/75 hover:text-swe-yellow border border-white/30 hover:border-swe-yellow/30 transition-colors px-2.5 py-1.5"
+                className="flex-shrink-0 flex items-center gap-1 text-sm text-white/75 hover:text-swe-yellow border border-white/30 hover:border-swe-yellow/30 transition-colors px-2.5 py-1.5"
                 title="Slumpa ett namnförslag"
               >
                 ↺ Slumpa
