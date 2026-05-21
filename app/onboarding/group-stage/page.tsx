@@ -8,6 +8,8 @@ import { loadDraft, saveDraft, setStep, computeGroupStandings } from '@/lib/onbo
 import type { VmtMatch, Pick, GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 import { randomizeGroupPicks, randomGroupScorer } from '@/lib/group-randomize'
+import { GROUP_INSIGHTS } from '@/lib/group-insights'
+import NavBar from '@/components/NavBar'
 
 export default function GroupStagePage() {
   const router = useRouter()
@@ -151,7 +153,9 @@ export default function GroupStagePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 pb-24">
+    <div className="min-h-screen">
+    <NavBar />
+    <div className="mx-auto max-w-5xl px-3 py-4 pb-24">
       {/* Header with stadium background */}
       <div className="relative overflow-hidden mb-4 border border-white/10">
         <Image
@@ -216,25 +220,28 @@ export default function GroupStagePage() {
         </div>
       )}
 
-      {/* Group tabs */}
-      <div className="flex flex-wrap gap-1 mb-4">
-        {GROUPS.map(g => (
-          <button key={g} onClick={() => setActiveGroup(g)}
-            className={`px-2.5 py-1 text-xs font-display font-black uppercase border transition-colors ${
-              activeGroup === g
-                ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
-                : groupDone(g)
-                ? 'bg-pitch-900/30 text-pitch-400 border-pitch-500/30'
-                : 'bg-navy-900 text-white/65 border-white/10 hover:text-white'
-            }`}>
-            {g}
-            {groupDone(g) && activeGroup !== g && <span className="ml-1 text-pitch-400">✓</span>}
-          </button>
-        ))}
-      </div>
+      {/* Two-column layout: picks on left, insights on right */}
+      <div className="lg:grid lg:grid-cols-[1fr_288px] lg:gap-6 lg:items-start">
+        <div>
+        {/* Group tabs */}
+        <div className="flex flex-wrap gap-1 mb-4">
+          {GROUPS.map(g => (
+            <button key={g} onClick={() => setActiveGroup(g)}
+              className={`px-2.5 py-1 text-xs font-display font-black uppercase border transition-colors ${
+                activeGroup === g
+                  ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
+                  : groupDone(g)
+                  ? 'bg-pitch-900/30 text-pitch-400 border-pitch-500/30'
+                  : 'bg-navy-900 text-white/65 border-white/10 hover:text-white'
+              }`}>
+              {g}
+              {groupDone(g) && activeGroup !== g && <span className="ml-1 text-pitch-400">✓</span>}
+            </button>
+          ))}
+        </div>
 
-      {/* Active group content */}
-      <GroupPanel
+        {/* Active group content */}
+        <GroupPanel
         group={activeGroup}
         matches={gm[activeGroup]}
         matchPicks={draft.matchPicks}
@@ -256,6 +263,13 @@ export default function GroupStagePage() {
         isLastGroup={GROUPS.indexOf(activeGroup) === GROUPS.length - 1}
         groupDone={!!groupDone(activeGroup)}
       />
+        </div>{/* end left column */}
+
+        {/* Group insights panel */}
+        <div className="mt-6 lg:mt-0 lg:sticky lg:top-[72px]">
+          <GroupInsightsPanel group={activeGroup} />
+        </div>
+      </div>{/* end grid */}
 
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-navy-950/95 backdrop-blur px-3 py-3">
@@ -274,6 +288,35 @@ export default function GroupStagePage() {
           </button>
         </div>
       </div>
+    </div>
+    </div>
+  )
+}
+
+function GroupInsightsPanel({ group }: { group: string }) {
+  const insight = GROUP_INSIGHTS[group]
+  if (!insight) return null
+  return (
+    <div className="border border-white/10 bg-navy-900/40 p-4 space-y-4">
+      <div>
+        <div className="label mb-1">Grupp {group} — analys</div>
+        <p className="font-display font-black text-sm uppercase tracking-wide text-swe-yellow leading-tight">{insight.rubrik}</p>
+      </div>
+      <div className="space-y-3 text-sm">
+        <div>
+          <p className="text-[10px] font-display font-black uppercase tracking-wider text-white/35 mb-1">Prognos</p>
+          <p className="text-white/80 leading-relaxed">{insight.prognos}</p>
+        </div>
+        <div className="border-t border-white/5 pt-3">
+          <p className="text-[10px] font-display font-black uppercase tracking-wider text-white/35 mb-1">Storstjarna</p>
+          <p className="text-white/80 leading-relaxed">{insight.storstjarna}</p>
+        </div>
+        <div className="border-t border-white/5 pt-3">
+          <p className="text-[10px] font-display font-black uppercase tracking-wider text-swe-yellow/50 mb-1">Varning</p>
+          <p className="text-white/70 leading-relaxed">{insight.varning}</p>
+        </div>
+      </div>
+      <p className="text-[10px] text-white/20 italic border-t border-white/5 pt-3">Redaktionell prognos — inte garantier.</p>
     </div>
   )
 }

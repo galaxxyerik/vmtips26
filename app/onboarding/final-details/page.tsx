@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loadDraft, saveDraft, clearDraft } from '@/lib/onboarding-storage'
+import NavBar from '@/components/NavBar'
 
 export default function FinalDetailsPage() {
   const router = useRouter()
@@ -65,6 +66,8 @@ export default function FinalDetailsPage() {
   const canSubmit = swishChecked && !submitting
 
   return (
+    <div>
+    <NavBar />
     <div className="mx-auto max-w-lg px-3 py-6 pb-12">
       <div className="mb-6">
         <div className="label">Steg 3 av 3 · Detaljer</div>
@@ -160,6 +163,7 @@ export default function FinalDetailsPage() {
           </button>
         </div>
       </form>
+    </div>
     </div>
   )
 }

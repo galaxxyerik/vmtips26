@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { loadDraft, saveDraft, setStep } from '@/lib/onboarding-storage'
+import NavBar from '@/components/NavBar'
 import { buildR32Bracket, type R32Match } from '@/lib/bracket-logic'
 import type { GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
@@ -213,6 +214,8 @@ export default function BracketPage() {
   const rounds: KnockoutMatch['round'][] = ['r32', 'r16', 'qf', 'sf', 'bronze', 'final']
 
   return (
+    <div>
+    <NavBar />
     <div
       className="mx-auto max-w-2xl px-3 py-4"
       style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
@@ -315,6 +318,7 @@ export default function BracketPage() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   )
 }
