@@ -20,6 +20,17 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await syncMatches({ includePlayers: true })
+
+    // After syncing, recalculate scores in the background (fire-and-forget)
+    const host = req.headers.get('host') ?? 'localhost:3000'
+    const proto = host.startsWith('localhost') ? 'http' : 'https'
+    fetch(`${proto}://${host}/api/admin/recalculate-scores`, {
+      method: 'POST',
+      headers: process.env.CRON_SECRET
+        ? { authorization: `Bearer ${process.env.CRON_SECRET}` }
+        : {},
+    }).catch(err => console.error('recalculate-scores trigger failed:', err))
+
     return NextResponse.json({ ok: true, ...result })
   } catch (err) {
     console.error(`[${new Date().toISOString()}] sync-matches error:`, err)

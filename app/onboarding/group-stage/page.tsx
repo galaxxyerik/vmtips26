@@ -17,6 +17,7 @@ export default function GroupStagePage() {
   const [activeGroup, setActiveGroup] = useState<GroupLabel>('A')
   const [loading, setLoading] = useState(true)
   const [bracketCleared, setBracketCleared] = useState(false)
+  const [syncState, setSyncState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   useEffect(() => {
     setStep('group-stage')
@@ -30,7 +31,10 @@ export default function GroupStagePage() {
     setDraft(prev => {
       if (!prev) return prev
       const next = fn({ ...prev })
+      setSyncState('saving')
       saveDraft(next)
+      setSyncState('saved')
+      setTimeout(() => setSyncState('idle'), 1500)
       return next
     })
   }
@@ -123,7 +127,12 @@ export default function GroupStagePage() {
     return map
   }, [matches])
 
-  if (loading || !draft) return <div className="flex min-h-screen items-center justify-center text-white/35">Laddar...</div>
+  if (loading || !draft) return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-navy-950">
+      <div className="w-8 h-8 border-2 border-swe-yellow/30 border-t-swe-yellow animate-spin" />
+      <p className="text-white/30 text-xs font-display font-black uppercase tracking-widest">Laddar matcher...</p>
+    </div>
+  )
 
   const gm = groupedMatches()
   const totalMatches = matches.length
@@ -155,7 +164,15 @@ export default function GroupStagePage() {
         <div className="absolute inset-0 bg-navy-950/85 z-[1]" />
         <div className="relative z-10 px-4 py-3 flex items-center gap-4">
           <div className="flex-1 min-w-0">
-            <div className="label">Steg 1 av 3 · Gruppspel</div>
+            <div className="flex items-center gap-2">
+              <div className="label">Steg 1 av 3 · Gruppspel</div>
+              {syncState === 'saving' && (
+                <span className="text-[9px] font-display font-black uppercase tracking-wider text-white/30">Sparar...</span>
+              )}
+              {syncState === 'saved' && (
+                <span className="text-[9px] font-display font-black uppercase tracking-wider text-pitch-400/70">✓ Sparad</span>
+              )}
+            </div>
             <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white leading-tight">Tippa gruppspelet</h1>
           </div>
           {/* Group F flags */}
