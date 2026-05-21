@@ -290,7 +290,7 @@ export function AdminSubmissionRow({
                 setActiveGroup={setActiveGroup}
               />
               <SlutspelSection bracketPicks={picksData.bracketPicks} groups={picksData.groups} />
-              <OvrigtSection tournamentScorer={picksData.tournamentScorer} />
+              <OvrigtSection tournamentScorer={picksData.tournamentScorer} submissionId={id} />
             </div>
           )}
         </div>
@@ -623,15 +623,49 @@ export function SlutspelSection({
 
 // ── Section: Övrigt ───────────────────────────────────────────────────────────
 
-function OvrigtSection({ tournamentScorer }: { tournamentScorer: string | null }) {
+function OvrigtSection({ tournamentScorer, submissionId }: { tournamentScorer: string | null; submissionId: string }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(tournamentScorer ?? '')
+  const [current, setCurrent] = useState(tournamentScorer)
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (!value.trim()) return
+    setSaving(true)
+    const res = await fetch('/api/admin/update-scorer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ submissionId, playerName: value.trim() }),
+    })
+    if (res.ok) { setCurrent(value.trim()); setEditing(false) }
+    setSaving(false)
+  }
+
   return (
-    <div className="px-4 py-4 flex items-center gap-4">
+    <div className="px-4 py-4 flex items-center gap-4 flex-wrap">
       <div className="label text-swe-yellow/60">Sektion 3 — Övrigt</div>
       <div className="flex items-center gap-2">
         <span className="label text-[9px]">Skyttekung i VM</span>
-        <span className={`text-sm font-medium ${tournamentScorer ? 'text-pitch-400' : 'text-white/20'}`}>
-          {tournamentScorer ?? '—'}
-        </span>
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <input
+              className="bg-navy-800 border border-white/20 text-white text-sm px-2 py-0.5 w-36 focus:outline-none focus:border-swe-yellow"
+              value={value}
+              onChange={e => setValue(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+              autoFocus
+            />
+            <button onClick={handleSave} disabled={saving} className="text-xs text-pitch-400 hover:text-white px-1">{saving ? '…' : '✓'}</button>
+            <button onClick={() => setEditing(false)} className="text-xs text-white/30 hover:text-white px-1">✕</button>
+          </div>
+        ) : (
+          <>
+            <span className={`text-sm font-medium ${current ? 'text-pitch-400' : 'text-white/20'}`}>
+              {current ?? '—'}
+            </span>
+            <button onClick={() => { setValue(current ?? ''); setEditing(true) }} className="text-[10px] text-white/30 hover:text-swe-yellow ml-1">redigera</button>
+          </>
+        )}
       </div>
     </div>
   )
