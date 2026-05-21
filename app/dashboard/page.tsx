@@ -165,7 +165,7 @@ export default async function DashboardPage() {
           <div className="absolute inset-0 bg-black/60" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/20 to-transparent" />
 
-          <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-12 lg:pb-16">
+          <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-12 lg:pb-16 text-center">
             <div className="label text-swe-yellow/60 mb-3">
               VM-TIPS 26 · POÄNGTAVLAN ÖPPNAR OM
             </div>
