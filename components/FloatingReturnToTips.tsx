@@ -26,7 +26,8 @@ export default function FloatingReturnToTips() {
   const [tipPath, setTipPath] = useState('/onboarding/group-stage')
 
   useEffect(() => {
-    if (!pathname || pathname === '/' || pathname.startsWith('/onboarding')) {
+    // Hide only on the landing page (which has its own resume modal)
+    if (!pathname || pathname === '/') {
       setShow(false)
       return
     }
@@ -44,10 +45,13 @@ export default function FloatingReturnToTips() {
   return (
     <button
       onClick={() => router.push(tipPath)}
-      aria-label="Fortsätt tipsa"
-      className="fixed bottom-5 right-5 z-50 bg-swe-yellow text-navy-950 font-display font-black text-xs uppercase tracking-wide px-3 py-2.5 shadow-lg hover:bg-white transition-colors"
+      aria-label="Fortsätt tippa"
+      className="fixed bottom-6 right-6 z-50 bg-swe-yellow text-navy-950 font-display font-black text-sm uppercase tracking-wide px-5 py-3.5 transition-colors hover:bg-white active:scale-95"
+      style={{
+        boxShadow: '0 0 24px rgba(255, 205, 0, 0.55), 0 0 8px rgba(255, 205, 0, 0.3), 0 6px 20px rgba(0,0,0,0.5)',
+      }}
     >
-      Tipset →
+      Fortsätt tippa! →
     </button>
   )
 }
