@@ -131,11 +131,11 @@ const FEATURED_PLAYERS: FeaturedPlayer[] = [
 ]
 
 const PLAYER_IMAGE_FALLBACKS: Record<string, string> = {
-  'img.player.gyokeres': '/images/gyokeres-arsenal-portrait.jpg',
+  'img.player.gyokeres': 'https://www.svenskfotboll.se/4a8c04/globalassets/svff/bilderblock/arkiv/2025/2510/viktor_gyokeres.jpg',
   'img.player.isak':     '/images/isak-action-lfc.webp',
   'img.player.lindelof': '/images/lindelof-action.jpg',
   'img.player.bergvall': '/images/bergvall-action.jpg',
-  'img.player.ayari':    getFotMobImageUrl(1168311),
+  'img.player.ayari':    'https://www.svenskfotboll.se/cdn-cgi/image/f=auto/4ae6db/globalassets/svff/bilderblock/arkiv/2024/2405/yasin_ayari2023.jpg',
   'img.player.elanga':   '/images/elanga-action.jpg',
 }
 
@@ -240,39 +240,39 @@ const TEAM_IMAGE_FALLBACKS: Record<string, string> = {
 }
 
 // ── Player photos ─────────────────────────────────────────────────────────────
-// Local files take priority. Add /images/players/<name>.jpg to upgrade any entry.
-// Wikipedia fallbacks work from browsers (403 only from server-side curl tests).
+// Prioritise official federation/team media for the editorial guide cards.
+// FotMob is intentionally reserved for the compact Swedish squad thumbnails.
 
 const PLAYER_PHOTOS: Record<string, string> = {
-  // ── Local files (high quality) ────────────────────────────────────────────
-  'Viktor Gyökeres':        '/images/gyokeres-arsenal-portrait.jpg',
-  'Kylian Mbappé':          '/images/worldcup-guide/players/kylian-mbappe.jpg',
-  'Vinicius Jr':            '/images/worldcup-guide/players/vinicius-jr.jpg',
-  'Jude Bellingham':        '/images/worldcup-guide/players/jude-bellingham.jpg',
-  'Lamine Yamal':           '/images/worldcup-guide/players/lamine-yamal.jpg',
+  // ── Official federation / national-team portraits ────────────────────────
+  'Viktor Gyökeres':        'https://www.svenskfotboll.se/4a8c04/globalassets/svff/bilderblock/arkiv/2025/2510/viktor_gyokeres.jpg',
+  'Kylian Mbappé':          'https://media.fff.fr/uploads/images/6603fdc34dc59cdc97f993a1260e5432.png',
+  'Vinicius Jr':            'https://stcbfsiteprdimgbrs.blob.core.windows.net/img-site/cdn/WhatsApp%20Image%202024-11-19%20at%2008.43.25.jpeg',
+  'Jude Bellingham':        'https://cdn.englandfootball.com/-/jssmedia/EnglandFootball/PlayerProfile/MenSenior/2024-25/jude-bellingham-550.png?h=750&iar=0&w=550&rev=0b4d47a21bed497f889215b63e929bc9&hash=7F000E2745A888BB3B7771EDDF564CD7',
+  'Lamine Yamal':           'https://rfef.es/sites/default/files/styles/ficha/public/fichas-jugadores/lamine_yamal_390x520.png.webp?itok=lsnSWy-H',
+  'Pedri':                  'https://rfef.es/sites/default/files/styles/ficha/public/img-internacionales/pedri.jpg.webp?itok=GR9LGM3J',
+  'Bukayo Saka':            'https://cdn.englandfootball.com/-/jssmedia/EnglandFootball/PlayerProfile/MenSenior/2025-26/March-2026/Bukayo-Saka.png?h=750&iar=0&w=550&rev=4433ab9cadb4481aa12df88a9983ef8d&hash=36A119D7B5C6E4A2D43A05D4FD4F59D4',
+  'Virgil van Dijk':        'https://sassets.knvb.nl/sites/onsoranje.nl/files/players/b61529d98808eb966fa155298ca81792.png',
+  'Cody Gakpo':             'https://sassets.knvb.nl/sites/onsoranje.nl/files/players/3e9a4e8dee2e952749a7cdd047dfa6c0.png',
+  'Frenkie de Jong':        'https://sassets.knvb.nl/sites/onsoranje.nl/files/players/cd3807c73b8d246ce326a0e48533e9e0.png',
+  'Tijjani Reijnders':      'https://sassets.knvb.nl/sites/onsoranje.nl/files/players/be24e2c2dc9664752b4865432810daf7.png',
+  'Takefusa Kubo':          'https://jfa.jp/national_team/inc/member/samuraiblue/kubo_takefusa.jpg',
+  'Ritsu Doan':             'https://jfa.jp/national_team/inc/member/samuraiblue/doan_ritsu.jpg',
+  'Daichi Kamada':          'https://jfa.jp/national_team/inc/member/samuraiblue/kamada_daichi.jpg',
+  'Warren Zaïre-Emery':     'https://fff.twic.pics/https://media.fff.fr/uploads/images/dc56020d1eb06b8a33496793162c4a0f.png?twic=v1/focus=470x207',
+
+  // ── Official club / competition media when federation portraits are weak ──
   'Erling Haaland':         '/images/worldcup-guide/players/erling-haaland.jpg',
+  'Jamal Musiala':          'https://res.cloudinary.com/dfb-de/image/fetch/c_fill,g_faces:center,h_576,w_1024/q_auto/f_auto/https://assets.dfb.de/uploads/000/312/393/original_musiala.jpg',
+  'Achraf Hakimi':          'https://media.psg.fr/image/upload/c_limit,w_3841/f_avif/q_75/v1/_AM12909_cpdgze?_a=BAVAZGID0',
+  'Julián Álvarez':         'https://img-estaticos.atleticodemadrid.com/system/fotos/17851/destacado_300x300/BUSTOS_WEB_900x900_0016_19_J-ALVAREZ.png?1723899633',
+  'Endrick':                'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/endrick/assets/ENDRICK_EQUIPO_CARITA_380x501_SinParche.png',
+  'Arda Güler':             'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/arda-guler/assets/ARDA_550x650_SinParche.png',
+
+  // ── Local editorial fallbacks ─────────────────────────────────────────────
   'Kendry Páez':            '/images/worldcup-guide/players/kendry-paez.png',
-  'Virgil van Dijk':        '/images/van-dijk-portrait.jpg',
-  'Daichi Kamada':          '/images/worldcup-guide/players/daichi-kamada.png',
   'Youssef Msakni':         '/images/worldcup-guide/players/youssef-msakni.png',
   'Wahbi Khazri':           '/images/worldcup-guide/players/wahbi-khazri.png',
-
-  // ── FotMob CDN fallbacks for reliable portraits ───────────────────────────
-  'Pedri':                  getFotMobImageUrl(1083323),
-  'Jamal Musiala':          getFotMobImageUrl(1156141),
-  'Bukayo Saka':            getFotMobImageUrl(961995),
-  'Achraf Hakimi':          getFotMobImageUrl(770881),
-  'Cody Gakpo':             getFotMobImageUrl(806552),
-  'Julián Álvarez':         getFotMobImageUrl(974753),
-  'Endrick':                getFotMobImageUrl(1406729),
-  'Arda Güler':             getFotMobImageUrl(1253890),
-  'Takefusa Kubo':          getFotMobImageUrl(848289),
-  'Estêvão Willian':        getFotMobImageUrl(1356901),
-  'Sverre Nypan':           getFotMobImageUrl(1355509),
-  'Warren Zaïre-Emery':     getFotMobImageUrl(1367615),
-  'Frenkie de Jong':        getFotMobImageUrl(638622),
-  'Tijjani Reijnders':      getFotMobImageUrl(868344),
-  'Ritsu Doan':             getFotMobImageUrl(629805),
 }
 
 const COUNTRY_COLORS: Record<string, string> = {
