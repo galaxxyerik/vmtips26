@@ -141,7 +141,6 @@ export default function BracketPage() {
       const p = picks[m.matchNumber]
       if (p === undefined) return false
       if (isPlaceholderTeam(m.team1) || isPlaceholderTeam(m.team2)) return false
-      if (m.round === 'bronze' && (p === `Förlorare ${sfm[0].label}` || p === `Förlorare ${sfm[1].label}`)) return false
       return p !== m.team1 && p !== m.team2
     })
     if (stalePicks.length > 0) {
@@ -272,7 +271,6 @@ export default function BracketPage() {
           <div key={round} className="mb-6">
             <h2 className="font-display font-black text-xs uppercase tracking-wider text-white/40 mb-2 flex items-center gap-2 flex-wrap">
               {ROUND_LABELS[round]}
-              <span className="text-white/20 font-normal">{roundMatches.length} matcher</span>
               {round === 'bronze' && (
                 <span className="text-white/20 font-normal normal-case">· förlorarna från semifinalerna</span>
               )}
