@@ -164,16 +164,16 @@ function PointsGroup({ rows }: { rows: { pts: string; label: string; desc: strin
           className="flex items-start gap-5 py-4 border-b last:border-0"
           style={{ borderColor: 'rgba(255,255,255,0.08)' }}
         >
-          <div className="w-20 shrink-0">
-            <span className="font-mono font-bold tnum text-swe-yellow leading-none" style={{ fontSize: '40px' }}>
+          <div className="shrink-0">
+            <span className="font-mono font-bold tnum text-swe-yellow leading-none whitespace-nowrap" style={{ fontSize: '26px' }}>
               {r.pts}
             </span>
             <span className="block text-[10px] font-display font-black uppercase tracking-widest text-swe-yellow/50 mt-0.5">
               poäng
             </span>
           </div>
-          <div className="pt-1">
-            <div className="font-display font-black text-xl uppercase tracking-wide text-white leading-tight">{r.label}</div>
+          <div className="pt-0.5">
+            <div className="font-display font-black text-lg uppercase tracking-wide text-white leading-tight">{r.label}</div>
             <p className="text-white/50 text-sm mt-1 leading-relaxed">{r.desc}</p>
           </div>
         </div>
