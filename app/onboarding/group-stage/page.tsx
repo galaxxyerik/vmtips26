@@ -188,7 +188,7 @@ export default function GroupStagePage() {
         <div className="font-display font-black text-[11px] uppercase tracking-[0.18em] text-swe-yellow/80">
           Sparas automatiskt
         </div>
-        <p className="mt-1 text-sm leading-relaxed text-white/45">
+        <p className="mt-1 text-sm leading-relaxed text-white/70">
           Du behöver inte fylla i allt på en gång — ditt tips sparas automatiskt. Återkommer du med samma e-post kan du fortsätta där du slutade.
         </p>
       </div>
@@ -225,7 +225,7 @@ export default function GroupStagePage() {
                 ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
                 : groupDone(g)
                 ? 'bg-pitch-900/30 text-pitch-400 border-pitch-500/30'
-                : 'bg-navy-900 text-white/40 border-white/10 hover:text-white'
+                : 'bg-navy-900 text-white/65 border-white/10 hover:text-white'
             }`}>
             {g}
             {groupDone(g) && activeGroup !== g && <span className="ml-1 text-pitch-400">✓</span>}
@@ -320,11 +320,11 @@ function GroupPanel({
         <p className="text-white/30 text-sm">Inga matcher inlagda ännu.</p>
       ) : (
         <div className="border border-white/10 divide-y divide-white/5">
-          <div className="flex items-center gap-4 px-3 py-2 bg-navy-900/60 border-b border-white/5">
+          <div className="flex items-center gap-5 px-3 py-2.5 bg-navy-900/60 border-b border-white/5">
             {(['1', 'X', '2'] as const).map((key, i) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <span className="w-5 h-[18px] flex items-center justify-center bg-navy-800 border border-white/10 text-xs font-display font-black text-white/70">{key}</span>
-                <span className="text-xs text-white/55">{['Hemmaseger', 'Oavgjort', 'Bortaseger'][i]}</span>
+              <div key={key} className="flex items-center gap-2">
+                <span className="w-6 h-5 flex items-center justify-center bg-navy-800 border border-white/15 text-sm font-display font-black text-white/85">{key}</span>
+                <span className="text-sm text-white/75">{['Hemmaseger', 'Oavgjort', 'Bortaseger'][i]}</span>
               </div>
             ))}
           </div>
@@ -349,9 +349,9 @@ function GroupPanel({
               return (
                 <div key={team} className="flex items-center gap-2 px-3 py-2 border-b border-white/5 last:border-0 bg-navy-900/50">
                   <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
-                  <span className="flex-1 text-sm font-medium text-white/80">{team}</span>
+                  <span className="flex-1 text-sm font-medium text-white">{team}</span>
                   {s && (
-                    <span className="text-xs text-white/50 tnum tabular-nums">
+                    <span className="text-xs text-white/65 tnum tabular-nums">
                       {s.w}V {s.d}O {s.l}F
                     </span>
                   )}
@@ -390,7 +390,7 @@ function GroupPanel({
               onChange={e => onThirdPlace(e.target.checked)}
               className="w-4 h-4 accent-swe-yellow"
             />
-            <span className="text-sm text-white/70">
+            <span className="text-sm text-white/85">
               Trea-laget går vidare ({tableOrder[2] || '?'})
             </span>
           </label>
@@ -447,7 +447,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
     <div className="flex items-center gap-1 px-2 py-2 bg-navy-900/30 hover:bg-navy-900/70 transition-colors">
       <div className="w-20 text-right text-xs text-white/45 hidden sm:block tnum">{dateStr} {timeStr}</div>
       <div className="flex-1 flex items-center gap-1 min-w-0">
-        <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-swe-yellow' : 'text-white/75'}`}>
+        <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-swe-yellow' : 'text-white'}`}>
           {match.home_team}
         </span>
         {(['1', 'X', '2'] as Pick[]).map(opt => (
@@ -460,7 +460,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
             {opt}
           </button>
         ))}
-        <span className={`flex-1 text-left text-sm font-medium truncate ${pick === '2' ? 'text-swe-yellow' : 'text-white/75'}`}>
+        <span className={`flex-1 text-left text-sm font-medium truncate ${pick === '2' ? 'text-swe-yellow' : 'text-white'}`}>
           {match.away_team}
         </span>
       </div>
