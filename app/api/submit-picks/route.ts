@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendMail } from '@/lib/server-mail'
 import { canEditPicks } from '@/lib/deadlines'
+import { getSystemConfig, isGloballyLocked } from '@/lib/system-config'
+import { logAdminAction } from '@/lib/admin-guard'
+
+const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 export async function POST(req: NextRequest) {
   try {
     const auth = await createClient()
     const { data: { user } } = await auth.auth.getUser()
     const body = await req.json()
-    const { name, email, password, submissionId, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks } = body
+    const { name, email, password, submissionId, tournamentScorer, matchPicks, groupTableOrder, thirdPlaceSelected, groupScorers, bracketPicks, adminOverride } = body
+    const isAdmin = !!user && user.email === ADMIN_EMAIL
 
     const normalizedName = name?.trim()
     const normalizedEmail = normalizeEmail(email)
@@ -44,7 +49,20 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient()
-    const canEdit = canEditPicks()
+
+    // Bypass deadline + lock checks for admin
+    const bypassLock = isAdmin && adminOverride === true
+    if (!bypassLock) {
+      if (!canEditPicks()) {
+        return NextResponse.json({ error: 'Deadlinen har passerat — inga fler ändringar tillåtna.' }, { status: 403 })
+      }
+      const sysConfig = await getSystemConfig()
+      if (isGloballyLocked(sysConfig)) {
+        return NextResponse.json({ error: 'Tips är för tillfället låsta av administratören.' }, { status: 403 })
+      }
+    }
+
+    const canEdit = true
 
     const { data: existingByEmail } = await supabase
       .from('vmt_submissions')
@@ -96,9 +114,19 @@ export async function POST(req: NextRequest) {
       isUpdate = true
       sid = existing.id
 
+      const updatePayload: Record<string, unknown> = {
+        name: normalizedName,
+        email: normalizedEmail,
+        submitted_at: new Date().toISOString(),
+        total_points: 0,
+      }
+      if (bypassLock) {
+        updatePayload.admin_edited_at = new Date().toISOString()
+        updatePayload.admin_edited_by = user!.email
+      }
       const { error: updateError } = await supabase
         .from('vmt_submissions')
-        .update({ name: normalizedName, email: normalizedEmail, submitted_at: new Date().toISOString(), total_points: 0 })
+        .update(updatePayload)
         .eq('id', sid)
 
       if (updateError) {
@@ -180,6 +208,17 @@ export async function POST(req: NextRequest) {
       round: getRound(Number(matchNum)),
     }))
     if (bracketRows.length > 0) await supabase.from('vmt_bracket_picks').insert(bracketRows)
+
+    // Audit log for admin edits
+    if (bypassLock && isUpdate) {
+      await logAdminAction({
+        adminEmail: user!.email!,
+        action: 'admin_edit_submission',
+        targetId: sid,
+        targetName: normalizedName,
+        details: { email: normalizedEmail },
+      })
+    }
 
     // Insert notification only for new submissions
     if (!isUpdate) {

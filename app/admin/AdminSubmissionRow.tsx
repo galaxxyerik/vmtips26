@@ -42,6 +42,10 @@ export interface SubmissionRowProps {
   scorer: string | null
   champion: string | null
   rank: number | null
+  admin_locked?: boolean
+  admin_note?: string | null
+  onLockChange?: (id: string, locked: boolean) => void
+  onNoteChange?: (id: string, note: string | null) => void
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -74,12 +78,48 @@ interface KnockoutMatchView {
 
 export function AdminSubmissionRow({
   id, name, email, submitted_at, confirmed, total_points, scorer, champion, rank,
+  admin_locked = false, admin_note = null, onLockChange, onNoteChange,
 }: SubmissionRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [picksData, setPicksData] = useState<PicksData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [activeGroup, setActiveGroup] = useState('A')
+  const [lockLoading, setLockLoading] = useState(false)
+  const [noteEditing, setNoteEditing] = useState(false)
+  const [noteDraft, setNoteDraft] = useState(admin_note ?? '')
+  const [noteSaving, setNoteSaving] = useState(false)
+
+  async function handleToggleLock() {
+    setLockLoading(true)
+    try {
+      const res = await fetch('/api/admin/lock-submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId: id, locked: !admin_locked }),
+      })
+      if (res.ok) onLockChange?.(id, !admin_locked)
+    } finally {
+      setLockLoading(false)
+    }
+  }
+
+  async function handleSaveNote() {
+    setNoteSaving(true)
+    try {
+      const res = await fetch('/api/admin/add-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId: id, note: noteDraft }),
+      })
+      if (res.ok) {
+        onNoteChange?.(id, noteDraft.trim() || null)
+        setNoteEditing(false)
+      }
+    } finally {
+      setNoteSaving(false)
+    }
+  }
 
   async function handleToggle() {
     if (!expanded && !picksData && !error) {
@@ -142,6 +182,16 @@ export function AdminSubmissionRow({
           )}
         </div>
 
+        {/* Lock + note indicators */}
+        <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+          {admin_locked && (
+            <span className="text-[9px] font-display font-black border border-loss-500/30 text-loss-500/70 px-1 py-0.5">LÅST</span>
+          )}
+          {admin_note && (
+            <span className="text-[9px] font-display font-black border border-white/15 text-white/30 px-1 py-0.5" title={admin_note}>ANTECKNING</span>
+          )}
+        </div>
+
         {/* Scorer + champion picks — hidden on very small screens */}
         <div className="hidden md:flex flex-col items-end gap-0.5 flex-shrink-0 text-right">
           {scorer
@@ -163,11 +213,61 @@ export function AdminSubmissionRow({
         </div>
 
         {/* Action buttons — stop propagation so they don't toggle the row */}
-        <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
           <ToggleConfirmButton submissionId={id} confirmed={confirmed} />
+          <button
+            onClick={handleToggleLock}
+            disabled={lockLoading}
+            title={admin_locked ? 'Lås upp tips' : 'Lås tips'}
+            className={`px-2 py-1 text-xs font-display font-black uppercase border transition-colors disabled:opacity-40 ${
+              admin_locked
+                ? 'border-loss-500/40 text-loss-500 hover:border-loss-500 hover:bg-loss-500/10'
+                : 'border-white/10 text-white/25 hover:border-white/30 hover:text-white/60'
+            }`}
+          >
+            {lockLoading ? '…' : admin_locked ? 'Lås upp' : 'Lås'}
+          </button>
+          <button
+            onClick={() => { setNoteEditing(v => !v); setNoteDraft(admin_note ?? '') }}
+            title="Lägg till/redigera anteckning"
+            className="px-2 py-1 text-xs font-display font-black uppercase border border-white/10 text-white/25 hover:border-white/30 hover:text-white/60 transition-colors"
+          >
+            Not
+          </button>
           <DeleteButton submissionId={id} name={name} />
         </div>
       </div>
+
+      {/* ── Note edit panel ── */}
+      {noteEditing && (
+        <div className="border-t border-white/5 bg-navy-900/30 px-4 py-3 flex items-start gap-3" onClick={e => e.stopPropagation()}>
+          <div className="flex-1">
+            <div className="label text-[9px] mb-1.5">Admin-anteckning för {name}</div>
+            <textarea
+              value={noteDraft}
+              onChange={e => setNoteDraft(e.target.value)}
+              placeholder="T.ex. 'Har swishat men skrev fel namn'"
+              rows={2}
+              className="w-full bg-navy-950 border border-white/15 px-3 py-2 text-sm text-white/80 placeholder:text-white/20 resize-none focus:outline-none focus:border-white/30"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5 pt-5">
+            <button
+              onClick={handleSaveNote}
+              disabled={noteSaving}
+              className="px-3 py-1 text-xs font-display font-black uppercase border border-pitch-500/40 text-pitch-400 hover:bg-pitch-900/20 disabled:opacity-40 transition-colors"
+            >
+              {noteSaving ? '…' : 'Spara'}
+            </button>
+            <button
+              onClick={() => setNoteEditing(false)}
+              className="px-3 py-1 text-xs font-display font-black uppercase border border-white/10 text-white/30 hover:text-white/60 transition-colors"
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Expanded detail ── */}
       {expanded && (

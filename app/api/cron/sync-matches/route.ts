@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { syncMatches } from '@/lib/match-sync'
+import { getSystemConfig } from '@/lib/system-config'
 
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
@@ -19,6 +20,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const sysConfig = await getSystemConfig()
+    if (sysConfig['emergency_mode'] === 'true') {
+      return NextResponse.json({ ok: false, skipped: true, reason: 'emergency_mode' }, { status: 503 })
+    }
+
     const result = await syncMatches({ includePlayers: true })
 
     // After syncing, recalculate scores in the background (fire-and-forget)

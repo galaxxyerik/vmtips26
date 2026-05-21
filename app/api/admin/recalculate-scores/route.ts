@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { calculateScore, type MatchForScoring, type SubmissionPicks } from '@/lib/scoring'
+import { getSystemConfig } from '@/lib/system-config'
 
 const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
@@ -20,10 +21,16 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
 
+  // Check scoring_frozen
+  const sysConfig = await getSystemConfig()
+  if (sysConfig['scoring_frozen'] === 'true') {
+    return NextResponse.json({ ok: false, skipped: true, reason: 'scoring_frozen' })
+  }
+
   // Load all match data needed for scoring
   const { data: matchRows, error: matchErr } = await service
     .from('vmt_matches')
-    .select('id, match_number, phase, group_label, home_team, away_team, result, home_goal_scorers, away_goal_scorers')
+    .select('id, match_number, phase, group_label, home_team, away_team, result, manual_result, manual_override, home_goal_scorers, away_goal_scorers')
     .order('id')
 
   if (matchErr || !matchRows) {
@@ -37,7 +44,7 @@ export async function POST(req: NextRequest) {
     group_label: m.group_label,
     home_team: m.home_team,
     away_team: m.away_team,
-    result: m.result as '1' | 'X' | '2' | null,
+    result: (m.manual_override ? m.manual_result : m.result) as '1' | 'X' | '2' | null,
     home_goal_scorers: (m.home_goal_scorers as string[]) ?? [],
     away_goal_scorers: (m.away_goal_scorers as string[]) ?? [],
   }))
