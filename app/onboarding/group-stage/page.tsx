@@ -196,13 +196,13 @@ export default function GroupStagePage() {
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center gap-2 text-xs">
-          <span className={`tnum ${pickedCount === totalMatches && totalMatches > 0 ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
+          <span className={`tnum ${pickedCount === totalMatches && totalMatches > 0 ? 'text-swe-yellow font-bold' : 'text-white/60'}`}>
             {pickedCount}/{totalMatches} matcher
           </span>
           <div className="flex-1 h-0.5 bg-white/10">
             <div className="h-full bg-swe-yellow transition-all" style={{ width: `${totalMatches ? pickedCount/totalMatches*100 : 0}%` }} />
           </div>
-          <span className={`tnum ${thirdPlaceOk ? 'text-swe-yellow font-bold' : 'text-white/40'}`}>
+          <span className={`tnum ${thirdPlaceOk ? 'text-swe-yellow font-bold' : 'text-white/60'}`}>
             {draft.thirdPlaceSelected.length}/8 treor
           </span>
         </div>
@@ -260,7 +260,7 @@ export default function GroupStagePage() {
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-navy-950/95 backdrop-blur px-3 py-3">
         <div className="mx-auto max-w-2xl flex items-center justify-between gap-3">
-          <div className="text-xs text-white/30 space-y-0.5">
+          <div className="text-xs text-white/55 space-y-0.5">
             {!allMatchesPicked && <div>· Tippa alla {totalMatches} matcher</div>}
             {!thirdPlaceOk && <div>· Välj exakt 8 treor ({draft.thirdPlaceSelected.length}/8)</div>}
             {!allScorers && <div>· Fyll i skyttekung i alla grupper</div>}
@@ -306,10 +306,10 @@ function GroupPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-display font-black text-sm uppercase tracking-wider text-white/60">Grupp {group}</h2>
+        <h2 className="font-display font-black text-base uppercase tracking-wider text-white">Grupp {group}</h2>
         <button
           onClick={onRandomize}
-          className="text-xs text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2 py-1"
+          className="text-sm text-white/60 hover:text-swe-yellow border border-white/20 hover:border-swe-yellow/30 transition-colors px-3 py-1.5"
         >
           ↺ Slumpa grupp
         </button>
@@ -320,11 +320,11 @@ function GroupPanel({
         <p className="text-white/30 text-sm">Inga matcher inlagda ännu.</p>
       ) : (
         <div className="border border-white/10 divide-y divide-white/5">
-          <div className="flex items-center gap-4 px-3 py-1.5 bg-navy-900/60 border-b border-white/5">
+          <div className="flex items-center gap-4 px-3 py-2 bg-navy-900/60 border-b border-white/5">
             {(['1', 'X', '2'] as const).map((key, i) => (
               <div key={key} className="flex items-center gap-1.5">
-                <span className="w-5 h-[18px] flex items-center justify-center bg-navy-800 border border-white/10 text-[10px] font-display font-black text-white/50">{key}</span>
-                <span className="text-[10px] text-white/30">{['Hemmaseger', 'Oavgjort', 'Bortaseger'][i]}</span>
+                <span className="w-5 h-[18px] flex items-center justify-center bg-navy-800 border border-white/10 text-xs font-display font-black text-white/70">{key}</span>
+                <span className="text-xs text-white/55">{['Hemmaseger', 'Oavgjort', 'Bortaseger'][i]}</span>
               </div>
             ))}
           </div>
@@ -351,7 +351,7 @@ function GroupPanel({
                   <span className="w-5 text-center text-xs font-display font-black text-white/30 tnum">{idx + 1}</span>
                   <span className="flex-1 text-sm font-medium text-white/80">{team}</span>
                   {s && (
-                    <span className="text-[10px] text-white/30 tnum tabular-nums">
+                    <span className="text-xs text-white/50 tnum tabular-nums">
                       {s.w}V {s.d}O {s.l}F
                     </span>
                   )}
@@ -406,7 +406,7 @@ function GroupPanel({
               />
               <button
                 onClick={onRandomizeScorer}
-                className="flex-shrink-0 flex items-center gap-1 text-[10px] font-display font-black uppercase tracking-wide text-white/30 hover:text-swe-yellow border border-white/10 hover:border-swe-yellow/30 transition-colors px-2.5 py-1"
+                className="flex-shrink-0 flex items-center gap-1 text-xs font-display font-black uppercase tracking-wide text-white/55 hover:text-swe-yellow border border-white/20 hover:border-swe-yellow/30 transition-colors px-2.5 py-1.5"
                 title="Slumpa ett namnförslag"
               >
                 ↺ Slumpa
@@ -445,7 +445,7 @@ function MatchRow({ match, pick, onPick }: { match: VmtMatch; pick: Pick | null;
 
   return (
     <div className="flex items-center gap-1 px-2 py-2 bg-navy-900/30 hover:bg-navy-900/70 transition-colors">
-      <div className="w-20 text-right text-xs text-white/25 hidden sm:block tnum">{dateStr} {timeStr}</div>
+      <div className="w-20 text-right text-xs text-white/45 hidden sm:block tnum">{dateStr} {timeStr}</div>
       <div className="flex-1 flex items-center gap-1 min-w-0">
         <span className={`flex-1 text-right text-sm font-medium truncate ${pick === '1' ? 'text-swe-yellow' : 'text-white/75'}`}>
           {match.home_team}
