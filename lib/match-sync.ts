@@ -1,8 +1,9 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
-import { GROUP_PICK_POINTS, PHASE_POINTS } from '@/lib/scoring'
+import { GROUP_PICK_POINTS, PHASE_POINTS, TOURNAMENT_SCORER_POINTS } from '@/lib/scoring'
 import { syncPlayerStats } from '@/lib/player-stats-sync'
 import { teamNameSv } from '@/lib/team-names'
+import { playerNamesMatch } from '@/lib/player-name-match'
 
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
@@ -169,20 +170,27 @@ export async function recalculateAllSubmissionPoints() {
   const service = createServiceClient()
   syncLog('Räknar om poäng för alla tips')
 
+  // Actual tournament top scorer - set TOURNAMENT_SCORER_WINNER in env when known
+  const actualScorer = process.env.TOURNAMENT_SCORER_WINNER?.trim() || null
+  if (actualScorer) syncLog(`Skyttekung: ${actualScorer}`)
+
   const [
     { data: submissions },
     { data: groupPicks },
     { data: bracketPicks },
     { data: matches },
+    { data: scorerPicks },
   ] = await Promise.all([
     service.from('vmt_submissions').select('id'),
     service.from('vmt_group_picks').select('submission_id, match_id, pick'),
     service.from('vmt_bracket_picks').select('submission_id, match_number, pick_team, round'),
     service.from('vmt_matches').select('id, match_number, phase, home_team, away_team, home_score, away_score, result, status'),
+    service.from('vmt_tournament_scorer_pick').select('submission_id, player_name'),
   ])
 
   const matchById = new Map((matches ?? []).map(match => [match.id, match]))
   const matchByNumber = new Map((matches ?? []).map(match => [match.match_number, match]))
+  const scorerBySubmission = new Map((scorerPicks ?? []).map(p => [p.submission_id, p.player_name]))
   let updated = 0
 
   for (const submission of submissions ?? []) {
@@ -197,6 +205,13 @@ export async function recalculateAllSubmissionPoints() {
       if (!match || match.status !== 'finished') continue
       const winner = (match.home_score ?? 0) > (match.away_score ?? 0) ? match.home_team : match.away_team
       if (winner === pick.pick_team) total += PHASE_POINTS[pick.round]?.exact ?? 0
+    }
+
+    if (actualScorer) {
+      const guess = scorerBySubmission.get(submission.id)
+      if (guess && playerNamesMatch(guess, actualScorer)) {
+        total += TOURNAMENT_SCORER_POINTS
+      }
     }
 
     const { error } = await service.from('vmt_submissions').update({ total_points: total }).eq('id', submission.id)
