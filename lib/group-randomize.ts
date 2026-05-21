@@ -5,17 +5,17 @@ const STRENGTH: Record<string, number> = {
   'Brasilien': 85, 'Portugal': 83, 'Tyskland': 82, 'Nederländerna': 80,
   'Belgien': 75, 'Kroatien': 73, 'Uruguay': 71, 'Colombia': 70,
   'Marocko': 69, 'USA': 68, 'Japan': 67, 'Schweiz': 66,
-  'Senegal': 65, 'Danmark': 65, 'Turkiet': 64, 'Mexiko': 63,
-  'Sydkorea': 62, 'Serbien': 61, 'Polen': 60, 'Sverige': 60,
+  'Senegal': 65, 'Turkiet': 64, 'Mexiko': 63,
+  'Sydkorea': 62, 'Sverige': 60,
   'Österrike': 59, 'Skottland': 58, 'Norge': 58, 'Australien': 58,
-  'Tjeckien': 58, 'Ecuador': 57, 'Elfenbenskusten': 56, 'Nigeria': 56,
-  'Chile': 55, 'Peru': 55, 'Kanada': 54, 'Ghana': 53,
-  'Kamerun': 52, 'Bosnien-Hercegovina': 52, 'Saudiarabien': 50,
+  'Tjeckien': 58, 'Ecuador': 57, 'Elfenbenskusten': 56,
+  'Kanada': 54, 'Ghana': 53,
+  'Bosnien-H.': 52, 'Bosnien-Hercegovina': 52, 'Saudiarabien': 50,
   'Algeriet': 50, 'Paraguay': 49, 'Iran': 48, 'Tunisien': 47,
-  'Egypten': 47, 'Kongo-Kinshasa': 46, 'Qatar': 45, 'Sydafrika': 45,
+  'Egypten': 47, 'Kongo DR': 46, 'Kongo-Kinshasa': 46, 'Qatar': 45, 'Sydafrika': 45,
   'Uzbekistan': 44, 'Kap Verde': 43, 'Panama': 42, 'Irak': 42,
-  'Jordanien': 38, 'Bolivia': 38, 'Honduras': 37, 'Nya Zeeland': 37,
-  'Jamaica': 35, 'Curaçao': 33, 'Haiti': 30,
+  'Jordanien': 38, 'Nya Zeeland': 37,
+  'Curaçao': 33, 'Haiti': 30,
 }
 
 function teamStrength(name: string): number {
@@ -50,61 +50,79 @@ export function randomizeGroupPicks(matches: VmtMatch[]): Record<number, Pick> {
 }
 
 export const TEAM_SCORERS: Record<string, string[]> = {
-  'Argentina':        ['Lionel Messi', 'Lautaro Martínez', 'Julián Álvarez'],
-  'Spanien':          ['Lamine Yamal', 'Nico Williams', 'Pedri'],
-  'Frankrike':        ['Kylian Mbappé', 'Antoine Griezmann', 'Ousmane Dembélé'],
-  'England':          ['Harry Kane', 'Jude Bellingham', 'Bukayo Saka'],
-  'Brasilien':        ['Vinicius Jr', 'Rodrygo', 'Endrick'],
-  'Portugal':         ['Cristiano Ronaldo', 'João Félix', 'Rafael Leão'],
-  'Tyskland':         ['Kai Havertz', 'Florian Wirtz', 'Leroy Sané'],
-  'Nederländerna':    ['Cody Gakpo', 'Memphis Depay', 'Donyell Malen'],
-  'Belgien':          ['Kevin De Bruyne', 'Romelu Lukaku', 'Dodi Lukebakio'],
-  'Kroatien':         ['Luka Modrić', 'Andrej Kramarić', 'Bruno Petković'],
-  'Uruguay':          ['Federico Valverde', 'Darwin Núñez', 'Rodrigo Bentancur'],
-  'Colombia':         ['James Rodríguez', 'Luis Díaz', 'Jhon Jáder Durán'],
-  'Marocko':          ['Youssef En-Nesyri', 'Hakim Ziyech', 'Azzedine Ounahi'],
-  'USA':              ['Christian Pulisic', 'Gio Reyna', 'Timothy Weah'],
-  'Japan':            ['Takefusa Kubo', 'Kaoru Mitoma', 'Ritsu Doan'],
-  'Schweiz':          ['Granit Xhaka', 'Breel Embolo', 'Ruben Vargas'],
-  'Senegal':          ['Sadio Mané', 'Ismaïla Sarr', 'Boulaye Dia'],
-  'Turkiet':          ['Hakan Çalhanoğlu', 'Enes Ünal', 'Kerem Aktürkoğlu'],
-  'Mexiko':           ['Santiago Giménez', 'Raúl Jiménez', 'Alexis Vega'],
-  'Sydkorea':         ['Son Heung-min', 'Lee Kang-in', 'Cho Gue-sung'],
-  'Australien':       ['Mathew Leckie', 'Mitch Duke', 'Martin Boyle'],
-  'Ecuador':          ['Moisés Caicedo', 'Enner Valencia', 'Jeremy Sarmiento'],
-  'Ghana':            ['Mohammed Kudus', 'Thomas Partey', 'Jordan Ayew'],
-  'Kanada':           ['Alphonso Davies', 'Jonathan David', 'Tajon Buchanan'],
-  'Serbien':          ['Aleksandar Mitrović', 'Dušan Vlahović', 'Dušan Tadić'],
-  'Polen':            ['Robert Lewandowski', 'Piotr Zieliński', 'Arkadiusz Milik'],
-  'Elfenbenskusten':  ['Sébastien Haller', 'Franck Kessié', 'Nicolas Pépé'],
-  'Kamerun':          ['Vincent Aboubakar', 'Eric Maxim Choupo-Moting', 'Bryan Mbeumo'],
-  'Nigeria':          ['Victor Osimhen', 'Ademola Lookman', 'Samuel Chukwueze'],
-  'Saudiarabien':     ['Salem Al-Dawsari', 'Firas Al-Buraikan', 'Mohammed Al-Shehri'],
-  'Iran':             ['Sardar Azmoun', 'Mehdi Taremi', 'Alireza Jahanbakhsh'],
-  'Tunisien':         ['Youssef Msakni', 'Wahbi Khazri', 'Seifeddine Jaziri'],
-  'Panama':           ['Rolando Blackburn', 'Alfredo Stephens', 'Ismael Díaz'],
-  'Paraguay':         ['Miguel Almirón', 'Julio Enciso', 'Gustavo Gómez'],
-  'Bolivia':          ['Ramiro Vaca', 'Boris Sagredo', 'Marcelo Moreno Martins'],
-  'Qatar':            ['Akram Afif', 'Hassan Al-Haydos', 'Almoez Ali'],
-  'Honduras':         ['Romell Quioto', 'Alberth Elis', 'Bryan Moya'],
-  'Jamaica':          ['Leon Bailey', 'Michail Antonio', 'Bobby Decordova-Reid'],
-  'Sverige':          ['Alexander Isak', 'Dejan Kulusevski', 'Emil Forsberg'],
-  'Österrike':        ['Marko Arnautović', 'Marcel Sabitzer', 'Christoph Baumgartner'],
-  'Skottland':        ['Che Adams', 'Billy Gilmour', 'Ryan Christie'],
-  'Norge':            ['Erling Haaland', 'Martin Ødegaard', 'Alexander Sørloth'],
-  'Danmark':          ['Christian Eriksen', 'Rasmus Højlund', 'Jonas Wind'],
-  'Tjeckien':         ['Patrik Schick', 'Tomáš Souček', 'Vladimír Coufal'],
-  'Kongo-Kinshasa':   ['Chancel Mbemba', 'Yoane Wissa', 'Cédric Bakambu'],
-  'Sydafrika':        ['Percy Tau', 'Themba Zwane', 'Bongani Zungu'],
-  'Algeriet':         ['Riyad Mahrez', 'Islam Slimani', 'Youcef Atal'],
-  'Egypten':          ['Mohamed Salah', 'Omar Marmoush', 'Mostafa Mohamed'],
-  'Irak':             ['Mohanad Ali', 'Amjad Attwan', 'Alaa Abbas'],
-  'Uzbekistan':       ['Eldor Shomurodov', 'Abbosbek Fayzullaev', 'Otabek Shukurov'],
-  'Kap Verde':        ['Garry Rodrigues', 'Ryan Mendes', 'Stopira'],
-  'Curaçao':          ['Leandro Bacuna', 'Rangelo Janga', 'Cuco Martina'],
-  'Jordan':           ['Ahmad Al-Ali', 'Moussa Al-Tamari', 'Baha Faisal'],
-  'Jordanien':        ['Ahmad Al-Ali', 'Moussa Al-Tamari', 'Baha Faisal'],
-  'Haiti':            ['Duckens Nazon', 'Frantzdy Pierrot', 'Derrick Etienne'],
+  // ── Grupp A ──────────────────────────────────────────────────────────────────
+  'Mexiko':              ['Santiago Giménez', 'Raúl Jiménez', 'Roberto Alvarado'],
+  'Sydkorea':            ['Son Heung-min', 'Cho Gue-sung', 'Hwang Hee-chan'],
+  'Tjeckien':            ['Patrik Schick', 'Adam Hložek', 'Tomáš Souček'],
+  'Sydafrika':           ['Percy Tau', 'Lyle Foster', 'Evidence Makgopa'],
+
+  // ── Grupp B ──────────────────────────────────────────────────────────────────
+  'Kanada':              ['Jonathan David', 'Alphonso Davies', 'Cyle Larin'],
+  'Schweiz':             ['Breel Embolo', 'Ruben Vargas', 'Zeki Amdouni'],
+  'Bosnien-H.':          ['Edin Džeko', 'Ermedin Demirović', 'Esmir Bajraktarević'],
+  'Bosnien-Hercegovina': ['Edin Džeko', 'Ermedin Demirović', 'Esmir Bajraktarević'],
+  'Qatar':               ['Akram Afif', 'Almoez Ali', 'Hassan Al-Haydos'],
+
+  // ── Grupp C ──────────────────────────────────────────────────────────────────
+  'Brasilien':           ['Vinícius Jr', 'Raphinha', 'Neymar'],
+  'Marocko':             ['Youssef En-Nesyri', 'Hakim Ziyech', 'Soufiane Boufal'],
+  'Skottland':           ['Che Adams', 'Lyndon Dykes', 'Scott McTominay'],
+  'Haiti':               ['Wilson Isidor', 'Duckens Nazon'],
+
+  // ── Grupp D ──────────────────────────────────────────────────────────────────
+  'USA':                 ['Christian Pulisic', 'Folarin Balogun', 'Ricardo Pepi'],
+  'Turkiet':             ['Arda Güler', 'Kenan Yıldız', 'Kerem Aktürkoğlu'],
+  'Australien':          ['Mathew Leckie', 'Mitchell Duke', 'Nestory Irankunda'],
+  'Paraguay':            ['Julio Enciso', 'Antonio Sanabria', 'Miguel Almirón'],
+
+  // ── Grupp E ──────────────────────────────────────────────────────────────────
+  'Tyskland':            ['Florian Wirtz', 'Jamal Musiala', 'Kai Havertz'],
+  'Ecuador':             ['Enner Valencia', 'Kendry Páez', 'Gonzalo Plata'],
+  'Elfenbenskusten':     ['Simon Adingra', 'Sébastien Haller', 'Nicolas Pépé'],
+  'Curaçao':             ['Jurgen Locadia', 'Kenji Gorre'],
+
+  // ── Grupp F ──────────────────────────────────────────────────────────────────
+  'Nederländerna':       ['Cody Gakpo', 'Memphis Depay', 'Donyell Malen'],
+  'Sverige':             ['Viktor Gyökeres', 'Alexander Isak', 'Lucas Bergvall'],
+  'Japan':               ['Takefusa Kubo', 'Ayase Ueda', 'Daizen Maeda'],
+  'Tunisien':            ['Khalil Ayari', 'Elias Saad', 'Aïssa Laïdouni'],
+
+  // ── Grupp G ──────────────────────────────────────────────────────────────────
+  'Belgien':             ['Romelu Lukaku', 'Jeremy Doku', 'Dodi Lukebakio'],
+  'Egypten':             ['Mohamed Salah', 'Omar Marmoush', 'Mostafa Mohamed'],
+  'Iran':                ['Mehdi Taremi', 'Sardar Azmoun', 'Ali Alipour'],
+  'Nya Zeeland':         ['Chris Wood', 'Matt Garbett'],
+
+  // ── Grupp H ──────────────────────────────────────────────────────────────────
+  'Spanien':             ['Lamine Yamal', 'Nico Williams', 'Álvaro Morata'],
+  'Uruguay':             ['Darwin Núñez', 'Federico Valverde', 'Facundo Torres'],
+  'Saudiarabien':        ['Salem Al-Dawsari', 'Firas Al-Buraikan', 'Saleh Al-Shehri'],
+  'Kap Verde':           ['Garry Rodrigues', 'Ryan Mendes'],
+
+  // ── Grupp I ──────────────────────────────────────────────────────────────────
+  'Frankrike':           ['Kylian Mbappé', 'Ousmane Dembélé', 'Marcus Thuram'],
+  'Norge':               ['Erling Haaland', 'Alexander Sørloth', 'Martin Ødegaard'],
+  'Senegal':             ['Ismaïla Sarr', 'Boulaye Dia', 'Nicolas Jackson'],
+  'Irak':                ['Mohanad Ali', 'Amjad Attwan'],
+
+  // ── Grupp J ──────────────────────────────────────────────────────────────────
+  'Argentina':           ['Lautaro Martínez', 'Julián Álvarez', 'Lionel Messi'],
+  'Österrike':           ['Michael Gregoritsch', 'Marcel Sabitzer', 'Marko Arnautović'],
+  'Algeriet':            ['Riyad Mahrez', 'Youcef Atal', 'Andy Delort'],
+  'Jordanien':           ['Moussa Al-Tamari', 'Ahmad Al-Ali'],
+
+  // ── Grupp K ──────────────────────────────────────────────────────────────────
+  'Portugal':            ['Cristiano Ronaldo', 'Bruno Fernandes', 'Rafael Leão'],
+  'Colombia':            ['Luis Díaz', 'Jhon Durán', 'James Rodríguez'],
+  'Uzbekistan':          ['Eldor Shomurodov', 'Abbosbek Fayzullaev'],
+  'Kongo DR':            ['Yoane Wissa', 'Cédric Bakambu'],
+  'Kongo-Kinshasa':      ['Yoane Wissa', 'Cédric Bakambu'],
+
+  // ── Grupp L ──────────────────────────────────────────────────────────────────
+  'England':             ['Harry Kane', 'Jude Bellingham', 'Bukayo Saka'],
+  'Kroatien':            ['Andrej Kramarić', 'Ante Budimir', 'Marko Livaja'],
+  'Ghana':               ['Mohammed Kudus', 'Antoine Semenyo', 'Jordan Ayew'],
+  'Panama':              ['Ismael Díaz', 'Cecilio Waterman'],
 }
 
 export function randomGroupScorer(teamNames: string[]): string {
