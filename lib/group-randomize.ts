@@ -51,7 +51,7 @@ export function randomizeGroupPicks(matches: VmtMatch[]): Record<number, Pick> {
 
 export const TEAM_SCORERS: Record<string, string[]> = {
   'Argentina':        ['Lionel Messi', 'Lautaro Martínez', 'Julián Álvarez'],
-  'Spanien':          ['Lamine Yamal', 'Álvaro Morata', 'Pedri'],
+  'Spanien':          ['Lamine Yamal', 'Nico Williams', 'Pedri'],
   'Frankrike':        ['Kylian Mbappé', 'Antoine Griezmann', 'Ousmane Dembélé'],
   'England':          ['Harry Kane', 'Jude Bellingham', 'Bukayo Saka'],
   'Brasilien':        ['Vinicius Jr', 'Rodrygo', 'Endrick'],
@@ -68,7 +68,7 @@ export const TEAM_SCORERS: Record<string, string[]> = {
   'Schweiz':          ['Granit Xhaka', 'Breel Embolo', 'Ruben Vargas'],
   'Senegal':          ['Sadio Mané', 'Ismaïla Sarr', 'Boulaye Dia'],
   'Turkiet':          ['Hakan Çalhanoğlu', 'Enes Ünal', 'Kerem Aktürkoğlu'],
-  'Mexiko':           ['Hirving Lozano', 'Raúl Jiménez', 'Alexis Vega'],
+  'Mexiko':           ['Santiago Giménez', 'Raúl Jiménez', 'Alexis Vega'],
   'Sydkorea':         ['Son Heung-min', 'Lee Kang-in', 'Cho Gue-sung'],
   'Australien':       ['Mathew Leckie', 'Mitch Duke', 'Martin Boyle'],
   'Ecuador':          ['Moisés Caicedo', 'Enner Valencia', 'Jeremy Sarmiento'],
