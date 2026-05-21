@@ -47,7 +47,7 @@ const FACTS = [
   'Canada har aldrig tidigare spelat ett VM på hemmaplan.',
   'Brasil har vunnit VM flest gånger: fem gånger (1958, 1962, 1970, 1994, 2002).',
   'Argentina är regerande världsmästare efter segern i Qatar 2022.',
-  'VM 2026 är den första turnering där 12 grupper A–L används istället för åtta.',
+  'VM 2026 är den första turneringen med 12 grupper istället för åtta.',
   'De åtta bästa treorna i gruppspelet går också vidare — en ny regel för 2026.',
   'Just Fontaine från Frankrike håller fortfarande rekorden: 13 mål i ett enda VM (1958).',
   'Miroslav Klose (Tyskland) är VM:s totala skyttekung med 16 mål.',
@@ -86,10 +86,10 @@ const TALENTS: Player[] = [
 
 const DARK_HORSES: DarkHorse[] = [
   { country: 'Marocko', flag: '🇲🇦', maxFinish: 'Semifinal', why: 'Marocko visade 2022 att de inte är en gissning längre — de är ett faktum. Hakimi i världsklass, ett kompakt defensivsystem och fanatiska fans. Grupp C med Brasilien är hård, men överlever de den är de farliga hela vägen.', keyPlayer: 'Achraf Hakimi', strength: 8 },
-  { country: 'Colombia', flag: '🇨🇴', maxFinish: 'Semifinal', why: 'Colombia möter Portugal och Uzbekistan i Grupp K — en grupp de kan vinna. Med James Rodríguez som spelande tränare på planen och Jhon Durán som joker kan de gå längre än vad oddsen visar.', keyPlayer: 'James Rodríguez', strength: 8, imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1400&q=80' },
-  { country: 'Uruguay', flag: '🇺🇾', maxFinish: 'Kvartsfinal', why: 'Grupp H med Spanien är hård — men Uruguay spelar aldrig vackert och de vinner matcher de inte borde vinna. Valverde och Núñez är ett av VM:s farligaste anfallspar och defensiven är stenhård.', keyPlayer: 'Federico Valverde', strength: 7, imageUrl: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1400&q=80' },
-  { country: 'Kroatien', flag: '🇭🇷', maxFinish: 'Kvartsfinal', why: 'Modrić säger att detta är hans sista VM och det räcker som motivation. Grupp L med England är möjlig att klara — och Kroatien levererar alltid på storscenen: semifinal 2018, final 2022.', keyPlayer: 'Luka Modrić', strength: 7, imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1400&q=80' },
-  { country: 'Skottland', flag: '🏴', maxFinish: 'Åttondel', why: 'Första VM sedan 1998 och de är inte med för att åka hem tidigt. Grupp C med Brasilien och Marocko är brutal — men Robertson och McTominay kan ta poäng mot vem som helst på en bra dag.', keyPlayer: 'Andrew Robertson', strength: 6, imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80' },
+  { country: 'Colombia', flag: '🇨🇴', maxFinish: 'Semifinal', why: 'Colombia möter Portugal och Uzbekistan i Grupp K — en grupp de kan vinna. Med James Rodríguez som spelande tränare på planen och Jhon Durán som joker kan de gå längre än vad oddsen visar.', keyPlayer: 'James Rodríguez', strength: 8 },
+  { country: 'Uruguay', flag: '🇺🇾', maxFinish: 'Kvartsfinal', why: 'Grupp H med Spanien är hård — men Uruguay spelar aldrig vackert och de vinner matcher de inte borde vinna. Valverde och Núñez är ett av VM:s farligaste anfallspar och defensiven är stenhård.', keyPlayer: 'Federico Valverde', strength: 7 },
+  { country: 'Kroatien', flag: '🇭🇷', maxFinish: 'Kvartsfinal', why: 'Modrić säger att detta är hans sista VM och det räcker som motivation. Grupp L med England är möjlig att klara — och Kroatien levererar alltid på storscenen: semifinal 2018, final 2022.', keyPlayer: 'Luka Modrić', strength: 7 },
+  { country: 'Skottland', flag: '🏴', maxFinish: 'Åttondel', why: 'Första VM sedan 1998 och de är inte med för att åka hem tidigt. Grupp C med Brasilien och Marocko är brutal — men Robertson och McTominay kan ta poäng mot vem som helst på en bra dag.', keyPlayer: 'Andrew Robertson', strength: 6 },
 ]
 
 const GROUPS: Group[] = [
@@ -202,6 +202,17 @@ const FAVORITES: Favorite[] = [
   { country: 'Marocko', flag: '🇲🇦', pct: 6, imageUrl: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1400&q=80' },
 ]
 
+const FAVORITE_NOTES: Record<string, { headline: string; detail: string; keyPlayer: string }> = {
+  Frankrike: { headline: 'Djupast trupp i turneringen', keyPlayer: 'Kylian Mbappé', detail: 'Frankrike har världsklass på nästan varje position och kan ändra matchbild från bänkens första byte. Frågetecknet är snarare om offensiven får frihet än om kvaliteten räcker.' },
+  Brasilien: { headline: 'Högst toppnivå offensivt', keyPlayer: 'Vinicius Jr', detail: 'Brasilien har spelarna som kan avgöra även när spelet hackar. Vinner de mittfältet och får balans bakom Vinicius finns mästartaket där.' },
+  Spanien: { headline: 'Bäst rytm och bollkontroll', keyPlayer: 'Lamine Yamal', detail: 'Spanien kan kväva matcher med passningsspel och har fått en mer direkt dimension med Yamal. De behöver bara omsätta kontroll i mål oftare.' },
+  England: { headline: 'Mest press, mest potential', keyPlayer: 'Jude Bellingham', detail: 'England har namn nog att vinna allt, särskilt centralt med Bellingham som motor. Risken är den gamla: för mycket försiktighet när matcherna blir tunga.' },
+  Argentina: { headline: 'Mästarkultur och cynism', keyPlayer: 'Julián Álvarez', detail: 'Argentina kan vinna jämna matcher på rutin, tempo och tävlingsinstinkt. De är inte lika självklara som 2022, men de vet exakt hur en turnering överlevs.' },
+  Portugal: { headline: 'Lyxproblem i varje lagdel', keyPlayer: 'Bruno Fernandes', detail: 'Portugal har bredden, tekniken och målhotet för att gå hela vägen. Om laget spelar snabbare än namnen på lagbladet är de farliga.' },
+  Tyskland: { headline: 'Hemligt bättre än oddsen', keyPlayer: 'Jamal Musiala', detail: 'Tyskland har en ny kreativ stomme och Musiala kan bära dem genom låsta matcher. De känns inte som en maskin än, men golvet är högt.' },
+  Marocko: { headline: 'Turneringens farligaste outsider', keyPlayer: 'Achraf Hakimi', detail: 'Marocko har redan visat att 2022 inte var en engångsgrej. Strukturen är stark, fansen kommer märkas, och Hakimi ger elitnivå i båda riktningar.' },
+}
+
 function getFotMobImageUrl(playerId: number): string {
   return `https://images.fotmob.com/image_resources/playerimages/${playerId}.png`
 }
@@ -233,10 +244,6 @@ const SWEDISH_SQUAD_FOTMOB_IDS: Record<string, number> = {
   'Gustaf Nilsson': 118241,
   'Alexander Bernhardsson': 1014688,
   'Benjamin Nygren': 931605,
-}
-
-const TEAM_IMAGE_FALLBACKS: Record<string, string> = {
-  England: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80',
 }
 
 // ── Player photos ─────────────────────────────────────────────────────────────
@@ -315,6 +322,13 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'fakta', label: 'Fakta' },
 ]
 
+const QUICK_FACTS = [
+  { value: '48 lag', detail: 'Fler än något tidigare VM' },
+  { value: '12 grupper', detail: 'Två bästa plus åtta treor vidare' },
+  { value: '104 matcher', detail: 'Öppning till final på 39 dagar' },
+  { value: '19 juli', detail: 'Final på MetLife Stadium' },
+]
+
 export default function WorldCupGuidePage() {
   const [tab, setTab] = useState<Tab>('grupper')
   const [playerStats, setPlayerStats] = useState<Record<string, PlayerStatRow>>({})
@@ -351,7 +365,7 @@ export default function WorldCupGuidePage() {
       <NavBar userName={null} />
 
       {/* Full-bleed hero — SoFi Stadium, Los Angeles */}
-      <div className="relative h-[55vh] min-h-[300px] overflow-hidden">
+      <div className="relative min-h-[520px] overflow-hidden lg:min-h-[620px]">
         <Image
           src="/images/sofi-stadium-aerial.jpg"
           alt="SoFi Stadium i Los Angeles, USA — VM 2026"
@@ -362,36 +376,40 @@ export default function WorldCupGuidePage() {
         />
         <div className="absolute inset-0 bg-navy-950/55" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 px-6 lg:px-16 pb-10">
-          <div className="label text-swe-yellow/70 mb-2">VM-Bibel · 2026</div>
-          <h1 className="font-display font-black uppercase tracking-tight leading-none">
-            <span className="block text-white" style={{ fontSize: 'clamp(28px, 4.5vw, 56px)' }}>VM 2026</span>
-            <span className="block text-swe-yellow" style={{ fontSize: 'clamp(72px, 14vw, 160px)' }}>GUIDEN</span>
-          </h1>
-          <p className="text-white/45 text-sm mt-3">11 juni – 19 juli · USA, Kanada &amp; Mexiko · 48 lag · 104 matcher</p>
-        </div>
-      </div>
-
-      {/* Stat strip — open editorial, no boxes */}
-      <div className="border-b border-white/10">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex divide-x divide-white/[0.12]">
-            {[
-              { label: 'Lag', value: '48' },
-              { label: 'Grupper', value: '12 · A–L' },
-              { label: 'Matcher', value: '104' },
-              { label: 'Final', value: '19 jul' },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex-1 px-5 lg:px-10 py-6 lg:py-8">
-                <div
-                  className="font-mono font-bold leading-none text-swe-yellow"
-                  style={{ fontSize: 'clamp(30px, 4.5vw, 64px)' }}
-                >
-                  {value}
-                </div>
-                <div className="text-[11px] text-white/40 uppercase tracking-widest mt-2">{label}</div>
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className="mx-auto grid max-w-7xl gap-8 px-6 pb-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:pb-12 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="self-end">
+              <div className="label text-swe-yellow/70 mb-2">VM-Bibel · 2026</div>
+              <h1 className="font-display font-black uppercase tracking-tight leading-none">
+                <span className="block text-white" style={{ fontSize: 'clamp(28px, 4.5vw, 56px)' }}>VM 2026</span>
+                <span className="block text-swe-yellow" style={{ fontSize: 'clamp(72px, 14vw, 160px)' }}>GUIDEN</span>
+              </h1>
+              <p className="mt-3 max-w-xl text-sm text-white/55 sm:text-base">
+                11 juni – 19 juli · USA, Kanada &amp; Mexiko
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-px bg-white/10 sm:hidden">
+                {QUICK_FACTS.map(item => (
+                  <div key={item.value} className="bg-navy-950/80 px-3 py-2.5">
+                    <div className="font-display font-black uppercase leading-none text-swe-yellow">{item.value}</div>
+                    <div className="mt-1 text-[10px] leading-tight text-white/40">{item.detail}</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <aside className="hidden self-end border-l border-white/15 pl-7 lg:block">
+              <div className="label mb-4 text-swe-yellow/70">Snabbkoll</div>
+              <div className="divide-y divide-white/12">
+                {QUICK_FACTS.map(item => (
+                  <div key={item.value} className="py-4 first:pt-0 last:pb-0">
+                    <div className="font-display text-3xl font-black uppercase leading-none text-white xl:text-4xl">
+                      {item.value}
+                    </div>
+                    <div className="mt-1.5 text-sm leading-snug text-white/45">{item.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </aside>
           </div>
         </div>
       </div>
@@ -521,7 +539,7 @@ function GroupsTab() {
         </h2>
         <div className="h-[3px] w-16 bg-swe-yellow" />
         <p className="text-white/40 text-sm mt-3">
-          12 grupper · A–L · De 2 bästa + 8 bästa tredjeplacerade vidare ·{' '}
+          12 grupper · De två bästa i varje grupp går vidare, plus åtta bästa treor ·{' '}
           <span className="text-swe-yellow font-display font-black">W</span> = etta ·{' '}
           <span className="text-white/60 font-display font-black">Q</span> = vidare ·{' '}
           <span className="text-white/20 font-display font-black">E</span> = åker hem
@@ -1224,6 +1242,9 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
 // ── Tab: Favorites ─────────────────────────────────────────────────────────────
 
 function FavoritesTab() {
+  const [expanded, setExpanded] = useState<string | null>(FAVORITES[0]?.country ?? null)
+  const topPct = FAVORITES[0]?.pct ?? 1
+
   return (
     <div className="space-y-8">
       <div>
@@ -1231,44 +1252,63 @@ function FavoritesTab() {
           Favoriter
         </h2>
         <div className="h-[2px] w-14 bg-swe-yellow" />
-        <p className="text-white/40 text-sm mt-3">Oddsbaserade vinstchanser för de starkaste lagen.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5">
-        {FAVORITES.map((f, i) => (
-          <div key={f.country} className="relative min-h-[230px] overflow-hidden bg-[#07111f]">
-            <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-45">{f.flag}</div>
-            {(f.imageUrl ?? TEAM_IMAGE_FALLBACKS[f.country]) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={f.imageUrl ?? TEAM_IMAGE_FALLBACKS[f.country]}
-                alt={f.country}
-                className="absolute inset-0 h-full w-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-            ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-swe-yellow" />
-            <div className="relative z-10 flex h-full min-h-[230px] flex-col justify-between p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="font-mono text-white/40 text-sm">{String(i + 1).padStart(2, '0')}</div>
-                <div className="text-right leading-none">
-                  <span className="font-mono font-bold text-5xl text-swe-yellow">{f.pct}</span>
-                  <span className="text-white/35 text-lg">%</span>
-                </div>
-              </div>
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-lg">{f.flag}</span>
-                  <span className="font-display font-black uppercase tracking-wide text-2xl text-white">{f.country}</span>
-                </div>
-                <div className="h-[2px] bg-white/20 overflow-hidden">
-                  <div className="h-full bg-swe-yellow" style={{ width: `${(f.pct / 19) * 100}%` }} />
-                </div>
-              </div>
-            </div>
+      <div className="grid gap-px bg-white/5 sm:grid-cols-3">
+        {[
+          ['Titelchans', 'Procenten är vår uppskattade chans att laget vinner hela VM.'],
+          ['Modell', 'Truppkvalitet, gruppväg, tänkbar slutspelsväg och turneringsvana vägs ihop.'],
+          ['Tolkning', 'Det är en ranking, inte bettingodds. Klicka på ett land för kort motivering.'],
+        ].map(([label, text]) => (
+          <div key={label} className="bg-navy-950 px-4 py-3">
+            <div className="label text-[9px] text-swe-yellow/70">{label}</div>
+            <p className="mt-1 text-xs leading-relaxed text-white/45">{text}</p>
           </div>
         ))}
+      </div>
+
+      <div className="divide-y divide-white/5 border-y border-white/10">
+        {FAVORITES.map((f, i) => {
+          const isExpanded = expanded === f.country
+          const note = FAVORITE_NOTES[f.country]
+          return (
+            <button
+              key={f.country}
+              type="button"
+              onClick={() => setExpanded(isExpanded ? null : f.country)}
+              className={`block w-full px-0 py-0 text-left transition-colors ${
+                isExpanded ? 'bg-swe-yellow/5' : 'hover:bg-white/[0.03]'
+              }`}
+            >
+              <div className="grid grid-cols-[44px_minmax(0,1fr)_72px] items-center gap-3 px-4 py-4 sm:grid-cols-[56px_minmax(0,1fr)_110px] sm:px-5">
+                <div className="font-mono text-xs font-bold text-white/25">{String(i + 1).padStart(2, '0')}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{f.flag}</span>
+                    <span className="font-display text-xl font-black uppercase tracking-wide text-white">{f.country}</span>
+                  </div>
+                  <div className="mt-1 h-[2px] max-w-xl overflow-hidden bg-white/10">
+                    <div className="h-full bg-swe-yellow" style={{ width: `${(f.pct / topPct) * 100}%` }} />
+                  </div>
+                </div>
+                <div className="text-right leading-none">
+                  <span className="font-mono text-3xl font-bold text-swe-yellow sm:text-4xl">{f.pct}</span>
+                  <span className="text-sm text-white/35">%</span>
+                  <div className="mt-1 text-[9px] uppercase tracking-widest text-white/30">titelchans</div>
+                </div>
+              </div>
+              {isExpanded && note && (
+                <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-display text-sm font-black uppercase tracking-wide text-swe-yellow">{note.headline}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/30">Nyckel: {note.keyPlayer}</span>
+                  </div>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/55">{note.detail}</p>
+                </div>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Final prediction */}
@@ -1304,6 +1344,8 @@ function FavoritesTab() {
 // ── Tab: Dark Horses ───────────────────────────────────────────────────────────
 
 function DarkHorsesTab() {
+  const [expanded, setExpanded] = useState<string | null>(DARK_HORSES[0]?.country ?? null)
+
   return (
     <div className="space-y-8">
       <div>
@@ -1311,48 +1353,57 @@ function DarkHorsesTab() {
           Skrällchanser
         </h2>
         <div className="h-[2px] w-14 bg-swe-yellow" />
-        <p className="text-white/40 text-sm mt-3">Lag som kan gå längre än de flesta tror.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-px bg-white/5">
-        {DARK_HORSES.map(d => (
-          <div key={d.country} className="relative min-h-[260px] overflow-hidden bg-[#07111f]">
-            <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-45">{d.flag}</div>
-            {d.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={d.imageUrl}
-                alt={d.country}
-                className="absolute inset-0 h-full w-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-            ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/65 to-transparent" />
-            <div className="relative z-10 flex min-h-[260px] flex-col justify-end p-5">
-            <div className="flex items-start gap-4 mb-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-display font-black uppercase tracking-wide text-white text-2xl leading-none mb-1">
-                  {d.flag} {d.country}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-display font-black border border-swe-yellow/30 text-swe-yellow px-1.5 py-0.5">
-                    Max {d.maxFinish}
-                  </span>
-                  <span className="text-[11px] text-white/35 font-display font-black uppercase">{d.keyPlayer}</span>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0 leading-none">
-                <div className="font-mono font-bold text-5xl text-swe-yellow">{d.strength}</div>
-                <div className="text-white/25 text-xs font-mono -mt-1">/10</div>
-              </div>
-            </div>
-            <div className="h-[2px] bg-white/8 mb-4 overflow-hidden">
-              <div className="h-full bg-swe-yellow" style={{ width: `${(d.strength / 10) * 100}%` }} />
-            </div>
-            <p className="text-sm text-white/50 leading-relaxed">{d.why}</p>
-            </div>
+      <div className="grid gap-px bg-white/5 sm:grid-cols-3">
+        {[
+          ['Inte titelchans', 'Skrällistan visar hur långt laget rimligen kan gå om turneringen faller rätt.'],
+          ['Bedömning', 'Gruppväg, defensiv stabilitet, matchvinnare och erfarenhet i utslagsmatcher vägs ihop.'],
+          ['Tolkning', 'Rimligt tak är maxnivån, inte prognosen. Klicka på laget för motiveringen.'],
+        ].map(([label, text]) => (
+          <div key={label} className="bg-navy-950 px-4 py-3">
+            <div className="label text-[9px] text-swe-yellow/70">{label}</div>
+            <p className="mt-1 text-xs leading-relaxed text-white/45">{text}</p>
           </div>
         ))}
+      </div>
+
+      <div className="divide-y divide-white/5 border-y border-white/10">
+        {DARK_HORSES.map((d, i) => {
+          const isExpanded = expanded === d.country
+          return (
+            <button
+              key={d.country}
+              type="button"
+              onClick={() => setExpanded(isExpanded ? null : d.country)}
+              className={`block w-full px-0 py-0 text-left transition-colors ${
+                isExpanded ? 'bg-swe-yellow/5' : 'hover:bg-white/[0.03]'
+              }`}
+            >
+              <div className="grid grid-cols-[44px_minmax(0,1fr)_112px] items-center gap-3 px-4 py-4 sm:grid-cols-[56px_minmax(0,1fr)_180px] sm:px-5">
+                <div className="font-mono text-xs font-bold text-white/25">{String(i + 1).padStart(2, '0')}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{d.flag}</span>
+                    <span className="font-display text-xl font-black uppercase tracking-wide text-white">{d.country}</span>
+                  </div>
+                  <div className="mt-1 text-[10px] uppercase tracking-widest text-white/30">Nyckel: {d.keyPlayer}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-display text-sm font-black uppercase tracking-wide text-swe-yellow sm:text-base">
+                    {d.maxFinish}
+                  </div>
+                  <div className="mt-1 text-[9px] uppercase tracking-widest text-white/30">rimligt tak</div>
+                </div>
+              </div>
+              {isExpanded && (
+                <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
+                  <p className="max-w-3xl text-sm leading-relaxed text-white/55">{d.why}</p>
+                </div>
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
