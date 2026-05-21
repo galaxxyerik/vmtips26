@@ -1,106 +1,188 @@
-# Codex Prompt — vmtips26 fortsättning
+# CODEX_PROMPT — vmtips26 (aktuell per maj 2026)
 
-## Kontext
-vmtips26 är en privat svensk VM-tipsapp (Next.js 15 App Router, Tailwind, Supabase). Privat sluten sajt — upphovsrättsskyddade bilder är ok att använda.
+## Systembeskrivning
 
-Alla ändringar görs direkt på `master` och pushas till `origin/master` efter varje commit (alltid, utan att fråga).
+vmtips26 är en privat svensk VM-tipsapp för ~50 vänner. Byggt på:
+- **Next.js 15** App Router, TypeScript, Tailwind CSS
+- **Supabase** (Postgres + Auth) via `@supabase/ssr`
+- **Vercel** — auto-deploys från `master`
+- Allt UI på svenska. Privat sluten sajt — upphovsrättsskyddade bilder ok.
 
-## Senast gjort (commit 0f7f28e)
+**Workflow:** Committa direkt till `master` och pusha till `origin/master` efter varje avslutad ändring, utan att fråga.
 
-### Grupp-randomiseraren (lib/group-randomize.ts)
-- `TEAM_SCORERS` är nu genomgånget och uppdaterat mot bekräftade VM 2026-trupper (via officiella truppkällor maj 2026).
-- 10 svaghetslagen borttagna ur `TEAM_SCORERS` (inga förslag slumpas för dem): Haiti, Panama, Qatar, Curaçao, Nya Zeeland, Saudiarabien, Kap Verde, Irak, Jordanien, Uzbekistan.
-- Korrigeringar per lag bl.a.: Neymar tillbaka (Brasilien), Memphis Depay tillbaka (Nederländerna, 8 mål i kval), Sardar Azmoun borttagen (Iran — officiellt utesluten), Nicolas Pépé tillbaka (Elfenbenskusten, FIFA-bekräftad), Inaki Williams (Ghana), Hannibal Mejbri (Tunisien), m.m.
+---
 
-### UI-förbättringar i group-stage (commit a96ab4c)
-- Legendraden "1/X/2" är omdesignad till chip+etikett-rad (inte längre centrerat grå-text-pill).
-- Scorer-knappen är omdesignad från bare `↺` till tydligare `↺ Slumpa`-knapp med border.
+## Onboarding-flöde (3 steg)
 
-## Slump-systemet — kontrollera viktning (VIKTIG UPPGIFT)
+1. `/` — LandingPage: namn + e-post → cross-device draft sync via `vmt_drafts`
+2. `/onboarding/group-stage` — 72 gruppspelsmatcher (1/X/2), grupptabeller, 8 tredjeplatser, gruppskyttekung
+3. `/onboarding/bracket` — 32 slutspelsmatcher (R32→Final), kaskadereset vid ändrade grupper
+4. `/onboarding/final-details` — turneringsskyttekung, lösenord (valfritt), Swish-bekräftelse
+5. Submit → `POST /api/submit-picks` → `clearDraft()` → `/dashboard?submitted=true`
 
-Användaren undrar om slumpsystemet ger "rimliga" slumpar, dvs. att gruppfavoriterna har ganska stor sannolikhet att vinna sin grupp.
+### Redigera tips
+Inloggad användare → `/dashboard/[submissionId]` → "Uppdatera mitt tips" → återanvänder onboarding med `submissionId` i draft → `submit-picks` hanterar update. Möjligt fram till deadline (11 juni 18:00 UTC = 20:00 Stockholm).
 
-**Befintlig implementation** (`lib/group-randomize.ts`):
-- `STRENGTH`-mappen ger varje lag ett styrkebetyg (30–90).
-- `randomMatchPick(homeTeam, awayTeam)` räknar `diff = styrka(hemma) + 5 − styrka(borta)` och väljer 1/X/2-sannolikheter:
-  ```
-  diff ≥ 20  → [60%, 25%, 15%]
-  diff ≥ 10  → [50%, 28%, 22%]
-  diff ≥ −9  → [38%, 30%, 32%]   ← nära jämna lag
-  diff ≥ −19 → [22%, 28%, 50%]
-  annars     → [15%, 25%, 60%]
-  ```
-- `randomizeGroupPicks` anropar `randomMatchPick` för varje match och returnerar en hel grupps picks.
+---
 
-**Slutsats:** Mekanismen ÄR viktad på matchnivå — starka lag vinner mer sannolikt varje enskild match. Eftersom grupptabellen uppstår av alla 6 matchresultat samlat, tenderar favoriter att hamna i topp naturligt.
+## Auth
 
-**Saker att kontrollera/förbättra:**
-1. Är `STRENGTH`-värdena rimliga för VM 2026? T.ex. Norge (Haaland, 16 mål i kval) är satt till 58 — kanske för lågt? Kanada som värdnation har fördel. Kolla om några lag verkar skevt rankade.
-2. Är trösklarna rimliga? I nuläget är diff ±9 "jämnt" — det innebär att lag med upp till 9 styrkepoängs skillnad betraktas som jämna. Kan det vara för brett?
-3. Funktionen slumpar bara på matchnivå och returnerar picks — den simulerar inte hela grupptabellen. Det finns ingen garanti att den bästa pickade ordningen i grupptabellen hänger ihop med matcherna. Det är oklart om grupp-tabell-ordningen också slumpas. Kolla `app/onboarding/group-stage/page.tsx` — hanteras `onRandomize` och grupp-tabellen separat?
+- Supabase password auth (`signInWithPassword`)
+- Lösenord skapas valfritt vid submit (`supabase.auth.admin.createUser`)
+- `/login` → `/dashboard/[submissionId]` om submission finns
+- `/forgot-password` → reset-mail → `/auth/callback?next=/reset-password` → `/reset-password`
+- `app/auth/callback/route.ts` — byter Supabase-kod mot session (måste stå i Supabase "Allowed redirect URLs")
 
-## Pending UI-uppgifter (ej gjorda än)
+---
 
-### 1. Landing page — "Påbörja ditt tips" för nära footer
-Knappen hamnar precis mot den nedre strap-listen. Lägg till `pb-24 sm:pb-32` på hero-content-diven i `components/LandingPage.tsx`:
-```tsx
-<div className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-24 sm:pb-32 max-w-2xl">
+## Deadline & Locking
+
+- **`lib/deadlines.ts`**: `PICKS_DEADLINE_AT = new Date('2026-06-11T18:00:00Z')` (= 20:00 CEST)
+- `canEditPicks()` kontrolleras i backend (`submit-picks`) och frontend
+- System config kan override:a via `global_lock` i `vmt_system_config`
+- Admin bypasser alltid deadline via `adminOverride: true` i submit-picks
+- Individuella submissions kan låsas via `admin_locked` i `vmt_submissions`
+
+---
+
+## Databasschema
+
+### Kärnatabeller
+| Tabell | Syfte |
+|--------|-------|
+| `vmt_matches` | 104 matcher; `result`, `manual_result`, `manual_winner`, `manual_override` |
+| `vmt_submissions` | Deltagare; `confirmed`, `total_points`, `admin_locked`, `admin_edited_at`, `admin_edited_by`, `admin_note` |
+| `vmt_group_picks` | 1/X/2 per match per submission |
+| `vmt_group_table_picks` | Grupptabellordning |
+| `vmt_third_place_picks` | Tredjeplatser per grupp |
+| `vmt_group_scorer_picks` | Gruppskyttekung per grupp |
+| `vmt_tournament_scorer_pick` | Turneringsskyttekung |
+| `vmt_bracket_picks` | Slutspelspicks per matchnummer |
+| `vmt_drafts` | Cross-device draft sync |
+| `vmt_notifications` | Nya tips (admin notis) |
+| `vmt_sync_log` | Sista API-sync-tidstämplar |
+| `vmt_admin_log` | Audit log för adminåtgärder |
+| `vmt_system_config` | key/value config (se nedan) |
+
+### vmt_system_config — nycklar
+| Nyckel | Funktion |
+|--------|----------|
+| `global_lock` | Stänger alla tips (override av deadline) |
+| `emergency_mode` | Fryser live-updates, scoring och matchsync |
+| `disable_submissions` | Stänger nya anmälningar |
+| `maintenance_banner` | Banner-text (tom = ingen banner) |
+| `scoring_frozen` | Stoppar recalculate-scores |
+| `admin_last_seen` | ISO-tidsstämpel för senaste admin-besök (används för NY-badge) |
+
+**Migrationer att applicera manuellt i Supabase:**
+- `supabase/migrations/20260521200000_admin_system.sql` ✅ **REDAN APPLICERAD**
+
+---
+
+## Nyckelfiler
+
+| Fil | Syfte |
+|-----|-------|
+| `lib/types.ts` | VmtMatch, OnboardingDraft, Pick, GroupLabel |
+| `lib/deadlines.ts` | `PICKS_DEADLINE_AT`, `canEditPicks()` |
+| `lib/scoring.ts` | `calculateScore()` — full poängberäkning inkl. annan väg |
+| `lib/bracket-logic.ts` | Bygger R32-bracket från grupputfall (FIFA Annex C) |
+| `lib/group-randomize.ts` | Viktad slumpgenerator + TEAM_SCORERS |
+| `lib/onboarding-storage.ts` | localStorage draft + server sync |
+| `lib/system-config.ts` | `getSystemConfig()` / `setSystemConfig()` mot `vmt_system_config` |
+| `lib/admin-guard.ts` | `requireAdmin(req)` + `logAdminAction()` |
+| `components/LandingPage.tsx` | Entry form + resume modal |
+| `components/NavBar.tsx` | Sticky nav, "Tippa nu →" / "Logga ut" |
+| `app/api/submit-picks/route.ts` | Final submit — skapar/uppdaterar alla picks; respekterar global_lock; adminOverride bypass |
+| `app/api/draft/route.ts` | GET/POST/DELETE draft per e-post |
+| `app/api/admin/recalculate-scores/route.ts` | Räknar om total_points; använder manual_result när manual_override; hoppar om scoring_frozen |
+| `app/api/admin/match-override/route.ts` | Manuellt matchresultat (prioriteras i scoring) |
+| `app/api/admin/system-config/route.ts` | Läs/skriv system config |
+| `app/api/admin/lock-submission/route.ts` | Lås/lås upp individuell submission |
+| `app/api/admin/add-note/route.ts` | Admin-anteckning på submission |
+| `app/api/admin/export/route.ts` | CSV-export (deltagare, tips, poäng, notat) |
+| `app/api/cron/sync-matches/route.ts` | Synkar matcher + triggar recalculate-scores; hoppar om emergency_mode |
+| `app/admin/page.tsx` | Server component — hämtar all data, sätter admin_last_seen, renderar ControlRoom |
+| `app/admin/ControlRoom.tsx` | Client component — tabbar: Översikt / Deltagare / Matcher / System; toasts; optimistic UI |
+| `app/admin/AdminSubmissionRow.tsx` | Expanderbar rad med lock/note-knappar och NY-badge |
+| `app/dashboard/page.tsx` | Public leaderboard + deltagarlista |
+| `app/dashboard/[userId]/page.tsx` | Tipsvisning: owner=redigerbar, confirmed other=publik |
+| `app/dashboard/[userId]/MyTipDetails.tsx` | Owner-vy med "Uppdatera mitt tips"-knapp |
+| `app/dashboard/[userId]/PublicTipSummary.tsx` | Publik vy för andra bekräftade deltagare |
+| `app/worldcup-guide/page.tsx` | VM-Bibeln (guide med grupper, favoriter, skrällchanser, spelarlexikon) |
+
+---
+
+## Poängsystem
+
+| Kategori | Poäng |
+|----------|-------|
+| Rätt 1/X/2 | 1 p |
+| Exakt plats i grupptabell | 2 p |
+| En plats fel i grupptabell | 1 p |
+| Rätt trea vidare | 1 p |
+| Rätt gruppskyttekung | 3 p |
+| Slutspel rätt väg (R32/R16/QF/SF/Bronze/Final) | 2/3/4/5/3/6 p |
+| Slutspel annan väg | 1/1,5/2/2,5/1,5/3 p |
+| Turneringsskyttekung | 5 p |
+
+`calculateScore()` i `lib/scoring.ts` hanterar allt. Föredrar `manual_result` framför `result` i matchdata.
+`POST /api/admin/recalculate-scores` — räknar om alla. Triggas automatiskt av sync-matches.
+
+---
+
+## Admin-system (Tournament Control Room)
+
+### Åtkomstkontroll
+Endast `eeengstrand@gmail.com` har admin-access. `lib/admin-guard.ts` exporterar `requireAdmin(req)`.
+
+### Admin-åtgärder
+| Åtgärd | Route |
+|--------|-------|
+| Bekräfta/avbekräfta betalning | `POST /api/admin/toggle-confirm` |
+| Lås/lås upp submission | `POST /api/admin/lock-submission` |
+| Redigera tips (admin) | `POST /api/submit-picks` med `adminOverride: true` |
+| Manuellt matchresultat | `POST /api/admin/match-override` |
+| System config | `POST /api/admin/system-config` |
+| Admin-anteckning | `POST /api/admin/add-note` |
+| Räkna om poäng | `POST /api/admin/recalculate-scores` |
+| CSV-export | `GET /api/admin/export` |
+| Radera submission | `POST /api/admin/delete-submission` |
+
+### Audit Log (`vmt_admin_log`)
+Kolumner: `id`, `admin_email`, `action`, `target_id`, `target_name`, `details` (jsonb), `created_at`.
+Loggas via `logAdminAction()` i `lib/admin-guard.ts` för alla kritiska åtgärder.
+
+### NY-badge
+`vmt_system_config` key `admin_last_seen` uppdateras varje gång admin öppnar `/admin`.
+Submissions med `submitted_at > admin_last_seen` märks som nya med gul NY-chip — fungerar cross-device.
+
+### Control Room-tabbar
+- **Översikt** — stats, leaderboard, aggregerade picks, systemstatus-alerts
+- **Deltagare** — alla submissions med lock/note/confirm/radera; NY-badge på nya
+- **Matcher** — override per grupp eller slutspelsrunda + force recalculate
+- **System** — toggle-switchar för all system config, underhållsbanner, CSV-export, verktyg
+
+---
+
+## Scoring triggerkedja
+```
+Vercel cron → GET /api/cron/sync-matches
+  → (avbryt om emergency_mode)
+  → syncMatches() (lib/match-sync.ts) → POST /api/admin/recalculate-scores
+    → (avbryt om scoring_frozen)
+    → calculateScore() per submission (använder manual_result om manual_override)
+    → UPDATE vmt_submissions SET total_points
 ```
 
-### 2. Dashboard hero — NFL-stadion ser fel ut
-`nrg-stadium.jpg` är NFL. Byt till `friends-arena-stockholm.jpg` i `app/dashboard/page.tsx`:
-```tsx
-src="/images/friends-arena-stockholm.jpg"
-alt="Friends Arena i Stockholm — Sveriges hemmaplan"
-```
+---
 
-### 3. VM-guide featured players — återställ Fotmob-foton
-I `app/worldcup-guide/page.tsx` togs spelarbilderna i Nyckelspelare-sektionen bort. Lägg tillbaka `PLAYER_IMAGE_FALLBACKS` och bildslot i `SwedenTab()`. Se CODEX_PROMPT (förra versionen) för exakt kod.
-
-### 4. VM-guide — öka rubrikstorlekar
-- Spelarnamn: `text-sm` → `text-base`
-- Landnamn i DarkHorsesTab: lägg till `text-base`
-- Grupprubrik i GroupsTab: `text-sm` → `text-base`
-
-### 5. Landing page — logout saknas för inloggade
-`app/page.tsx` — skicka `userName={user?.email ?? null}` till `LandingPage`.
-`components/LandingPage.tsx` — ersätt inline `<nav>` med `<NavBar userName={userName ?? null} />`.
-
-## Uncommitted filer (ej att röra utan anledning)
-Dessa filer är modifierade/untracked men inte committade — de tillhör ett separat spår (player-stats/API-integration) och ska lämnas orörda om inte användaren specifikt ber om det:
-- `app/worldcup-guide/page.tsx`
-- `data/player-stats.ts`, `lib/player-stats-config.ts`, `lib/player-stats-sync.ts`, `lib/player-stats-types.ts`
+## Dirty filer (ej committa utan explicit begäran)
+- `lib/player-stats-sync.ts`
 - `scripts/seed-player-stats.ts`, `scripts/check-player-stats.ts`
 - `supabase/migrations/20260519143000_add_api_football_stats.sql`
 - `supabase/migrations/20260520113000_add_player_stats_source_metadata.sql`
 - `supabase/migrations/20260520131500_add_player_stats_appearances_and_starts.sql`
-
-## Tillgängliga bilder i /public/images/
-```
-att-stadium.jpg              gyokeres-arsenal-portrait.jpg   sofi-stadium-aerial.jpg
-bergvall-action.jpg          gyokeres-fotmob.png              sweden-fans.jpg
-bergvall-fotmob.png          gyokeres-wc-qual-action.jpg      sweden-poland-wc-qual-1.jpg
-elanga-action.jpg            isak-action-lfc.webp             sweden-poland-wc-qual-2.jpg
-elanga-fotmob.png            isak-body-lfc.webp               sweden-squad-2026.jpg
-friends-arena-stockholm.jpg  isak-fotmob.png                  tunisia-team.jpg
-gyokeres-action.jpg          isak-portrait.jpg                van-dijk-portrait.jpg
-gyokeres-arsenal-action2.jpg isak-sweden-action.jpg           wc-trophy.jpg
-gyokeres-arsenal-celebration.jpg  japan-team-wc2022.jpg       metlife-stadium.jpg
-gyokeres-arsenal-kit.jpg     lindelof-action.jpg              nrg-stadium.jpg
-gyokeres-arsenal-penalty.jpg lindelof-fotmob.png              nrg-stadium-interior.jpg
-                             potter-fotmob.png / potter-portrait.jpg
-                             potm.avif
-```
-
-## Commit-rutin
-```
-git add [filer] && git commit -m "..." && git push origin master
-```
-
-## Codex-prompt att klistra in
-
-> Fortsätt arbetet med VM-tips 26 (galaxxyerik/vmtips26). Läs CLAUDE.md i repots rot för fullständig stackkontext, och CODEX_PROMPT.md för vad som gjorts senast och vad som är pending.
->
-> Börja med att kontrollera slump-viktningen i lib/group-randomize.ts och app/onboarding/group-stage/page.tsx: stämmer STRENGTH-värdena för VM 2026, och ger systemet rimliga sannolikheter att gruppfavoriterna vinner? Kolla även om grupp-tabell-ordningen (inte bara 1/X/2-picks) också slumpas konsekvent med matchresultaten.
->
-> Fortsätt sedan med de 5 pending UI-uppgifterna i CODEX_PROMPT.md i den ordning de listas.
+- `supabase/vmt-schema.sql`
+- `.claude/settings.local.json`, `.claude/launch.json`
+- `public/images/flags/`
