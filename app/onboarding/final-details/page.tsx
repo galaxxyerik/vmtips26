@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loadDraft, saveDraft, clearDraft } from '@/lib/onboarding-storage'
-import SwishPayment from '@/components/SwishPayment'
 
 export default function FinalDetailsPage() {
   const router = useRouter()
@@ -118,21 +117,26 @@ export default function FinalDetailsPage() {
         </div>
 
         {/* Swish box */}
-        <div className="border border-swe-yellow/30 bg-swe-yellow/5">
-          <SwishPayment />
-          <div className="px-4 pb-4">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={swishChecked}
-                onChange={e => setSwishChecked(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-swe-yellow flex-shrink-0"
-              />
-              <span className="text-xs text-white/45 leading-relaxed">
-                Jag förstår att mitt deltagande är bindande när jag har swishat 100 kr till Erik Engstrand (0768919007). Jag är med i spelet när Erik bekräftat betalningen.
-              </span>
-            </label>
+        <div className="border border-swe-yellow/30 bg-swe-yellow/5 p-4 space-y-3">
+          <div>
+            <div className="label text-swe-yellow/70">Betalning</div>
+            <div className="font-display font-black text-2xl uppercase text-swe-yellow tracking-wide">100 kr via Swish</div>
+            <div className="text-sm text-white/50 mt-1">Erik Engstrand · 0768919007</div>
           </div>
+          <p className="text-xs text-white/50 leading-relaxed">
+            Swisha 100 kr till <span className="text-white/70 font-medium">0768919007</span> med meddelandet <span className="text-white/70 font-medium">VM-tips 2026</span>.
+          </p>
+          <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={swishChecked}
+              onChange={e => setSwishChecked(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-swe-yellow flex-shrink-0"
+            />
+            <span className="text-xs text-white/45 leading-relaxed">
+              Jag har swishat 100 kr till Erik Engstrand (0768919007). Jag förstår att mitt deltagande är bindande och att jag är med i spelet när Erik bekräftat betalningen.
+            </span>
+          </label>
         </div>
 
         {error && (
