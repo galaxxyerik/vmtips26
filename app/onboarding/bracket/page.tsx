@@ -130,10 +130,17 @@ export default function BracketPage() {
     const finalMatches = [...r32m, ...r16m, ...qfm, ...sfm, bronzeM, finalM]
     setAllMatches(finalMatches)
 
-    // Clear any picks whose value no longer matches either team in that match
+    const isPlaceholderTeam = (t: string) =>
+      t.startsWith('Vinnare') || t.startsWith('Etta') || t.startsWith('Tvåa') ||
+      t.startsWith('Trea') || t.startsWith('Förlorare')
+
+    // Clear picks whose value no longer matches either team — but only when both
+    // teams are resolved (not placeholders). If upstream picks are still missing,
+    // the teams are placeholders and we must keep the stored pick intact.
     const stalePicks = finalMatches.filter(m => {
       const p = picks[m.matchNumber]
       if (p === undefined) return false
+      if (isPlaceholderTeam(m.team1) || isPlaceholderTeam(m.team2)) return false
       if (m.round === 'bronze' && (p === `Förlorare ${sfm[0].label}` || p === `Förlorare ${sfm[1].label}`)) return false
       return p !== m.team1 && p !== m.team2
     })
