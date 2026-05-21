@@ -7,6 +7,7 @@ export function ToggleConfirmButton({ submissionId, confirmed }: { submissionId:
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [localConfirmed, setLocalConfirmed] = useState(confirmed)
 
   async function toggle() {
     setLoading(true)
@@ -15,12 +16,13 @@ export function ToggleConfirmButton({ submissionId, confirmed }: { submissionId:
       const res = await fetch('/api/admin/toggle-confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId, confirmed: !confirmed }),
+        body: JSON.stringify({ submissionId, confirmed: !localConfirmed }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         setError(body.error ?? 'Fel')
       } else {
+        setLocalConfirmed(c => !c)
         router.refresh()
       }
     } catch {
@@ -36,12 +38,12 @@ export function ToggleConfirmButton({ submissionId, confirmed }: { submissionId:
         onClick={toggle}
         disabled={loading}
         className={`px-3 py-1 text-xs font-display font-black uppercase tracking-wider border transition-colors disabled:opacity-40 ${
-          confirmed
+          localConfirmed
             ? 'border-white/20 text-white/40 hover:border-loss-500/50 hover:text-loss-500'
             : 'border-swe-yellow/40 text-swe-yellow hover:bg-swe-yellow hover:text-navy-950'
         }`}
       >
-        {loading ? '...' : confirmed ? 'Avbekräfta' : 'Bekräfta'}
+        {loading ? '...' : localConfirmed ? 'Avbekräfta' : 'Bekräfta'}
       </button>
       {error && <span className="text-[10px] text-loss-500">{error}</span>}
     </div>
