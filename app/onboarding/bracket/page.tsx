@@ -322,6 +322,19 @@ function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: 
     : match.round === 'bronze' && pick === 'Förlorare SF2' ? match.team2
     : pick
 
+  const bothLocked = isPlaceholder(match.team1) && isPlaceholder(match.team2)
+
+  if (bothLocked) {
+    return (
+      <div className="flex items-center px-2 py-3 gap-1 bg-navy-900/20">
+        <span className="text-xs text-white/20 font-mono w-8 flex-shrink-0 tnum">{match.label}</span>
+        <span className="text-[11px] text-white/20 italic">
+          Välj vinnare i föregående runda för att låsa upp denna match
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center px-2 py-1.5 gap-1 bg-navy-900/30 hover:bg-navy-900/60 transition-colors">
       <span className="text-xs text-white/20 font-mono w-8 flex-shrink-0 tnum">{match.label}</span>
@@ -329,15 +342,19 @@ function BracketMatchRow({ match, pick, onPick }: { match: KnockoutMatch; pick: 
         {[match.team1, match.team2].map(team => (
           <button key={team} onClick={() => !isPlaceholder(team) && onPick(team)}
             disabled={isPlaceholder(team)}
-            title={effectivePick === team ? 'Klicka för att avmarkera' : undefined}
             className={`flex-1 py-3 px-2 text-xs font-medium border text-center transition-colors ${
               isPlaceholder(team)
                 ? 'border-white/5 text-white/15 bg-navy-900/30 cursor-not-allowed'
                 : effectivePick === team
-                ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow hover:bg-loss-900/20 hover:border-loss-500/40'
+                ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow'
                 : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
             }`}>
             <span className="truncate block">{team}</span>
+            {effectivePick === team && (
+              <span className="block text-[9px] text-swe-yellow/50 mt-0.5 normal-case font-normal tracking-normal">
+                tryck för att ångra
+              </span>
+            )}
           </button>
         ))}
       </div>
