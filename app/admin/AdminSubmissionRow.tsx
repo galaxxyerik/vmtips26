@@ -44,6 +44,7 @@ export interface SubmissionRowProps {
   rank: number | null
   admin_locked?: boolean
   admin_note?: string | null
+  is_new?: boolean
   onLockChange?: (id: string, locked: boolean) => void
   onNoteChange?: (id: string, note: string | null) => void
 }
@@ -78,7 +79,7 @@ interface KnockoutMatchView {
 
 export function AdminSubmissionRow({
   id, name, email, submitted_at, confirmed, total_points, scorer, champion, rank,
-  admin_locked = false, admin_note = null, onLockChange, onNoteChange,
+  admin_locked = false, admin_note = null, is_new = false, onLockChange, onNoteChange,
 }: SubmissionRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [picksData, setPicksData] = useState<PicksData | null>(null)
@@ -167,6 +168,9 @@ export function AdminSubmissionRow({
             <span className="font-display font-black uppercase tracking-wide text-white text-sm leading-tight">
               {name}
             </span>
+            {is_new && (
+              <span className="text-[9px] font-display font-black border border-swe-yellow text-swe-yellow px-1.5 py-0.5 bg-swe-yellow/10">NY</span>
+            )}
             {confirmed
               ? <span className="text-[9px] font-display font-black border border-pitch-500/30 text-pitch-400 px-1 py-0.5">Bekräftad</span>
               : <span className="text-[9px] font-display font-black border border-swe-yellow/30 text-swe-yellow/70 px-1 py-0.5">Väntar</span>

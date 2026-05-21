@@ -41,6 +41,7 @@ interface Props {
   systemConfig: Record<string, string>
   lastMatchSync: string | null
   lastPlayerSync: string | null
+  adminLastSeen: string | null
 }
 
 type Tab = 'overview' | 'participants' | 'matches' | 'system'
@@ -68,6 +69,7 @@ export default function ControlRoom({
   systemConfig: initialConfig,
   lastMatchSync,
   lastPlayerSync,
+  adminLastSeen,
 }: Props) {
   const [tab, setTab] = useState<Tab>('overview')
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -187,6 +189,7 @@ export default function ControlRoom({
           lastMatchSync={lastMatchSync}
           lastPlayerSync={lastPlayerSync}
           config={config}
+          adminLastSeen={adminLastSeen}
         />
       )}
 
@@ -199,6 +202,7 @@ export default function ControlRoom({
           championMap={championMap}
           onLockChange={handleLockChange}
           onNoteChange={handleNoteChange}
+          adminLastSeen={adminLastSeen}
         />
       )}
 
@@ -245,6 +249,11 @@ export default function ControlRoom({
 
 // ── Overview Tab ───────────────────────────────────────────────────────────────
 
+function isNew(sub: SubmissionData, adminLastSeen: string | null): boolean {
+  if (!adminLastSeen || !sub.submitted_at) return false
+  return new Date(sub.submitted_at) > new Date(adminLastSeen)
+}
+
 function OverviewTab({
   subs,
   confirmed,
@@ -255,6 +264,7 @@ function OverviewTab({
   lastMatchSync,
   lastPlayerSync,
   config,
+  adminLastSeen,
 }: {
   subs: SubmissionData[]
   confirmed: SubmissionData[]
@@ -265,9 +275,11 @@ function OverviewTab({
   lastMatchSync: string | null
   lastPlayerSync: string | null
   config: Record<string, string>
+  adminLastSeen: string | null
 }) {
   const pot = confirmed.length * 100
   const locked = confirmed.filter(s => s.admin_locked).length
+  const newCount = subs.filter(s => isNew(s, adminLastSeen)).length
   const banner = config['maintenance_banner']
   const globalLock = config['global_lock'] === 'true'
   const emergencyMode = config['emergency_mode'] === 'true'
@@ -319,9 +331,14 @@ function OverviewTab({
           { label: 'Väntar', value: unconfirmed.length },
           { label: 'Pott', value: `${pot} kr` },
         ].map(({ label, value }) => (
-          <div key={label} className="px-5 py-4 border-r border-white/10 last:border-0">
+          <div key={label} className="px-5 py-4 border-r border-white/10 last:border-0 relative">
             <div className="label mb-1">{label}</div>
             <div className="font-display font-black text-2xl text-swe-yellow">{value}</div>
+            {label === 'Inskickade' && newCount > 0 && (
+              <span className="absolute top-3 right-3 text-[9px] font-display font-black border border-swe-yellow text-swe-yellow px-1.5 py-0.5 bg-swe-yellow/10">
+                +{newCount} NY
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -350,8 +367,9 @@ function OverviewTab({
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-display font-black uppercase tracking-wide text-white text-sm">{sub.name}</span>
+                      {isNew(sub, adminLastSeen) && <span className="text-[9px] font-display font-black border border-swe-yellow text-swe-yellow px-1.5 py-0.5 bg-swe-yellow/10">NY</span>}
                       {sub.admin_locked && <span className="text-[9px] border border-loss-500/30 text-loss-500/60 px-1">LÅST</span>}
                       {sub.admin_edited_by && <span className="text-[9px] border border-swe-yellow/20 text-swe-yellow/40 px-1">REDIGERAD</span>}
                     </div>
@@ -440,6 +458,7 @@ function ParticipantsTab({
   championMap,
   onLockChange,
   onNoteChange,
+  adminLastSeen,
 }: {
   confirmed: SubmissionData[]
   unconfirmed: SubmissionData[]
@@ -447,13 +466,22 @@ function ParticipantsTab({
   championMap: Record<string, string>
   onLockChange: (id: string, locked: boolean) => void
   onNoteChange: (id: string, note: string | null) => void
+  adminLastSeen: string | null
 }) {
+  const newCount = [...confirmed, ...unconfirmed].filter(s => isNew(s, adminLastSeen)).length
   const all = [...confirmed, ...unconfirmed]
 
   return (
     <div className="border border-white/10">
       <div className="px-4 py-3 border-b border-white/10 bg-navy-900 flex items-center justify-between">
-        <div className="label">Alla tips</div>
+        <div className="flex items-center gap-3">
+          <div className="label">Alla tips</div>
+          {newCount > 0 && (
+            <span className="text-[9px] font-display font-black border border-swe-yellow text-swe-yellow px-1.5 py-0.5 bg-swe-yellow/10">
+              +{newCount} NYA
+            </span>
+          )}
+        </div>
         <span className="text-[10px] text-white/25">Klicka på en rad för att se fullständiga tips</span>
       </div>
 
@@ -486,6 +514,7 @@ function ParticipantsTab({
                 rank={sub.confirmed && rank >= 0 ? rank + 1 : null}
                 admin_locked={sub.admin_locked}
                 admin_note={sub.admin_note}
+                is_new={isNew(sub, adminLastSeen)}
                 onLockChange={onLockChange}
                 onNoteChange={onNoteChange}
               />

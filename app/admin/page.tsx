@@ -1,7 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import { redirect } from 'next/navigation'
-import { getSystemConfig } from '@/lib/system-config'
+import { getSystemConfig, setSystemConfig } from '@/lib/system-config'
 import ControlRoom from './ControlRoom'
 import type { SubmissionData, MatchData } from './ControlRoom'
 
@@ -38,6 +38,12 @@ export default async function AdminPage() {
     service.from('vmt_sync_log').select('sync_key, synced_at'),
     getSystemConfig(),
   ])
+
+  // Capture the previous visit time before bumping it
+  const adminLastSeen = systemConfig['admin_last_seen'] ?? null
+
+  // Update last-seen timestamp — fire and forget, don't block render
+  setSystemConfig('admin_last_seen', new Date().toISOString(), ADMIN_EMAIL).catch(() => {})
 
   const submissions: SubmissionData[] = (submissionRows ?? []).map(s => ({
     id: s.id,
@@ -89,6 +95,7 @@ export default async function AdminPage() {
           systemConfig={systemConfig}
           lastMatchSync={lastMatchSync}
           lastPlayerSync={lastPlayerSync}
+          adminLastSeen={adminLastSeen}
         />
       </main>
     </div>
