@@ -365,14 +365,14 @@ export default function WorldCupGuidePage() {
     <div className="min-h-screen bg-navy-950">
       <NavBar userName={null} />
 
-      {/* Full-bleed hero — SoFi Stadium, Los Angeles */}
+      {/* Full-bleed hero */}
       <div className="relative min-h-[520px] overflow-hidden lg:min-h-[620px]">
         <Image
-          src="/images/sofi-stadium-aerial.jpg"
-          alt="SoFi Stadium i Los Angeles, USA — VM 2026"
+          src="/images/isak-sweden-action.jpg"
+          alt="Alexander Isak i svenska landslagströjan — VM 2026"
           fill
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-[center_25%]"
           priority
         />
         <div className="absolute inset-0 bg-navy-950/55" />
@@ -475,7 +475,7 @@ const FLAG_MAP: Record<string, string> = {
   'Portugal':       '/images/flag-pt.svg',
   'Tyskland':       '/images/flag-de.svg',
   'USA':            '/images/flag-us.svg',
-  'England':        '/images/flag-gb.svg',
+  'England':        F('gb-eng'),
 
   // ── Grupp A ────────────────────────────────────────────────────────────────
   'Mexiko':         F('mx'),
