@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { hasDraft, getDraftStep } from '@/lib/onboarding-storage'
+import { createClient } from '@/lib/supabase/client'
+import { hasDraft, getDraftStep, clearDraft } from '@/lib/onboarding-storage'
 import { ONBOARDING_KEY } from '@/lib/types'
 
 const STEP_PATHS: Record<string, string> = {
@@ -22,23 +23,49 @@ function draftHasEmail(): boolean {
 export default function FloatingReturnToTips() {
   const pathname = usePathname()
   const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [show, setShow] = useState(false)
   const [tipPath, setTipPath] = useState('/onboarding/group-stage')
 
   useEffect(() => {
-    // Hide only on the landing page (which has its own resume modal)
     if (!pathname || pathname === '/') {
       setShow(false)
       return
     }
-    if (hasDraft() && draftHasEmail()) {
-      const step = getDraftStep()
-      setTipPath(STEP_PATHS[step] ?? '/onboarding/group-stage')
-      setShow(true)
-    } else {
+
+    if (!hasDraft() || !draftHasEmail()) {
       setShow(false)
+      return
     }
-  }, [pathname])
+
+    // Draft exists — check if user already has a submission in Supabase.
+    // If so, the draft is stale: clear it and don't show the button.
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        const step = getDraftStep()
+        setTipPath(STEP_PATHS[step] ?? '/onboarding/group-stage')
+        setShow(true)
+        return
+      }
+
+      supabase
+        .from('vmt_submissions')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.id) {
+            // Already submitted — clear stale draft silently
+            clearDraft()
+            setShow(false)
+          } else {
+            const step = getDraftStep()
+            setTipPath(STEP_PATHS[step] ?? '/onboarding/group-stage')
+            setShow(true)
+          }
+        })
+    })
+  }, [pathname, supabase])
 
   if (!show) return null
 

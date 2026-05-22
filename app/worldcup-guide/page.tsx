@@ -372,7 +372,7 @@ export default function WorldCupGuidePage() {
           alt="Alexander Isak i svenska landslagströjan — VM 2026"
           fill
           sizes="100vw"
-          className="object-cover object-[center_25%]"
+          className="object-cover object-[center_35%]"
           priority
         />
         <div className="absolute inset-0 bg-navy-950/55" />
