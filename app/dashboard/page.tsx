@@ -4,11 +4,10 @@ import Footer from '@/components/Footer'
 import Image from 'next/image'
 import Link from 'next/link'
 import LiveMatches from './LiveMatches'
+import TournamentLeaderboard from './TournamentLeaderboard'
+import { getDashboardLeaderboard, TOURNAMENT_START } from '@/lib/leaderboard'
 
 export const dynamic = 'force-dynamic'
-
-// Leaderboard opens when VM starts (June 11 21:00 CEST = 19:00 UTC)
-const OPENS_AT = new Date('2026-06-11T19:00:00Z')
 
 const SWEDEN_MATCHES = [
   {
@@ -46,12 +45,24 @@ const SWEDEN_MATCHES = [
   },
 ]
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Promise<{ leaderboardPreview?: string; preview?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const now = new Date()
-  const isOpen = now >= OPENS_AT
+  const params = await searchParams
+  const previewParam = params?.leaderboardPreview ?? params?.preview
+  const leaderboardPreview = previewParam === 'mid' || previewParam === 'pre' ? previewParam : null
+  const now = leaderboardPreview === 'mid'
+    ? new Date('2026-06-21T12:00:00Z')
+    : leaderboardPreview === 'pre'
+      ? new Date('2026-06-01T12:00:00Z')
+      : new Date()
+  const isOpen = now >= TOURNAMENT_START
   const service = createServiceClient()
+  const leaderboardData = await getDashboardLeaderboard(service, user?.id ?? null, now, leaderboardPreview)
 
   // All participants — confirmed first, then by sign-up order
   const { data: allParticipants } = await service
@@ -65,7 +76,7 @@ export default async function DashboardPage() {
   const pot = confirmedCount * 100
 
   // Countdown to leaderboard opening
-  const msLeft = OPENS_AT.getTime() - now.getTime()
+  const msLeft = TOURNAMENT_START.getTime() - now.getTime()
   const daysLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24)))
 
   // Days until Sweden's first group match
@@ -120,18 +131,6 @@ export default async function DashboardPage() {
     myChampion = finalPick?.pick_team ?? null
     myGroupFWinner = groupFPick?.team ?? null
   }
-
-  // Ranked leaderboard (only when tournament is running)
-  let submissions: { id: string; name: string; total_points: number; confirmed: boolean; user_id: string | null }[] = []
-  if (isOpen) {
-    const { data } = await supabase
-      .from('vmt_submissions')
-      .select('id, name, total_points, confirmed, user_id')
-      .eq('confirmed', true)
-      .order('total_points', { ascending: false })
-    submissions = data ?? []
-  }
-  const ranked = submissions.map((s, i) => ({ ...s, rank: i + 1 }))
 
   // Live match data
   const { data: liveCandidateMatches } = await service
@@ -247,40 +246,7 @@ export default async function DashboardPage() {
               </div>
             )}
 
-            {/* ── PARTICIPANTS ── */}
-            <div>
-              <div className="flex items-center justify-between pl-3 border-l-2 border-swe-yellow mb-5">
-                <span className="font-display font-black uppercase text-white text-xl tracking-wide">
-                  Deltagare
-                </span>
-                <span className="font-mono text-white/40 text-sm tnum">
-                  {totalCount} st
-                </span>
-              </div>
-
-              <div>
-                {(allParticipants ?? []).map(p => (
-                  <div
-                    key={p.id}
-                    className="group flex items-center justify-between min-h-[44px] py-2.5 border-b border-white/10 last:border-0"
-                  >
-                    <span className="font-display font-black uppercase text-[18px] tracking-wide text-white/90">
-                      {p.name}
-                    </span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[12px] font-sans text-white/40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150">
-                        {p.confirmed ? 'Tips inlagt' : 'Inväntar tips'}
-                      </span>
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                          p.confirmed ? 'bg-swe-yellow' : 'bg-white/30'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TournamentLeaderboard initialData={leaderboardData} previewMode={leaderboardPreview} />
 
             {/* ── DITT TIPS I KORTHET ── */}
             {mySubmission && (
@@ -324,12 +290,11 @@ export default async function DashboardPage() {
               <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
                 {/* Sverige */}
                 <div className="flex items-center gap-3">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src="/images/flag-se.svg"
                     alt="Sverige"
-                    width={44}
-                    height={30}
-                    className="object-contain"
+                    className="h-[30px] w-auto"
                   />
                   <span className="font-display font-black uppercase text-white text-2xl tracking-wide">
                     Sverige
@@ -342,12 +307,11 @@ export default async function DashboardPage() {
 
                 {/* Opponent */}
                 <div className="flex items-center gap-3">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={nextMatch.flag}
                     alt={nextMatch.opponent}
-                    width={44}
-                    height={30}
-                    className="object-contain"
+                    className="h-[30px] w-auto"
                   />
                   <span className="font-display font-black uppercase text-white text-2xl tracking-wide">
                     {nextMatch.opponent}
@@ -385,50 +349,7 @@ export default async function DashboardPage() {
               </div>
             )}
 
-            {ranked.length === 0 ? (
-              <div className="border border-white/10 py-16 text-center text-white/35 text-sm">
-                Inga bekräftade deltagare ännu.
-              </div>
-            ) : (
-              <div className="border border-white/10">
-                <div className="grid grid-cols-12 px-4 h-8 items-center bg-navy-900 border-b border-white/10">
-                  <div className="col-span-1 label text-[9px]">#</div>
-                  <div className="col-span-9 label text-[9px]">Spelare</div>
-                  <div className="col-span-2 text-right label text-[9px]">Poäng</div>
-                </div>
-                {ranked.map(entry => (
-                  <div
-                    key={entry.id}
-                    className={`grid grid-cols-12 items-center px-4 h-11 border-b border-white/5 last:border-0 ${
-                      entry.user_id === user?.id ? 'bg-swe-yellow/10 border-l-2 border-l-swe-yellow' : ''
-                    }`}
-                  >
-                    <div className="col-span-1">
-                      <span className={`font-display font-black tnum text-lg ${
-                        entry.rank === 1 ? 'text-swe-yellow' :
-                        entry.rank === 2 ? 'text-white/70' :
-                        entry.rank === 3 ? 'text-amber-600' : 'text-white/25'
-                      }`}>
-                        {String(entry.rank).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <div className="col-span-9">
-                      <span className="font-display font-bold uppercase tracking-wider text-[13px] text-white/80">
-                        {entry.name}
-                        {entry.user_id === user?.id && (
-                          <span className="ml-2 text-[10px] text-swe-yellow">DU</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="col-span-2 text-right">
-                      <span className="font-display font-black tnum text-lg text-swe-yellow">
-                        {entry.total_points ?? 0}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <TournamentLeaderboard initialData={leaderboardData} previewMode={leaderboardPreview} />
           </>
         )}
       </main>
