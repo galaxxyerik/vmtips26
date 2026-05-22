@@ -548,10 +548,7 @@ function GroupsTab() {
         </h2>
         <div className="h-[3px] w-16 bg-swe-yellow" />
         <p className="text-white/40 text-sm mt-3">
-          12 grupper · De två bästa i varje grupp går vidare, plus åtta bästa treor ·{' '}
-          <span className="text-swe-yellow font-display font-black">W</span> = etta ·{' '}
-          <span className="text-white/60 font-display font-black">Q</span> = vidare ·{' '}
-          <span className="text-white/20 font-display font-black">E</span> = åker hem
+          12 grupper · De två bästa i varje grupp går vidare, plus åtta bästa treor · Vår gissning visas per lag
         </p>
       </div>
 
@@ -597,7 +594,7 @@ function GroupsTab() {
 
             {/* Teams */}
             <div className="relative divide-y divide-white/5">
-              {g.teams.map(team => (
+              {g.teams.map((team, teamIdx) => (
                 <div key={team.name} className={`flex items-center gap-2.5 px-4 py-2 ${
                   team.name === 'Sverige' ? 'bg-swe-yellow/5' : ''
                 }`}>
@@ -610,13 +607,13 @@ function GroupsTab() {
                   <span className={`flex-1 font-display font-black uppercase tracking-wide text-sm ${
                     team.name === 'Sverige' ? 'text-swe-yellow' : 'text-white/75'
                   }`}>{team.name}</span>
-                  <span className={`text-[10px] font-display font-black px-1.5 py-0.5 border ${
+                  <span className={`text-[9px] font-display font-black px-1.5 py-0.5 border whitespace-nowrap ${
                     team.prediction === 'W'
                       ? 'text-swe-yellow border-swe-yellow/40'
                       : team.prediction === 'Q'
                       ? 'text-white/50 border-white/15'
                       : 'text-white/15 border-white/8'
-                  }`}>{team.prediction}</span>
+                  }`}>{teamIdx === 0 ? 'Vinnare' : teamIdx === 1 ? '2:a' : teamIdx === 2 ? '3:a' : '4:a'}</span>
                 </div>
               ))}
             </div>
@@ -1283,7 +1280,9 @@ function FavoritesTab() {
                 <div className="font-mono text-xs font-bold text-white/25">{String(i + 1).padStart(2, '0')}</div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{f.flag}</span>
+                    {FLAG_MAP[f.country] && (
+                      <img src={FLAG_MAP[f.country]} alt={f.country} className="w-6 h-4 object-cover flex-shrink-0 opacity-90" />
+                    )}
                     <span className="font-display text-xl font-black uppercase tracking-wide text-white">{f.country}</span>
                   </div>
                   <div className="mt-1 h-[2px] max-w-xl overflow-hidden bg-white/10">
@@ -1383,7 +1382,9 @@ function DarkHorsesTab() {
                 <div className="font-mono text-xs font-bold text-white/25">{String(i + 1).padStart(2, '0')}</div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{d.flag}</span>
+                    {FLAG_MAP[d.country] && (
+                      <img src={FLAG_MAP[d.country]} alt={d.country} className="w-6 h-4 object-cover flex-shrink-0 opacity-90" />
+                    )}
                     <span className="font-display text-xl font-black uppercase tracking-wide text-white">{d.country}</span>
                   </div>
                   <div className="mt-1 text-[10px] uppercase tracking-widest text-white/30">Nyckel: {d.keyPlayer}</div>
