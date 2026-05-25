@@ -1016,11 +1016,11 @@ function SwedenTab({ stats }: { stats: Record<string, PlayerStatRow> }) {
       {/* ── Hero image — Sverige vs Polen VM-kval ── */}
       <div className="relative h-[40vh] min-h-[240px] overflow-hidden">
         <Image
-          src="/images/sweden-poland-wc-qual-1.jpg"
-          alt="Sverige i VM-kvalet 2025 — blågult mot världen"
+          src="/images/hero1.jpeg"
+          alt="Sverige i VM-kvalet 2026 — blågult mot världen"
           fill
           sizes="100vw"
-          className="object-cover object-top"
+          className="object-cover object-[center_30%]"
           priority
         />
         <div className="absolute inset-0 bg-navy-950/50" />

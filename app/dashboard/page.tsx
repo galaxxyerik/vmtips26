@@ -153,11 +153,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {/* ── HERO ── */}
       <div className="relative overflow-hidden" style={{ minHeight: '60vh' }}>
         <Image
-          src="/images/sweden-poland-wc-qual-1.jpg"
+          src="/images/hero1.jpeg"
           alt="Sverige firar VM-kvalet mot Polen"
           fill
           sizes="100vw"
-          className="object-cover object-[center_42%]"
+          className="object-cover object-[center_38%]"
           priority
         />
         {/* Heavy at bottom for text, light at top so photo breathes */}

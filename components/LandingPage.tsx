@@ -139,12 +139,12 @@ export default function LandingPage({ userName }: LandingPageProps) {
     <main className="relative min-h-screen bg-navy-950 text-white overflow-hidden">
       {/* Background photography */}
       <Image
-        src="/images/sweden-poland-wc-qual-2.jpg"
+        src="/images/hero2.webp"
         alt=""
         aria-hidden="true"
         fill
         sizes="100vw"
-        className="object-cover object-[62%_center] z-0"
+        className="object-cover object-center z-0"
         priority
       />
       {/* Vertical darkening — heavier at bottom */}
