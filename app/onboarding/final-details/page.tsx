@@ -12,10 +12,12 @@ export default function FinalDetailsPage() {
   const [swishChecked, setSwishChecked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [draftEmail, setDraftEmail] = useState('')
 
   useEffect(() => {
     const d = loadDraft()
     setTournamentScorer(d.tournamentScorer || '')
+    setDraftEmail(d.email || '')
     if (Object.keys(d.bracketPicks).length === 0) {
       router.push('/onboarding/bracket')
     }
@@ -86,7 +88,7 @@ export default function FinalDetailsPage() {
             onChange={e => setTournamentScorer(e.target.value)}
             placeholder="Spelarens namn..."
             className="input"
-            autoComplete="off"
+            autoComplete="nickname"
             autoCorrect="off"
             spellCheck={false}
             onBlur={e => {
@@ -105,6 +107,9 @@ export default function FinalDetailsPage() {
           <label className="label">
             Lösenord <span className="text-white/25 font-normal normal-case tracking-normal">(valfritt — för att följa ditt tips i realtid)</span>
           </label>
+          {/* Hidden email tells the browser to associate draftEmail:password as credentials,
+              not scorerName:password, preventing scorer from being autofilled as username elsewhere. */}
+          <input type="email" name="username" autoComplete="email" value={draftEmail} readOnly className="hidden" tabIndex={-1} aria-hidden="true" />
           <input
             id="new-password"
             name="new-password"
