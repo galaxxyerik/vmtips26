@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 function normalizeEmail(value: unknown): string {
   return typeof value === 'string' ? value.trim().toLowerCase() : ''
 }
 
+// GET: fetch draft by email.
+// Anonymous users allowed (cross-device resume before login).
+// Authenticated users may only fetch their own email's draft.
 export async function GET(req: NextRequest) {
   const email = normalizeEmail(req.nextUrl.searchParams.get('email'))
   if (!email) return NextResponse.json({ error: 'email krävs' }, { status: 400 })
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user && normalizeEmail(user.email) !== email) {
+    return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+  }
+
   try {
-    const supabase = createServiceClient()
-    const { data, error } = await supabase
+    const service = createServiceClient()
+    const { data, error } = await service
       .from('vmt_drafts')
       .select('draft')
       .eq('email', email)
@@ -23,13 +33,23 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST: save draft.
+// Anonymous users allowed (onboarding starts before auth).
+// Authenticated users may only save to their own email.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const email = normalizeEmail(body.email)
     if (!email || !body.draft) return NextResponse.json({ error: 'email och draft krävs' }, { status: 400 })
-    const supabase = createServiceClient()
-    const { error } = await supabase
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user && normalizeEmail(user.email) !== email) {
+      return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+    }
+
+    const service = createServiceClient()
+    const { error } = await service
       .from('vmt_drafts')
       .upsert({ email, draft: body.draft, updated_at: new Date().toISOString() }, { onConflict: 'email' })
     if (error) throw error
@@ -39,13 +59,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// DELETE: clear draft after submission.
+// Requires authentication — no reason to delete a draft without being logged in.
+// Authenticated user's email must match the requested email.
 export async function DELETE(req: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Inloggning krävs' }, { status: 401 })
+
     const body = await req.json()
     const email = normalizeEmail(body.email)
     if (!email) return NextResponse.json({ error: 'email krävs' }, { status: 400 })
-    const supabase = createServiceClient()
-    await supabase.from('vmt_drafts').delete().eq('email', email)
+    if (normalizeEmail(user.email) !== email) {
+      return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+    }
+
+    const service = createServiceClient()
+    await service.from('vmt_drafts').delete().eq('email', email)
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Serverfel' }, { status: 500 })

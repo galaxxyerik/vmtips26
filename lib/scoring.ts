@@ -147,11 +147,11 @@ function getTeamStats(team: string, matches: MatchForScoring[]): Omit<TeamStats,
     if (!m.result) continue
     const isHome = m.home_team === team
     if (isHome) {
-      if (m.result === '1') { pts += 3; w++; gf++; ga++ }
+      if (m.result === '1') { pts += 3; w++; gf++ }
       else if (m.result === 'X') { pts++; d++ }
       else { ga++ }
     } else if (m.away_team === team) {
-      if (m.result === '2') { pts += 3; w++; gf++; ga++ }
+      if (m.result === '2') { pts += 3; w++; gf++ }
       else if (m.result === 'X') { pts++; d++ }
       else { ga++ }
     }
