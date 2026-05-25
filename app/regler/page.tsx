@@ -108,6 +108,11 @@ export default async function ReglerPage() {
             <div className="mt-8">
               <div className="label mb-4">Vad betyder &ldquo;annan väg&rdquo;?</div>
               <AnnanVagDiagram />
+              <div className="mt-4 border-l-2 border-white/15 pl-4">
+                <p className="text-white/50 text-sm leading-relaxed">
+                  <span className="text-white/75 font-medium">Konkret exempel:</span> Du tippar att Sverige vinner Grupp F och möter andraplatsen i Grupp E i sextondelsfinal. Sverige vinner turneringen — men som tvåa i gruppen, via en annan bracket-gren. Du får <span className="text-swe-yellow font-medium">halvt poäng</span> för varje runda Sverige tar sig igenom, inte noll. Landet är rätt, vägen är fel.
+                </p>
+              </div>
             </div>
           </Section>
 
