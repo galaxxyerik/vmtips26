@@ -49,6 +49,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
   const [resumePath, setResumePath] = useState('/onboarding/group-stage')
   const [draftTime, setDraftTime] = useState<string | null>(null)
   const [isStarting, setIsStarting] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   async function handleStart(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -87,6 +88,20 @@ export default function LandingPage({ userName }: LandingPageProps) {
           }
         }
       } catch { /* network error — fall through to normal flow */ }
+
+      // No draft found — check if email already has a submitted tip.
+      // If so, the user should log in to edit rather than starting from scratch.
+      try {
+        const res = await fetch(`/api/check-submission?email=${encodeURIComponent(normalizedEmail)}`)
+        if (res.ok) {
+          const { hasSubmission } = await res.json() as { hasSubmission: boolean }
+          if (hasSubmission) {
+            setIsStarting(false)
+            setShowLoginPrompt(true)
+            return
+          }
+        }
+      } catch { /* network error — fall through */ }
     }
 
     setIsStarting(false)
@@ -136,6 +151,25 @@ export default function LandingPage({ userName }: LandingPageProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-navy-950/50 via-navy-950/65 to-navy-950 z-[1]" />
       {/* Horizontal darkening — left side nearly opaque, fades right to reveal photography */}
       <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-950/55 to-transparent z-[1]" />
+
+      {/* Already-submitted modal — shown when email has an existing submission but no active draft */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
+          <div className="w-full max-w-sm border border-white/15 bg-navy-900 p-6 space-y-4">
+            <div className="label">Tips redan inlämnat</div>
+            <h2 className="font-display font-black text-white text-xl uppercase tracking-wide">
+              Du har redan ett tips
+            </h2>
+            <p className="text-sm text-white/60 leading-snug">
+              Den här e-postadressen har redan ett inlämnat tips. Logga in för att se eller redigera det.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <a href="/login" className="btn-primary flex-1 text-center">Logga in →</a>
+              <button onClick={() => setShowLoginPrompt(false)} className="btn-secondary flex-1">Stäng</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Resume modal */}
       {showModal && (
