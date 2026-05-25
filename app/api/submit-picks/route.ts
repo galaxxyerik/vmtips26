@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         user_metadata: { name: normalizedName },
         email_confirm: true,
       })
-      if (authError && !authError.message.includes('already registered')) {
+      if (authError && authError.code !== 'email_exists') {
         console.error('Auth error:', authError)
       } else if (authData?.user) {
         userId = authData.user.id
