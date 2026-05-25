@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { sendMail } from '@/lib/server-mail'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export async function POST() {
-  const to = process.env.ADMIN_EMAIL ?? 'eeengstrand@gmail.com'
+  const to = ADMIN_EMAIL
   const from = process.env.SMTP_FROM_EMAIL ?? process.env.SMTP_USER ?? 'okänd avsändare'
 
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {

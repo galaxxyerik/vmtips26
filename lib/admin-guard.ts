@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 type AdminResult =
   | { ok: true; email: string }

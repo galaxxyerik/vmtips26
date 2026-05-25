@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { syncPlayerStats } from '@/lib/player-stats-sync'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export const maxDuration = 300
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 async function isAllowed(req: NextRequest) {
   const authHeader = req.headers.get('authorization')

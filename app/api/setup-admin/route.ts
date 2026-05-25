@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'eeengstrand@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 // One-time endpoint to create/reset the admin auth account.
 // Requires an active admin session to call.

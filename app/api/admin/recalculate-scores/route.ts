@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { calculateScore, type MatchForScoring, type SubmissionPicks } from '@/lib/scoring'
 import { getSystemConfig } from '@/lib/system-config'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 async function isAllowed(req: NextRequest) {
   const authHeader = req.headers.get('authorization')

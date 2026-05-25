@@ -4,8 +4,7 @@ import { sendMail } from '@/lib/server-mail'
 import { canEditPicks } from '@/lib/deadlines'
 import { getSystemConfig, isGloballyLocked } from '@/lib/system-config'
 import { logAdminAction } from '@/lib/admin-guard'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,11 +61,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const canEdit = true
+    const canEdit = bypassLock || canEditPicks()
 
     const { data: existingByEmail } = await supabase
       .from('vmt_submissions')
-      .select('id, user_id')
+      .select('id, user_id, admin_locked')
       .ilike('email', normalizedEmail)
       .order('submitted_at', { ascending: false })
       .limit(1)
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
         ? existingByEmail
         : await supabase
             .from('vmt_submissions')
-            .select('id, user_id')
+            .select('id, user_id, admin_locked')
             .eq('id', submissionId)
             .eq('user_id', user!.id)
             .maybeSingle()
@@ -109,6 +108,10 @@ export async function POST(req: NextRequest) {
 
       if (!existing) {
         return NextResponse.json({ error: 'Kunde inte hitta ditt befintliga tips.' }, { status: 404 })
+      }
+
+      if (!bypassLock && existing.admin_locked) {
+        return NextResponse.json({ error: 'Det här tipset är låst av administratören och kan inte ändras.' }, { status: 403 })
       }
 
       isUpdate = true

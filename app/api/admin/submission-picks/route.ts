@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
 
 export async function GET(req: NextRequest) {

@@ -5,6 +5,7 @@ import { ContentProvider } from '@/contexts/AdminEditContext'
 import AdminEditBar from '@/components/AdminEditBar'
 import FloatingReturnToTips from '@/components/FloatingReturnToTips'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export const metadata: Metadata = {
   title: 'VM-tips 26',
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const isAdmin = user?.email === 'eeengstrand@gmail.com'
+  const isAdmin = user?.email === ADMIN_EMAIL
 
   let content: Record<string, string> = {}
   try {

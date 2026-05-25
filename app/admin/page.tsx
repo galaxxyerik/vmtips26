@@ -4,10 +4,9 @@ import { redirect } from 'next/navigation'
 import { getSystemConfig, setSystemConfig } from '@/lib/system-config'
 import ControlRoom from './ControlRoom'
 import type { SubmissionData, MatchData } from './ControlRoom'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export const dynamic = 'force-dynamic'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 export default async function AdminPage() {
   const supabase = await createClient()

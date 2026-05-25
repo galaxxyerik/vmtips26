@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendMail } from '@/lib/server-mail'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 const SITE_URL = 'https://vmtips26.vercel.app'
 
 export async function POST(req: NextRequest) {

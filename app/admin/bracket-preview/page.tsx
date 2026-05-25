@@ -3,10 +3,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import { SlutspelSection, type BracketPick, type GroupData } from '../AdminSubmissionRow'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 export const dynamic = 'force-dynamic'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
 
 const previewGroups: Record<string, GroupData> = {
   A: { matches: [], tableOrder: ['A1', 'A2', 'A3', 'A4'], thirdPlaceSelected: false, groupScorer: null },

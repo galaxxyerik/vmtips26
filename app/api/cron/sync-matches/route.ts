@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { syncMatches } from '@/lib/match-sync'
 import { getSystemConfig } from '@/lib/system-config'
-
-const ADMIN_EMAIL = 'eeengstrand@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 
 async function isAllowed(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
