@@ -335,7 +335,21 @@ export default function WorldCupGuidePage() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
+  function handleTabChange(newTab: Tab) {
+    setTab(newTab)
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', newTab)
+    window.history.replaceState({}, '', url.toString())
+  }
+
   useEffect(() => {
+    // Restore tab from URL on mount (?tab=sverige etc.)
+    const params = new URLSearchParams(window.location.search)
+    const urlTab = params.get('tab') as Tab
+    if (urlTab && TABS.some(t => t.id === urlTab)) {
+      setTab(urlTab)
+    }
+
     setPlayerStats(VERIFIED_PLAYER_STATS)
     setLastUpdated(VERIFIED_PLAYER_STATS_UPDATED_AT)
 
@@ -427,7 +441,7 @@ export default function WorldCupGuidePage() {
                 key={t.id}
                 ref={el => { tabRefs.current[t.id] = el }}
                 onClick={() => {
-                  setTab(t.id)
+                  handleTabChange(t.id)
                   tabRefs.current[t.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
                 }}
                 className={`relative flex-shrink-0 min-h-[44px] px-4 py-2 text-xs font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap ${

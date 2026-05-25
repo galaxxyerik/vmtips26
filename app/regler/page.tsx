@@ -82,7 +82,7 @@ export default async function ReglerPage() {
           <Section title="Gruppspel">
             <PointsGroup
               rows={[
-                { pts: '1', label: 'Rätt matchutfall', desc: '1/X/2 korrekt · 36 matcher totalt · max 36 p' },
+                { pts: '1', label: 'Rätt matchutfall', desc: '1/X/2 korrekt · 72 matcher totalt · max 72 p' },
                 { pts: '2', label: 'Rätt lag, exakt rätt plats i grupptabell', desc: 'Exakt position 1–4 i gruppen' },
                 { pts: '1', label: 'Rätt lag, en plats fel i grupptabell', desc: '12 grupper × 4 lag · max 96 p totalt' },
                 { pts: '1', label: 'Rätt trea vidare', desc: '8 av 12 tredjeplacerade går vidare · max 8 p' },
