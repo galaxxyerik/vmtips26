@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
     .eq('id', matchId)
     .single()
 
+  if (!match) {
+    return NextResponse.json({ error: 'Match hittades inte' }, { status: 404 })
+  }
+
   let update: Record<string, unknown>
 
   if (clearOverride) {

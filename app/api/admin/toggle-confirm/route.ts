@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     .update({ confirmed })
     .eq('id', submissionId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Kunde inte uppdatera bekräftelsestatus' }, { status: 500 })
 
   if (confirmed && submission?.email) {
     const [

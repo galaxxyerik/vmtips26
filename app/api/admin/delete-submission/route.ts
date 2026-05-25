@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   await service.from('vmt_bracket_picks').delete().eq('submission_id', submissionId)
 
   const { error } = await service.from('vmt_submissions').delete().eq('id', submissionId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Kunde inte radera tips' }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }

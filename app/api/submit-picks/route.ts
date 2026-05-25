@@ -168,9 +168,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Write group picks (1/X/2)
-    const groupPickRows = Object.entries(matchPicks as Record<string, string>).map(([matchId, pick]) => ({
-      submission_id: sid, match_id: Number(matchId), pick
-    }))
+    const VALID_PICKS = ['1', 'X', '2']
+    const groupPickRows = Object.entries(matchPicks as Record<string, string>)
+      .filter(([, pick]) => VALID_PICKS.includes(pick))
+      .map(([matchId, pick]) => ({
+        submission_id: sid, match_id: Number(matchId), pick
+      }))
     if (groupPickRows.length > 0) {
       await supabase.from('vmt_group_picks').insert(groupPickRows)
     }
@@ -195,12 +198,13 @@ export async function POST(req: NextRequest) {
     // Write group scorers
     const scorerRows = Object.entries(groupScorers as Record<string, string>)
       .filter(([, v]) => v?.trim())
-      .map(([group, player_name]) => ({ submission_id: sid, group_label: group, player_name }))
+      .map(([group, player_name]) => ({ submission_id: sid, group_label: group, player_name: player_name.trim() }))
     if (scorerRows.length > 0) await supabase.from('vmt_group_scorer_picks').insert(scorerRows)
 
     // Write tournament scorer
-    if (tournamentScorer?.trim()) {
-      await supabase.from('vmt_tournament_scorer_pick').insert({ submission_id: sid, player_name: tournamentScorer.trim() })
+    const trimmedTournamentScorer = tournamentScorer?.trim()
+    if (trimmedTournamentScorer) {
+      await supabase.from('vmt_tournament_scorer_pick').insert({ submission_id: sid, player_name: trimmedTournamentScorer })
     }
 
     // Write bracket picks

@@ -64,6 +64,6 @@ export async function GET() {
     return NextResponse.json(cachedPayload)
   } catch (err) {
     console.error(`[${new Date().toISOString()}] live matches error:`, err)
-    return NextResponse.json({ ok: false, error: 'Kunde inte hämta live-matcher', matches: [] }, { status: 200 })
+    return NextResponse.json({ ok: false, error: 'Kunde inte hämta live-matcher', matches: [] }, { status: 500 })
   }
 }

@@ -15,8 +15,12 @@ export async function POST(req: NextRequest) {
   if (!auth.ok) return auth.response
 
   const { key, value } = await req.json()
+  const ALLOWED_KEYS = ['global_lock', 'emergency_mode', 'disable_submissions', 'maintenance_banner', 'scoring_frozen']
   if (!key || typeof value !== 'string') {
     return NextResponse.json({ error: 'key och value krävs' }, { status: 400 })
+  }
+  if (!ALLOWED_KEYS.includes(key)) {
+    return NextResponse.json({ error: `Okänd konfigurationsnyckel: ${key}` }, { status: 400 })
   }
 
   await setSystemConfig(key, value, auth.email)
