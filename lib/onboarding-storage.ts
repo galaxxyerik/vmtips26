@@ -36,7 +36,8 @@ function migrateBracketPicks(picks: Record<number, string>): Record<number, stri
   const out: Record<number, string> = {}
   for (const [k, v] of Object.entries(picks)) {
     const num = Number(k)
-    if (num >= 89) continue                      // drop stale R16+
+    // R16+ match numbers (89-104) are unchanged — keep them as-is.
+    // Only remap the R32 slots (73-88) that were reordered.
     const newKey = BRACKET_REMAP[num] ?? num
     out[newKey] = v
   }
