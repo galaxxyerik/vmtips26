@@ -19,12 +19,46 @@ function emptyDraft(): OnboardingDraft {
   }
 }
 
+/**
+ * One-time remapping applied when loading a stale localStorage draft.
+ * Matches the vmt_bracket_picks migration in 20260528120000_fix_bracket_and_add_ko_matches.sql.
+ * Keys 75→77, 76→75, 77→78, 78→76, 81→84, 82→83, 83→82, 84→81,
+ *      85→87, 86→88, 87→86, 88→85. R16+ (≥89) cleared.
+ */
+const BRACKET_REMAP: Record<number, number> = {
+  75: 77, 76: 75, 77: 78, 78: 76,
+  81: 84, 82: 83, 83: 82, 84: 81,
+  85: 87, 86: 88, 87: 86, 88: 85,
+}
+const BRACKET_REMAP_VERSION = 2
+
+function migrateBracketPicks(picks: Record<number, string>): Record<number, string> {
+  const out: Record<number, string> = {}
+  for (const [k, v] of Object.entries(picks)) {
+    const num = Number(k)
+    if (num >= 89) continue                      // drop stale R16+
+    const newKey = BRACKET_REMAP[num] ?? num
+    out[newKey] = v
+  }
+  return out
+}
+
 export function loadDraft(): OnboardingDraft {
   if (typeof window === 'undefined') return emptyDraft()
   try {
     const raw = localStorage.getItem(ONBOARDING_KEY)
     if (!raw) return emptyDraft()
-    const p = JSON.parse(raw) as Partial<OnboardingDraft>
+    const p = JSON.parse(raw) as Partial<OnboardingDraft> & { _bpv?: number }
+    let bracketPicks = p.bracketPicks ?? {}
+
+    // Migrate stale bracket match numbers exactly once
+    if ((p._bpv ?? 1) < BRACKET_REMAP_VERSION) {
+      bracketPicks = migrateBracketPicks(bracketPicks)
+      // Persist migrated draft back so this only runs once
+      const migrated = { ...p, bracketPicks, _bpv: BRACKET_REMAP_VERSION }
+      try { localStorage.setItem(ONBOARDING_KEY, JSON.stringify(migrated)) } catch { /* ignore */ }
+    }
+
     return {
       step: p.step ?? 'group-stage',
       updatedAt: p.updatedAt ?? new Date().toISOString(),
@@ -33,7 +67,7 @@ export function loadDraft(): OnboardingDraft {
       groupTableOrder: p.groupTableOrder ?? {},
       thirdPlaceSelected: p.thirdPlaceSelected ?? [],
       groupScorers: p.groupScorers ?? {},
-      bracketPicks: p.bracketPicks ?? {},
+      bracketPicks,
       tournamentScorer: p.tournamentScorer ?? '',
       name: p.name ?? '',
       email: p.email ?? '',
