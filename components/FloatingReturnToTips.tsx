@@ -28,7 +28,7 @@ export default function FloatingReturnToTips() {
   const [tipPath, setTipPath] = useState('/onboarding/group-stage')
 
   useEffect(() => {
-    if (!pathname || pathname === '/') {
+    if (!pathname || pathname === '/' || pathname.startsWith('/onboarding')) {
       setShow(false)
       return
     }
