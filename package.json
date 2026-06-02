@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "playwright test",
+    "test:prod": "BASE_URL=https://vmtips26.vercel.app playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
@@ -19,6 +21,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^20.17.50",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
