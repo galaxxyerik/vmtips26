@@ -89,29 +89,39 @@ Commit `ba7b3e4e` only fixed the localStorage equivalent.
   ~May 28; daily 7-day backups won't reach, PITR with ≥14-day retention would. Check ASAP.
 - Plan B: ask the 9 users to redo KO picks before deadline.
 
-### Open bugs (prioritized, none fixed yet)
+### Bug status (June 9 evening: critical + high fixed/accepted, applied to live DB)
 
-**Critical**
-1. `app/api/submit-picks/route.ts:140-217` — update path deletes all old picks, then inserts
-   without a transaction and without checking insert errors. Partial failure = permanent loss.
-   Fix: Postgres RPC doing delete+insert atomically, check every error.
-2. English team names break scoring (verified in live data):
-   - `vmt_matches` group G still says **"Belgium"** (ids 16, 39, 66) — translate migration
-     `20260519150000` missed it. ALL users' Belgium picks are stored/displayed in English.
-   - Tobias & Sven (submitted before May 19) have group-table picks + most R32 picks in English
-     (23 bracket rows + 64 table rows match no team). The translate migration never updated
-     pick tables. Fix: corrective migration translating `vmt_matches` + all pick tables.
+**Critical — FIXED June 9**
+1. ~~Non-atomic delete+insert in submit-picks~~ — fixed via `vmt_replace_picks` Postgres RPC
+   (migration `20260609120000`, applied): delete+insert for all six pick tables in ONE
+   transaction, validates team names against `vmt_matches` and 1/X/2 values; execute granted
+   only to service_role. Route checks the RPC error and deletes a freshly created submission
+   row on failure so retries aren't blocked by the duplicate-email 409.
+2. ~~English team names~~ — fixed via migration `20260609123000` (applied + verified):
+   `vmt_matches` Belgium→Belgien, full EN→SV translation of `vmt_group_table_picks` +
+   `vmt_bracket_picks` (Tobias/Sven), `"Belgium"` token replaced in `vmt_drafts` JSON.
+   Backup tables `vmt_*_backup_20260609` created first (RLS enabled = hidden from API).
+   `loadDraft()` also normalizes `"Belgium"` in localStorage drafts client-side.
+   Verified post-migration: 0 unmatched team names in pick tables, 0 "Belgium" anywhere.
 
-**High**
-3. `POST /api/draft` lets anonymous callers overwrite any draft by email; LandingPage auto-posts
-   a near-empty draft on email entry → typing someone else's email clobbers their draft.
-4. `GET /api/draft` leaks name + all picks to anyone knowing an email.
-5. Server drafts never deleted for anonymous users (`DELETE /api/draft` requires login, most
-   users have none) — stale drafts persist (confirmed in DB). Fix: delete `vmt_drafts` row
-   inside submit-picks via service role.
-6. RLS `public read confirmed submissions` exposes all columns incl. **email** to the anon key.
+**High — fixed or accepted June 9**
+3. ~~Draft clobber~~ — fixed: LandingPage no longer server-syncs pick-less drafts (localStorage
+   only), and `POST /api/draft` refuses to overwrite a draft that has picks with one that has
+   none (silent no-op — callers are fire-and-forget). Deliberate overwrite with a full draft
+   is still possible; accepted (email-only identity, Erik chose simplicity over magic links).
+4. `GET /api/draft` still leaks name + picks to anyone knowing an email — ACCEPTED by Erik
+   (friends pool, drafts irrelevant after the June 11 deadline). Real fix would be emailed
+   magic-link resume; revisit if the app outlives the tournament.
+5. ~~Stale server drafts~~ — fixed: submit-picks deletes the `vmt_drafts` row via service role
+   after a successful submission. Existing stale/test rows deliberately left in place —
+   Elias's draft is potential KO-pick recovery evidence, do NOT bulk-delete drafts.
+6. ~~Email exposed via RLS~~ — fixed via migration `20260609124500` (applied + verified):
+   column-level grants on `vmt_submissions`; anon/authenticated can only SELECT id, user_id,
+   name, submitted_at, confirmed, total_points. WARNING: any future client-side `select('*')`
+   or email/admin_* column reference on `vmt_submissions` will fail with
+   insufficient_privilege — go through an API route with the service client instead.
 
-**Medium/Low**
+**Medium/Low (still open)**
 7. No FK on `vmt_bracket_picks.match_number`; `pick_team` is unvalidated free text.
 8. `recalculate-scores` is unauthenticated when `NODE_ENV !== 'production'`; GET triggers POST.
 9. `admin/delete-submission` doesn't log to `vmt_admin_log` or remove drafts — untraceable.

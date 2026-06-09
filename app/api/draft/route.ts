@@ -49,6 +49,24 @@ export async function POST(req: NextRequest) {
     }
 
     const service = createServiceClient()
+
+    // Guard against clobbering: never overwrite a draft that has real picks with
+    // one that has none (e.g. a fresh device posting an empty draft for an email
+    // that already has a server draft). No-op instead of error — callers are
+    // fire-and-forget.
+    const incomingPickCount = Object.keys((body.draft as { matchPicks?: Record<string, string> })?.matchPicks ?? {}).length
+    if (incomingPickCount === 0) {
+      const { data: existing } = await service
+        .from('vmt_drafts')
+        .select('draft')
+        .eq('email', email)
+        .maybeSingle()
+      const existingPickCount = Object.keys((existing?.draft as { matchPicks?: Record<string, string> })?.matchPicks ?? {}).length
+      if (existing && existingPickCount > 0) {
+        return NextResponse.json({ ok: true, skipped: true })
+      }
+    }
+
     const { error } = await service
       .from('vmt_drafts')
       .upsert({ email, draft: body.draft, updated_at: new Date().toISOString() }, { onConflict: 'email' })

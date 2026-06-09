@@ -136,15 +136,6 @@ export async function POST(req: NextRequest) {
         console.error('Submission update error:', updateError)
         return NextResponse.json({ error: 'Kunde inte uppdatera ditt tips.' }, { status: 500 })
       }
-
-      await Promise.all([
-        supabase.from('vmt_group_picks').delete().eq('submission_id', sid),
-        supabase.from('vmt_group_table_picks').delete().eq('submission_id', sid),
-        supabase.from('vmt_third_place_picks').delete().eq('submission_id', sid),
-        supabase.from('vmt_group_scorer_picks').delete().eq('submission_id', sid),
-        supabase.from('vmt_tournament_scorer_pick').delete().eq('submission_id', sid),
-        supabase.from('vmt_bracket_picks').delete().eq('submission_id', sid),
-      ])
     } else {
       if (existingByEmail) {
         return NextResponse.json({
@@ -167,54 +158,59 @@ export async function POST(req: NextRequest) {
       sid = submission.id
     }
 
-    // Write group picks (1/X/2)
+    // Build all pick rows and write them atomically via the vmt_replace_picks RPC.
+    // The RPC deletes old picks + inserts the new ones in ONE transaction — a failure
+    // rolls everything back, so existing picks can never be lost halfway.
     const VALID_PICKS = ['1', 'X', '2']
     const groupPickRows = Object.entries(matchPicks as Record<string, string>)
       .filter(([, pick]) => VALID_PICKS.includes(pick))
-      .map(([matchId, pick]) => ({
-        submission_id: sid, match_id: Number(matchId), pick
-      }))
-    if (groupPickRows.length > 0) {
-      await supabase.from('vmt_group_picks').insert(groupPickRows)
-    }
+      .map(([matchId, pick]) => ({ match_id: Number(matchId), pick }))
 
-    // Write group table order
-    const tableRows: { submission_id: string; group_label: string; position: number; team: string }[] = []
+    const tableRows: { group_label: string; position: number; team: string }[] = []
     for (const [group, order] of Object.entries(groupTableOrder as Record<string, string[]>)) {
-      order.forEach((team, idx) => tableRows.push({ submission_id: sid, group_label: group, position: idx + 1, team }))
+      order.forEach((team, idx) => tableRows.push({ group_label: group, position: idx + 1, team }))
     }
-    if (tableRows.length > 0) await supabase.from('vmt_group_table_picks').insert(tableRows)
 
-    // Write third place picks
     const { data: groups } = await supabase.from('vmt_matches').select('group_label').eq('phase','group').not('group_label','is',null)
     const allGroups = [...new Set((groups ?? []).map((g: { group_label: string }) => g.group_label))]
     const thirdRows = allGroups.map(g => ({
-      submission_id: sid,
       group_label: g,
       selected: (thirdPlaceSelected as string[]).includes(g),
     }))
-    if (thirdRows.length > 0) await supabase.from('vmt_third_place_picks').insert(thirdRows)
 
-    // Write group scorers
     const scorerRows = Object.entries(groupScorers as Record<string, string>)
       .filter(([, v]) => v?.trim())
-      .map(([group, player_name]) => ({ submission_id: sid, group_label: group, player_name: player_name.trim() }))
-    if (scorerRows.length > 0) await supabase.from('vmt_group_scorer_picks').insert(scorerRows)
+      .map(([group, player_name]) => ({ group_label: group, player_name: player_name.trim() }))
 
-    // Write tournament scorer
-    const trimmedTournamentScorer = tournamentScorer?.trim()
-    if (trimmedTournamentScorer) {
-      await supabase.from('vmt_tournament_scorer_pick').insert({ submission_id: sid, player_name: trimmedTournamentScorer })
-    }
-
-    // Write bracket picks
     const bracketRows = Object.entries(bracketPicks as Record<string, string>).map(([matchNum, team]) => ({
-      submission_id: sid,
       match_number: Number(matchNum),
       pick_team: team,
       round: getRound(Number(matchNum)),
     }))
-    if (bracketRows.length > 0) await supabase.from('vmt_bracket_picks').insert(bracketRows)
+
+    const { error: picksError } = await supabase.rpc('vmt_replace_picks', {
+      p_submission_id: sid,
+      p_group_picks: groupPickRows,
+      p_table_picks: tableRows,
+      p_third_place_picks: thirdRows,
+      p_group_scorer_picks: scorerRows,
+      p_tournament_scorer: tournamentScorer?.trim() ?? null,
+      p_bracket_picks: bracketRows,
+    })
+
+    if (picksError) {
+      console.error('vmt_replace_picks error:', picksError)
+      if (!isUpdate) {
+        // Roll back the freshly created submission so a retry isn't blocked by the 409 duplicate-email check
+        await supabase.from('vmt_submissions').delete().eq('id', sid)
+      }
+      return NextResponse.json({ error: 'Kunde inte spara dina tips. Inga ändringar har sparats — försök igen.' }, { status: 500 })
+    }
+
+    // Clear any server-side draft for this email — anonymous users can't call
+    // DELETE /api/draft themselves (it requires login), so do it here with the service role.
+    const { error: draftDeleteError } = await supabase.from('vmt_drafts').delete().eq('email', normalizedEmail)
+    if (draftDeleteError) console.error('Draft cleanup error:', draftDeleteError)
 
     // Audit log for admin edits
     if (bypassLock && isUpdate) {

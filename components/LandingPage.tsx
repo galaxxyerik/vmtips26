@@ -67,9 +67,17 @@ export default function LandingPage({ userName }: LandingPageProps) {
     const d = loadDraft()
     d.name = nameVal
     d.email = normalizedEmail
-    saveDraft(d)
 
     const localHasPicks = Object.keys(d.matchPicks).length > 0
+
+    // Only sync to the server when there are actual picks. Pushing a near-empty
+    // draft here would overwrite this email's server draft before we've even
+    // checked it (cross-device resume below) — see bug 3 in the June 9 audit.
+    if (localHasPicks) {
+      saveDraft(d)
+    } else {
+      restoreDraft(d) // localStorage only, no server push
+    }
 
     if (!localHasPicks) {
       // No local picks — check server in case the user is on a new device

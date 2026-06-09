@@ -47,8 +47,16 @@ function migrateBracketPicks(picks: Record<number, string>): Record<number, stri
 export function loadDraft(): OnboardingDraft {
   if (typeof window === 'undefined') return emptyDraft()
   try {
-    const raw = localStorage.getItem(ONBOARDING_KEY)
+    let raw = localStorage.getItem(ONBOARDING_KEY)
     if (!raw) return emptyDraft()
+
+    // One-time fix for drafts saved while vmt_matches group G still said "Belgium"
+    // (corrected to "Belgien" in migration 20260609123000). Idempotent.
+    if (raw.includes('"Belgium"')) {
+      raw = raw.replaceAll('"Belgium"', '"Belgien"')
+      try { localStorage.setItem(ONBOARDING_KEY, raw) } catch { /* ignore */ }
+    }
+
     const p = JSON.parse(raw) as Partial<OnboardingDraft> & { _bpv?: number }
     let bracketPicks = p.bracketPicks ?? {}
 
