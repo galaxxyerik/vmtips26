@@ -68,7 +68,67 @@ Zero border-radius everywhere. No emojis in UI. Swedish copy throughout.
 - Added **1 = hemmaseger · X = oavgjort · 2 = bortaseger** hint above match rows
 - Added **"Turneringsformat"** section on rules page for football beginners
 
-## Latest status — VM-Bibeln / World Cup Guide (May 21, 2026)
+## Latest status — Bug audit + KO picks incident (June 9, 2026)
+
+A full bug audit was performed June 9 (code + live Supabase data via MCP). Findings below are verified against the live DB. Tournament starts June 11 — time-critical.
+
+### Incident: deleted knockout picks (root cause confirmed)
+
+`supabase/migrations/20260528120000_fix_bracket_and_add_ko_matches.sql` line 62
+(`DELETE FROM vmt_bracket_picks WHERE match_number >= 89;`), run manually in SQL Editor
+~May 28, hard-deleted all R16/QF/SF/bronze/final picks for the 11 submissions that existed then.
+Commit `ba7b3e4e` only fixed the localStorage equivalent.
+
+- 2 of 11 have re-submitted: Johan Engstrand, Kalle Engstrand.
+- **9 still missing 16 KO picks each**: Tobias Söderman, Sven Rungner, Ludvig Aslaksen,
+  Erik Engstrand, Oscar Alex, Oliver Alex, Anton Söderman, Max Rundström, Elias Aslaksen.
+- No soft deletes, archive tables, or audit rows exist (`vmt_admin_log` is empty).
+- Elias has a server draft in `vmt_drafts` with full KO picks, but its R32 picks differ from his
+  submission on 6 of 16 slots and it was touched June 9 — uncertain provenance, confirm with him.
+- Only real recovery: **Supabase PITR/backup** (Dashboard → Database → Backups). Deletion was
+  ~May 28; daily 7-day backups won't reach, PITR with ≥14-day retention would. Check ASAP.
+- Plan B: ask the 9 users to redo KO picks before deadline.
+
+### Open bugs (prioritized, none fixed yet)
+
+**Critical**
+1. `app/api/submit-picks/route.ts:140-217` — update path deletes all old picks, then inserts
+   without a transaction and without checking insert errors. Partial failure = permanent loss.
+   Fix: Postgres RPC doing delete+insert atomically, check every error.
+2. English team names break scoring (verified in live data):
+   - `vmt_matches` group G still says **"Belgium"** (ids 16, 39, 66) — translate migration
+     `20260519150000` missed it. ALL users' Belgium picks are stored/displayed in English.
+   - Tobias & Sven (submitted before May 19) have group-table picks + most R32 picks in English
+     (23 bracket rows + 64 table rows match no team). The translate migration never updated
+     pick tables. Fix: corrective migration translating `vmt_matches` + all pick tables.
+
+**High**
+3. `POST /api/draft` lets anonymous callers overwrite any draft by email; LandingPage auto-posts
+   a near-empty draft on email entry → typing someone else's email clobbers their draft.
+4. `GET /api/draft` leaks name + all picks to anyone knowing an email.
+5. Server drafts never deleted for anonymous users (`DELETE /api/draft` requires login, most
+   users have none) — stale drafts persist (confirmed in DB). Fix: delete `vmt_drafts` row
+   inside submit-picks via service role.
+6. RLS `public read confirmed submissions` exposes all columns incl. **email** to the anon key.
+
+**Medium/Low**
+7. No FK on `vmt_bracket_picks.match_number`; `pick_team` is unvalidated free text.
+8. `recalculate-scores` is unauthenticated when `NODE_ENV !== 'production'`; GET triggers POST.
+9. `admin/delete-submission` doesn't log to `vmt_admin_log` or remove drafts — untraceable.
+10. Email enumeration via `check-submission` + draft API; final-details fetch lacks try/catch;
+    `me/submission-picks` uses `.maybeSingle()` on non-unique `user_id`; `vmt_drafts` full of test rows.
+
+Recommendation: enable PITR; destructive migrations must start with
+`CREATE TABLE ..._backup AS SELECT ...`.
+
+### Supabase access (updated June 9)
+
+Desktop Claude Code sessions DO have the claude.ai Supabase MCP connector (web sessions may not).
+Project id `poztuyxcwumqyeqkgqym` ("Tripper" — shared project, vmt_* tables live alongside an
+unrelated trip-planning app's tables). `supabase_migrations.schema_migrations` does NOT contain
+manually-run SQL Editor migrations (e.g. the 20260528 one).
+
+## Older status — VM-Bibeln / World Cup Guide (May 21, 2026)
 
 The active page is `app/worldcup-guide/page.tsx`.
 
