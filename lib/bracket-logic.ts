@@ -573,6 +573,51 @@ export interface R32Match {
   team2Type: 'winner' | 'runner_up' | 'third';
 }
 
+/**
+ * Validate a full set of bracket picks against the R32 bracket and the
+ * winner-chain (M89 feeds from M73/M74 etc). Returns only the picks that are
+ * possible — anything keyed to the wrong match number (e.g. drafts corrupted by
+ * the repeated-remap bug, fixed June 9 2026) is dropped so it can be re-picked.
+ */
+export function sanitizeBracketPicks(
+  picks: Record<number, string>,
+  r32: R32Match[]
+): Record<number, string> {
+  const cleaned: Record<number, string> = {}
+
+  for (const m of r32) {
+    const p = picks[m.matchNumber]
+    if (p && (p === m.team1 || p === m.team2)) cleaned[m.matchNumber] = p
+  }
+
+  const FEEDERS: Record<number, [number, number]> = {
+    89: [73, 74], 90: [75, 76], 91: [77, 78], 92: [79, 80],
+    93: [81, 82], 94: [83, 84], 95: [85, 86], 96: [87, 88],
+    97: [89, 90], 98: [91, 92], 99: [93, 94], 100: [95, 96],
+    101: [97, 98], 102: [99, 100], 104: [101, 102],
+  }
+  for (const n of [89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 104]) {
+    const p = picks[n]
+    const [a, b] = FEEDERS[n]
+    if (p && (p === cleaned[a] || p === cleaned[b])) cleaned[n] = p
+  }
+
+  // Bronze (M103): the two semifinal losers
+  const loserOfSf = (sf: number, fa: number, fb: number): string | undefined => {
+    const w = cleaned[sf]
+    const a = cleaned[fa]
+    const b = cleaned[fb]
+    if (!w || !a || !b) return undefined
+    return w === a ? b : w === b ? a : undefined
+  }
+  const bronze = picks[103]
+  const l1 = loserOfSf(101, 97, 98)
+  const l2 = loserOfSf(102, 99, 100)
+  if (bronze && (bronze === l1 || bronze === l2)) cleaned[103] = bronze
+
+  return cleaned
+}
+
 export function buildR32Bracket(
   groupWinners: Record<Group, string>,
   groupRunnersUp: Record<Group, string>,

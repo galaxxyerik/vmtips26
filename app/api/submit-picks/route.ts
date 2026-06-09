@@ -5,6 +5,7 @@ import { canEditPicks } from '@/lib/deadlines'
 import { getSystemConfig, isGloballyLocked } from '@/lib/system-config'
 import { logAdminAction } from '@/lib/admin-guard'
 import { ADMIN_EMAIL } from '@/lib/admin-email'
+import { buildR32Bracket, sanitizeBracketPicks, type Group } from '@/lib/bracket-logic'
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,6 +42,34 @@ export async function POST(req: NextRequest) {
     const missingBracket = requiredMatches.filter(n => !bracketPickMap[n])
     if (missingBracket.length > 0) {
       return NextResponse.json({ error: 'Slutspelstips är ofullständigt.' }, { status: 400 })
+    }
+
+    // Reject brackets that are impossible given the user's own group picks —
+    // last line of defence against stale drafts with picks keyed to the wrong
+    // match numbers (the repeated-remap bug fixed June 9).
+    {
+      const tableOrder = groupTableOrder as Record<string, string[]>
+      const winners = {} as Record<Group, string>
+      const runners = {} as Record<Group, string>
+      const thirdTeams: Partial<Record<Group, string>> = {}
+      for (const [g, order] of Object.entries(tableOrder)) {
+        winners[g as Group] = order[0]
+        runners[g as Group] = order[1]
+        thirdTeams[g as Group] = order[2]
+      }
+      const r32 = buildR32Bracket(winners, runners, thirdTeams, thirdPlaceSelected as Group[])
+      if (!r32) {
+        return NextResponse.json({ error: 'Ogiltigt tredjeplatsval — gå tillbaka till gruppspelssteget.' }, { status: 400 })
+      }
+      const numericPicks: Record<number, string> = {}
+      for (const [k, v] of Object.entries(bracketPickMap)) numericPicks[Number(k)] = v
+      const valid = sanitizeBracketPicks(numericPicks, r32)
+      const invalid = requiredMatches.filter(n => !valid[n])
+      if (invalid.length > 0) {
+        return NextResponse.json({
+          error: 'Dina slutspelstips stämmer inte längre med ditt gruppspel. Öppna slutspelssteget igen och kontrollera dina val.',
+        }, { status: 400 })
+      }
     }
 
     if (!tournamentScorer?.trim()) {

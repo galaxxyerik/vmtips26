@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { loadDraft, saveDraft, setStep } from '@/lib/onboarding-storage'
-import { buildR32Bracket, type R32Match } from '@/lib/bracket-logic'
+import { buildR32Bracket, sanitizeBracketPicks, type R32Match } from '@/lib/bracket-logic'
 import type { GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 
@@ -31,10 +31,10 @@ export default function BracketPage() {
   useEffect(() => {
     setStep('bracket')
     const d = loadDraft()
-    setDraft(d)
 
     // Validate step 1 complete
     if (d.thirdPlaceSelected.length !== 8) {
+      setDraft(d)
       router.push('/onboarding/group-stage')
       return
     }
@@ -59,8 +59,22 @@ export default function BracketPage() {
     )
 
     if (!r32) {
+      setDraft(d)
       setError('Kunde inte bygga slutspelsbracket. Gå tillbaka och kontrollera dina tredjeplatsval.')
       return
+    }
+
+    // Self-heal stale drafts: older drafts can carry bracket picks keyed to
+    // outdated match numbers (the repeated-remap bug fixed June 9). Drop any
+    // pick that is impossible given the current bracket — the user simply
+    // re-picks those slots instead of submitting corrupt data.
+    const cleaned = sanitizeBracketPicks(d.bracketPicks, r32)
+    if (Object.keys(cleaned).length !== Object.keys(d.bracketPicks).length) {
+      const healed = { ...d, bracketPicks: cleaned }
+      saveDraft(healed)
+      setDraft(healed)
+    } else {
+      setDraft(d)
     }
 
     setR32Base(r32)
