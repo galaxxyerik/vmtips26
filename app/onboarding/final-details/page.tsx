@@ -13,11 +13,13 @@ export default function FinalDetailsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draftEmail, setDraftEmail] = useState('')
+  const [isEdit, setIsEdit] = useState(false)
 
   useEffect(() => {
     const d = loadDraft()
     setTournamentScorer(d.tournamentScorer || '')
     setDraftEmail(d.email || '')
+    setIsEdit(!!d.submissionId)
     if (Object.keys(d.bracketPicks).length === 0) {
       router.push('/onboarding/bracket')
     }
@@ -25,7 +27,7 @@ export default function FinalDetailsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!swishChecked) { setError('Du måste bekräfta Swish-betalningen.'); return }
+    if (!isEdit && !swishChecked) { setError('Du måste bekräfta Swish-betalningen.'); return }
     setSubmitting(true)
     setError(null)
 
@@ -65,15 +67,15 @@ export default function FinalDetailsPage() {
     router.push('/dashboard?submitted=true')
   }
 
-  const canSubmit = swishChecked && !submitting
+  const canSubmit = (isEdit || swishChecked) && !submitting
 
   return (
     <div>
     <NavBar />
     <div className="mx-auto max-w-lg px-3 py-6 pb-12">
       <div className="mb-6">
-        <div className="label">Steg 3 av 3 · Detaljer</div>
-        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white">Sista detaljer</h1>
+        <div className="label">{isEdit ? 'Uppdatera tips' : 'Steg 3 av 3 · Detaljer'}</div>
+        <h1 className="font-display font-black text-2xl uppercase tracking-wide text-white">{isEdit ? 'Skyttekung' : 'Sista detaljer'}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -102,50 +104,54 @@ export default function FinalDetailsPage() {
           <p className="text-xs text-white/30 mt-2">Rätt svar ger 5 bonuspoäng</p>
         </div>
 
-        {/* Optional password */}
-        <div className="border border-dashed border-white/10 p-4">
-          <label className="label">
-            Lösenord <span className="text-white/25 font-normal normal-case tracking-normal">(valfritt — för att följa ditt tips i realtid)</span>
-          </label>
-          {/* Hidden email tells the browser to associate draftEmail:password as credentials,
-              not scorerName:password, preventing scorer from being autofilled as username elsewhere. */}
-          <input type="email" name="username" autoComplete="email" value={draftEmail} readOnly className="hidden" tabIndex={-1} aria-hidden="true" />
-          <input
-            id="new-password"
-            name="new-password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Minst 8 tecken..."
-            minLength={8}
-            className="input"
-            autoComplete="new-password"
-          />
-          <p className="text-xs text-white/30 mt-2">Om du fyller i lösenord skapas ett konto automatiskt.</p>
-        </div>
-
-        {/* Swish box */}
-        <div className="border border-swe-yellow/30 bg-swe-yellow/5 p-4 space-y-3">
-          <div>
-            <div className="label text-swe-yellow/70">Betalning</div>
-            <div className="font-display font-black text-2xl uppercase text-swe-yellow tracking-wide">100 kr via Swish</div>
-            <div className="text-sm text-white/50 mt-1">Erik Engstrand · 0768919007</div>
-          </div>
-          <p className="text-xs text-white/50 leading-relaxed">
-            Swisha 100 kr till <span className="text-white/70 font-medium">0768919007</span> med meddelandet <span className="text-white/70 font-medium">VM-tips 2026</span>.
-          </p>
-          <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+        {/* Optional password — only shown for new submissions */}
+        {!isEdit && (
+          <div className="border border-dashed border-white/10 p-4">
+            <label className="label">
+              Lösenord <span className="text-white/25 font-normal normal-case tracking-normal">(valfritt — för att följa ditt tips i realtid)</span>
+            </label>
+            {/* Hidden email tells the browser to associate draftEmail:password as credentials,
+                not scorerName:password, preventing scorer from being autofilled as username elsewhere. */}
+            <input type="email" name="username" autoComplete="email" value={draftEmail} readOnly className="hidden" tabIndex={-1} aria-hidden="true" />
             <input
-              type="checkbox"
-              checked={swishChecked}
-              onChange={e => setSwishChecked(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-swe-yellow flex-shrink-0"
+              id="new-password"
+              name="new-password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Minst 8 tecken..."
+              minLength={8}
+              className="input"
+              autoComplete="new-password"
             />
-            <span className="text-xs text-white/45 leading-relaxed">
-              Jag har swishat 100 kr till Erik Engstrand (0768919007). Jag förstår att mitt deltagande är bindande och att jag är med i spelet när Erik bekräftat betalningen.
-            </span>
-          </label>
-        </div>
+            <p className="text-xs text-white/30 mt-2">Om du fyller i lösenord skapas ett konto automatiskt.</p>
+          </div>
+        )}
+
+        {/* Swish box — only shown for new submissions */}
+        {!isEdit && (
+          <div className="border border-swe-yellow/30 bg-swe-yellow/5 p-4 space-y-3">
+            <div>
+              <div className="label text-swe-yellow/70">Betalning</div>
+              <div className="font-display font-black text-2xl uppercase text-swe-yellow tracking-wide">100 kr via Swish</div>
+              <div className="text-sm text-white/50 mt-1">Erik Engstrand · 0768919007</div>
+            </div>
+            <p className="text-xs text-white/50 leading-relaxed">
+              Swisha 100 kr till <span className="text-white/70 font-medium">0768919007</span> med meddelandet <span className="text-white/70 font-medium">VM-tips 2026</span>.
+            </p>
+            <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={swishChecked}
+                onChange={e => setSwishChecked(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-swe-yellow flex-shrink-0"
+              />
+              <span className="text-xs text-white/45 leading-relaxed">
+                Jag har swishat 100 kr till Erik Engstrand (0768919007). Jag förstår att mitt deltagande är bindande och att jag är med i spelet när Erik bekräftat betalningen.
+              </span>
+            </label>
+          </div>
+        )}
 
         {error && (
           <p className="text-sm text-loss-500 bg-loss-900/30 border border-loss-500/30 px-3 py-2">{error}</p>
@@ -164,7 +170,7 @@ export default function FinalDetailsPage() {
             disabled={!canSubmit}
             className={canSubmit ? 'btn-primary' : 'btn-primary opacity-40 cursor-not-allowed'}
           >
-            {submitting ? 'Skickar in...' : 'Skicka in mitt tips →'}
+            {submitting ? 'Sparar...' : isEdit ? 'Bekräfta uppdaterat tips →' : 'Skicka in mitt tips →'}
           </button>
         </div>
       </form>

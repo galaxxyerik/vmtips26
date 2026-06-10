@@ -6,6 +6,7 @@ import Link from 'next/link'
 import LiveMatches from './LiveMatches'
 import TournamentLeaderboard from './TournamentLeaderboard'
 import { getDashboardLeaderboard, TOURNAMENT_START } from '@/lib/leaderboard'
+import { canEditPicks } from '@/lib/deadlines'
 
 export const dynamic = 'force-dynamic'
 
@@ -218,8 +219,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           )}
         </div>
 
-        {/* Bottom-right: subtle edit link for confirmed users */}
-        {mySubmission?.confirmed && (
+        {/* Bottom-right: subtle edit link for confirmed users — hidden after the deadline */}
+        {mySubmission?.confirmed && canEditPicks(now) && (
           <div className="absolute bottom-0 right-0 px-6 sm:px-10 pb-8 sm:pb-10">
             <Link
               href={`/dashboard/${mySubmission.id}`}
@@ -240,7 +241,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {[
               { value: String(totalCount), label: 'DELTAGARE', yellow: false },
               { value: `${pot.toLocaleString('sv-SE')} KR`, label: 'I POTTEN', yellow: true },
-              { value: '11 JUNI', label: 'DEADLINE', yellow: false },
+              { value: '11 JUNI', label: 'DEADLINE KL 21:00', yellow: false },
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -289,7 +290,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               {user && !mySubmission && (
                 <div>
                   <div className="font-display font-black text-swe-yellow uppercase tracking-wide text-sm mb-1.5">
-                    DEADLINE: 11 JUNI
+                    DEADLINE: 11 JUNI KL 21:00
                   </div>
                   <p className="text-white text-sm mb-4">Du har inte lagt ditt tips än.</p>
                   <Link href="/" className="btn-primary text-sm px-6 h-10 inline-flex items-center">

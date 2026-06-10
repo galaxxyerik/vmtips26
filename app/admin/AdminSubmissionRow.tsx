@@ -572,7 +572,7 @@ export function SlutspelSection({
           <div key={round}>
             <div className="flex items-center gap-2 mb-2">
               <span className="label text-[9px]">{ROUND_LABELS[round]}</span>
-              <span className="text-[9px] text-white/20">{subtitle}</span>
+              <span className="text-[9px] text-white/50">{subtitle}</span>
             </div>
 
             <div className={`border divide-y divide-white/5 ${isFinal ? 'border-swe-yellow/20 bg-swe-yellow/5' : 'border-white/10'}`}>
@@ -609,7 +609,7 @@ export function SlutspelSection({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="label text-[9px]">Bronsmatch</span>
-              <span className="text-[9px] text-white/20">2 lag · 1 match</span>
+              <span className="text-[9px] text-white/50">2 lag · 1 match</span>
             </div>
             <div className="border border-white/10">
               <ReadonlyBracketMatchRow match={bronzeMatch} />

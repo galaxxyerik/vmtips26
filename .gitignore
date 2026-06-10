@@ -32,3 +32,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling / session artifacts
+/test-results/
+/.ms-playwright/
+/.npm-cache/
+/.vercel-xdg/
+/.next-old*/
+/.gitindex-codex*
+/.gitobjects-codex*/
+/ai-text-demo/
+/index.ts

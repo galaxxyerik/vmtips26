@@ -15,6 +15,13 @@ export const TOURNAMENT_SCORER_POINTS = 5
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+/** DB stores scorers as jsonb — either plain names or { player, minute } objects (API-Football sync). */
+export type ScorerEntry = string | { player: string; minute?: number | null }
+
+export function scorerName(entry: ScorerEntry): string {
+  return typeof entry === 'string' ? entry : entry.player
+}
+
 export interface MatchForScoring {
   id: number
   match_number: number | null
@@ -23,8 +30,23 @@ export interface MatchForScoring {
   home_team: string
   away_team: string
   result: '1' | 'X' | '2' | null  // null = not finished
-  home_goal_scorers: string[]
-  away_goal_scorers: string[]
+  home_goal_scorers: ScorerEntry[]
+  away_goal_scorers: ScorerEntry[]
+}
+
+/**
+ * Admin-entered facit (vmt_page_content `scoring.group_scorer.*` / `scoring.tournament_scorer`).
+ * A non-empty override is authoritative and replaces the scorer derivation from match data —
+ * use comma-separated names for a shared golden boot.
+ */
+export interface ScoringOverrides {
+  groupScorers?: Record<string, string>
+  tournamentScorer?: string
+}
+
+function overrideNames(value: string | undefined): string[] | null {
+  const names = (value ?? '').split(',').map(s => s.trim()).filter(Boolean)
+  return names.length > 0 ? names : null
 }
 
 export interface SubmissionPicks {
@@ -38,7 +60,11 @@ export interface SubmissionPicks {
 
 // ── Main entry point ───────────────────────────────────────────────────────────
 
-export function calculateScore(picks: SubmissionPicks, matches: MatchForScoring[]): number {
+export function calculateScore(
+  picks: SubmissionPicks,
+  matches: MatchForScoring[],
+  overrides: ScoringOverrides = {}
+): number {
   let total = 0
 
   const groupMatches    = matches.filter(m => m.phase === 'group')
@@ -47,9 +73,9 @@ export function calculateScore(picks: SubmissionPicks, matches: MatchForScoring[
   total += scoreGroupResults(picks, groupMatches)
   total += scoreGroupTables(picks, groupMatches)
   total += scoreThirdPlace(picks, groupMatches)
-  total += scoreGroupScorers(picks, groupMatches)
+  total += scoreGroupScorers(picks, groupMatches, overrides)
   total += scoreBracket(picks, knockoutMatches)
-  total += scoreTournamentScorer(picks, matches)
+  total += scoreTournamentScorer(picks, matches, overrides)
 
   return total
 }
@@ -161,31 +187,45 @@ function getTeamStats(team: string, matches: MatchForScoring[]): Omit<TeamStats,
 
 // ── Group scorers ──────────────────────────────────────────────────────────────
 
-function scoreGroupScorers(picks: SubmissionPicks, groupMatches: MatchForScoring[]): number {
+function scoreGroupScorers(
+  picks: SubmissionPicks,
+  groupMatches: MatchForScoring[],
+  overrides: ScoringOverrides
+): number {
   const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
   let pts = 0
 
   for (const group of ALL_GROUPS) {
     const pick = picks.groupScorers[group]
     if (!pick) continue
+
+    // Admin-entered facit takes precedence over derivation from match data
+    const override = overrideNames(overrides.groupScorers?.[group])
+    if (override) {
+      if (override.some(s => nameMatch(pick, s))) pts += GROUP_SCORER_POINTS
+      continue
+    }
+
     const gm = groupMatches.filter(m => m.group_label === group && m.result !== null)
     if (gm.length < 6) continue // group not complete yet
 
-    const topScorer = groupTopScorer(gm)
-    if (topScorer && nameMatch(pick, topScorer)) pts += GROUP_SCORER_POINTS
+    const topScorers = groupTopScorers(gm)
+    if (topScorers.some(s => nameMatch(pick, s))) pts += GROUP_SCORER_POINTS
   }
   return pts
 }
 
-function groupTopScorer(matches: MatchForScoring[]): string | null {
+/** All players tied at the highest goal count (a shared golden boot counts for everyone). */
+function groupTopScorers(matches: MatchForScoring[]): string[] {
   const goals: Record<string, number> = {}
   for (const m of matches) {
-    for (const p of m.home_goal_scorers ?? []) goals[p] = (goals[p] ?? 0) + 1
-    for (const p of m.away_goal_scorers ?? []) goals[p] = (goals[p] ?? 0) + 1
+    for (const p of m.home_goal_scorers ?? []) goals[scorerName(p)] = (goals[scorerName(p)] ?? 0) + 1
+    for (const p of m.away_goal_scorers ?? []) goals[scorerName(p)] = (goals[scorerName(p)] ?? 0) + 1
   }
   const entries = Object.entries(goals)
-  if (entries.length === 0) return null
-  return entries.sort((a, b) => b[1] - a[1])[0][0]
+  if (entries.length === 0) return []
+  const max = Math.max(...entries.map(([, n]) => n))
+  return entries.filter(([, n]) => n === max).map(([name]) => name)
 }
 
 // ── Bracket picks ──────────────────────────────────────────────────────────────
@@ -193,13 +233,17 @@ function groupTopScorer(matches: MatchForScoring[]): string | null {
 function scoreBracket(picks: SubmissionPicks, knockoutMatches: MatchForScoring[]): number {
   // Build lookup: matchNumber → actual winner
   const winnerOf: Record<number, string> = {}
-  // Build lookup: phase → set of teams that PLAYED in that phase
+  // phase → teams that WON a match in that phase (advanced through the round)
+  const winnersInPhase: Record<string, Set<string>> = {}
+  // phase → teams that PLAYED in that phase
   const teamsInPhase: Record<string, Set<string>> = {}
 
   for (const m of knockoutMatches) {
     if (m.match_number === null || !m.result) continue
     const winner = m.result === '1' ? m.home_team : m.away_team
     winnerOf[m.match_number] = winner
+    if (!winnersInPhase[m.phase]) winnersInPhase[m.phase] = new Set()
+    winnersInPhase[m.phase].add(winner)
     if (!teamsInPhase[m.phase]) teamsInPhase[m.phase] = new Set()
     teamsInPhase[m.phase].add(m.home_team)
     teamsInPhase[m.phase].add(m.away_team)
@@ -217,8 +261,15 @@ function scoreBracket(picks: SubmissionPicks, knockoutMatches: MatchForScoring[]
 
     if (winnerOf[matchNum] === pickedTeam) {
       pts += phasePts.exact
-    } else if (teamsInPhase[phase]?.has(pickedTeam)) {
-      // Team made it to this round via a different bracket path (annan väg)
+    } else if (phase === 'final' || phase === 'bronze') {
+      // Single-match rounds (per Erik June 9): partial if the picked team
+      // reached the match but lost — e.g. 3 p for a losing finalist.
+      if (teamsInPhase[phase]?.has(pickedTeam)) pts += phasePts.partial
+    } else if (winnersInPhase[phase]?.has(pickedTeam)) {
+      // R32–SF: the picked team advanced through this round, but via a
+      // different bracket path (annan väg). Merely playing (and losing) a
+      // match in the round gives nothing — the rules page says the team
+      // must "ta sig igenom" the round.
       pts += phasePts.partial
     }
   }
@@ -227,18 +278,30 @@ function scoreBracket(picks: SubmissionPicks, knockoutMatches: MatchForScoring[]
 
 // ── Tournament top scorer ──────────────────────────────────────────────────────
 
-function scoreTournamentScorer(picks: SubmissionPicks, matches: MatchForScoring[]): number {
+function scoreTournamentScorer(
+  picks: SubmissionPicks,
+  matches: MatchForScoring[],
+  overrides: ScoringOverrides
+): number {
   if (!picks.tournamentScorer) return 0
+
+  // Admin-entered facit takes precedence over derivation from match data
+  const override = overrideNames(overrides.tournamentScorer)
+  if (override) {
+    return override.some(s => nameMatch(picks.tournamentScorer, s)) ? TOURNAMENT_SCORER_POINTS : 0
+  }
+
   const goals: Record<string, number> = {}
   for (const m of matches) {
     if (!m.result) continue
-    for (const p of m.home_goal_scorers ?? []) goals[p] = (goals[p] ?? 0) + 1
-    for (const p of m.away_goal_scorers ?? []) goals[p] = (goals[p] ?? 0) + 1
+    for (const p of m.home_goal_scorers ?? []) goals[scorerName(p)] = (goals[scorerName(p)] ?? 0) + 1
+    for (const p of m.away_goal_scorers ?? []) goals[scorerName(p)] = (goals[scorerName(p)] ?? 0) + 1
   }
   const entries = Object.entries(goals)
   if (entries.length === 0) return 0
-  const topScorer = entries.sort((a, b) => b[1] - a[1])[0][0]
-  return nameMatch(picks.tournamentScorer, topScorer) ? TOURNAMENT_SCORER_POINTS : 0
+  const max = Math.max(...entries.map(([, n]) => n))
+  const topScorers = entries.filter(([, n]) => n === max).map(([name]) => name)
+  return topScorers.some(s => nameMatch(picks.tournamentScorer, s)) ? TOURNAMENT_SCORER_POINTS : 0
 }
 
 // ── Name matching (case-insensitive, handles "Last, First" vs "First Last") ────

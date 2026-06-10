@@ -68,7 +68,65 @@ Zero border-radius everywhere. No emojis in UI. Swedish copy throughout.
 - Added **1 = hemmaseger · X = oavgjort · 2 = bortaseger** hint above match rows
 - Added **"Turneringsformat"** section on rules page for football beginners
 
-## Latest status — Bug audit + KO picks incident (June 9, 2026)
+## Latest status — Full QA audit + scoring fixes (June 10, 2026)
+
+Full pre-tournament QA performed June 10 (deadline June 11 21:00 Stockholm). 31 submissions
+in DB at start AND end of audit — zero user rows touched. `scripts/diagnose-bracket-picks.ts`
+re-run against live DB: **0 mismatches across all 31 submissions**.
+
+### KO picks incident update (June 10)
+
+- 4 more of the 9 re-submitted June 10: Ludvig Aslaksen, Erik Engstrand, Elias Aslaksen,
+  Sven Rungner — all with full 32 bracket picks.
+- **5 still missing R16+ picks**: Tobias Söderman, Oscar Alex, Oliver Alex, Anton Söderman,
+  Max Rundström. Definitively unrecoverable (all `*_backup_20260609` tables post-date the
+  May 28 deletion; no `vmt_drafts` rows exist for these 5; PITR unavailable). They must redo
+  KO picks before the deadline.
+
+### Fixed in this audit (one commit, June 10)
+
+1. **`lib/match-sync.ts` would have corrupted `vmt_matches` on first sync (June 11 night).**
+   `upsertFixtures` upserted on `match_number = API-Football fixture id` (6–7 digits) — every
+   synced fixture would INSERT a duplicate row instead of updating our seeded 1–104 rows.
+   Rewritten: group matches matched on Swedish team pair, KO matches on phase + kickoff (±3h,
+   unique in schedule); KO rows get real team names filled in; unmatched fixtures are logged
+   and skipped — sync NEVER inserts rows now.
+2. **Two scoring engines.** Nightly `recalculateAllSubmissionPoints` (match-sync) used its own
+   incomplete point logic (no tables/thirds/scorers/annan väg, ignored manual_override) and
+   overwrote `total_points` after the admin's full recalc. Both paths now delegate to
+   `lib/recalculate.ts` → `calculateScore` (single engine, honors `scoring_frozen`).
+3. **KO draws.** Sync derived '1'/'X'/'2' from fulltime score — KO matches level after 90 min
+   got 'X'. New `deriveKnockoutResult` uses API winner flag, then penalty/extratime scores.
+4. **Goal-scorer shape mismatch.** DB stores `{player, minute}` jsonb objects (sync/UI shape)
+   but scoring counted them as strings → scorer points could never be awarded. `ScorerEntry`
+   type + `scorerName()` normalizer in `lib/scoring.ts` accepts both shapes.
+5. **Admin scorer facit wired in.** `ScorerResultsForm` + `/api/admin/scorer-results` existed
+   as orphans (never rendered, keys never read). Now rendered on /admin; `calculateScore`
+   accepts `ScoringOverrides` — non-empty `scoring.group_scorer.X` / `scoring.tournament_scorer`
+   in `vmt_page_content` overrides derivation from match data (comma-separated for shared boot).
+6. **Deadline was 20:00, should be 21:00**: `lib/deadlines.ts` 18:00Z → 19:00Z, /regler text,
+   dashboard copy. Removed a stale TreeWalker DOM hack in SwishSection that rewrote deadline
+   text client-side.
+7. Dashboard "Redigera mitt tips" link now hidden after deadline (`canEditPicks`); editing was
+   already blocked server-side.
+8. `lib/leaderboard.ts` `possibleTips` capped at 36 → 72 (there are 72 group matches).
+9. Committed previously-uncommitted work: edit-mode for final-details (no Swish re-confirm on
+   update), `canUpdateBySubmissionIdMatch` in submit-picks (anonymous re-submit via unguessable
+   UUID), tied-scorer handling + stricter annan väg in scoring, max points 176→212 (308 total),
+   worldcup-guide images that deployed code already referenced (were broken on live).
+
+`scripts/verify-scoring.ts` (pure-function, no DB): 8 scenarios incl. QA scenarios A/B/C,
+perfect-submission MAX=308, object-shaped scorers, override precedence. All pass. All 22
+Playwright tests pass against a clean production build.
+
+### Still open (accepted/low, June 10)
+
+- `phaseBreakdown` in leaderboard is an approximation (fills group bucket first) — cosmetic.
+- recalculate-scores dev-mode auth bypass (`NODE_ENV !== 'production'`) — irrelevant on Vercel.
+- Email enumeration via check-submission/draft API — accepted June 9.
+- `vmt_drafts` still holds old test rows — deliberately untouched.
+
+## Older status — Bug audit + KO picks incident (June 9, 2026)
 
 A full bug audit was performed June 9 (code + live Supabase data via MCP). Findings below are verified against the live DB. Tournament starts June 11 — time-critical.
 
@@ -83,11 +141,33 @@ Commit `ba7b3e4e` only fixed the localStorage equivalent.
 - **9 still missing 16 KO picks each**: Tobias Söderman, Sven Rungner, Ludvig Aslaksen,
   Erik Engstrand, Oscar Alex, Oliver Alex, Anton Söderman, Max Rundström, Elias Aslaksen.
 - No soft deletes, archive tables, or audit rows exist (`vmt_admin_log` is empty).
-- Elias has a server draft in `vmt_drafts` with full KO picks, but its R32 picks differ from his
-  submission on 6 of 16 slots and it was touched June 9 — uncertain provenance, confirm with him.
-- Only real recovery: **Supabase PITR/backup** (Dashboard → Database → Backups). Deletion was
-  ~May 28; daily 7-day backups won't reach, PITR with ≥14-day retention would. Check ASAP.
-- Plan B: ask the 9 users to redo KO picks before deadline.
+- **PITR/backup checked June 9 evening by Erik: NOT available.** The deleted R16+ picks are
+  unrecoverable. Plan B is the only plan: the 9 users must redo their KO picks before the
+  June 11 deadline (flow is safe now — see displaced-picks fix below).
+- Elias's server draft re-examined June 9 evening: it is internally consistent (its KO picks
+  all follow from its own R32), so it IS a genuine bracket — but its R32 genuinely differs
+  from his submitted R32 on 6 slots (not displacement). The draft's KO picks are impossible
+  under his submitted R32, so they cannot be grafted on. Elias must confirm which bracket he
+  wants (or just redo KO picks like the other 8).
+
+### Second incident found June 9 evening: displaced bracket picks (FIXED)
+
+Erik noticed picks "half disappeared" in the admin bracket view — rows existed (✓) but no
+team was highlighted. Root cause: `loadDraft()` in `lib/onboarding-storage.ts` stripped the
+`_bpv` version guard from the returned draft and `saveDraft()` persisted the stripped copy,
+so the "one-time" May 28 `BRACKET_REMAP` re-applied on EVERY loadDraft-after-saveDraft,
+rotating bracket pick keys one cycle step each time (M^k displacement). Every submission
+made after May 28 (15 of them) had R32 picks keyed to wrong match numbers; the 9 incident
+users were unaffected (their picks were remapped correctly by the migration itself).
+
+Fix (commit `f8456da7`, June 9): DB repaired with id-based permutation moving each pick to
+the fixture containing its team (128 + 4 rows, backup in
+`vmt_bracket_picks_backup_20260609_prefix`, **zero rows deleted**); diagnostic
+`scripts/diagnose-bracket-picks.ts` (read-only + `--emit-sql`) verifies **0 mismatches across
+all 24 submissions**. Code: BRACKET_REMAP removed for good, `sanitizeBracketPicks()` added to
+`lib/bracket-logic.ts`, bracket page self-heals stale localStorage drafts on load, and
+submit-picks rejects brackets impossible under the user's group picks. All 11 Playwright
+tests pass.
 
 ### Bug status (June 9 evening: critical + high fixed/accepted, applied to live DB)
 

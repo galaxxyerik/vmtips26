@@ -1,9 +1,8 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
-import { GROUP_PICK_POINTS, PHASE_POINTS, TOURNAMENT_SCORER_POINTS } from '@/lib/scoring'
 import { syncPlayerStats } from '@/lib/player-stats-sync'
 import { teamNameSv } from '@/lib/team-names'
-import { playerNamesMatch } from '@/lib/player-name-match'
+import { recalculateAllScores } from '@/lib/recalculate'
 
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
@@ -16,9 +15,13 @@ interface ApiFixture {
     status: { short: string; elapsed?: number | null }
   }
   league: { round: string }
-  teams: { home: { name: string }; away: { name: string } }
+  teams: { home: { name: string; winner?: boolean | null }; away: { name: string; winner?: boolean | null } }
   goals?: { home: number | null; away: number | null }
-  score: { fulltime: { home: number | null; away: number | null } }
+  score: {
+    fulltime: { home: number | null; away: number | null }
+    extratime?: { home: number | null; away: number | null }
+    penalty?: { home: number | null; away: number | null }
+  }
   events?: ApiFixtureEvent[]
 }
 
@@ -49,16 +52,27 @@ function roundToPhase(round: string): string | null {
   return null
 }
 
-function roundToGroup(round: string): string | null {
-  const match = round.match(/Group ([A-L])/i)
-  return match ? match[1].toUpperCase() : null
-}
-
 function deriveResult(homeScore: number | null, awayScore: number | null): '1' | 'X' | '2' | null {
   if (homeScore === null || awayScore === null) return null
   if (homeScore > awayScore) return '1'
   if (homeScore === awayScore) return 'X'
   return '2'
+}
+
+/**
+ * Knockout matches can't end in a draw — when fulltime is level the winner came
+ * via extra time or penalties. Prefer the API's explicit winner flag, then the
+ * penalty/extra-time scores.
+ */
+function deriveKnockoutResult(f: ApiFixture): '1' | '2' | null {
+  if (f.teams.home.winner === true) return '1'
+  if (f.teams.away.winner === true) return '2'
+  for (const score of [f.score.penalty, f.score.extratime, f.score.fulltime, f.goals]) {
+    if (score?.home != null && score?.away != null && score.home !== score.away) {
+      return score.home > score.away ? '1' : '2'
+    }
+  }
+  return null
 }
 
 function statusFromShort(short: string): 'scheduled' | 'live' | 'finished' {
@@ -91,14 +105,75 @@ async function goalScorersForFixture(fixture: ApiFixture) {
   }
 }
 
+interface ExistingMatchRow {
+  id: number
+  match_number: number | null
+  phase: string
+  home_team: string
+  away_team: string
+  kickoff: string
+  home_score: number | null
+  away_score: number | null
+  status: string | null
+}
+
+const KO_KICKOFF_TOLERANCE_MS = 3 * 60 * 60 * 1000
+
+/**
+ * Map an API-Football fixture onto one of OUR 104 seeded vmt_matches rows.
+ * API fixture ids are NOT our match numbers — group matches are matched on the
+ * (Swedish) team pair, knockout matches on phase + kickoff (placeholder teams).
+ * Fixtures that can't be matched are skipped and logged — we NEVER insert rows.
+ */
+function findExistingMatch(f: ApiFixture, phase: string, existing: ExistingMatchRow[]): ExistingMatchRow | null {
+  const home = teamNameSv(f.teams.home.name)
+  const away = teamNameSv(f.teams.away.name)
+
+  if (phase === 'group') {
+    return existing.find(m =>
+      m.phase === 'group' &&
+      ((m.home_team === home && m.away_team === away) || (m.home_team === away && m.away_team === home))
+    ) ?? null
+  }
+
+  // Knockout: teams are placeholders until the round is set — match on phase + kickoff
+  const apiKickoff = new Date(f.fixture.date).getTime()
+  const candidates = existing.filter(m =>
+    m.phase === phase &&
+    Math.abs(new Date(m.kickoff).getTime() - apiKickoff) <= KO_KICKOFF_TOLERANCE_MS
+  )
+  if (candidates.length === 1) return candidates[0]
+
+  // Several KO matches near the same kickoff — disambiguate on already-known teams
+  const byTeams = candidates.filter(m =>
+    (m.home_team === home || m.away_team === home) && (m.home_team === away || m.away_team === away)
+  )
+  return byTeams.length === 1 ? byTeams[0] : null
+}
+
 async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
   const service = createServiceClient()
   let upserted = 0
   const updatedMatchIds: number[] = []
 
+  const { data: existingRows, error: existingErr } = await service
+    .from('vmt_matches')
+    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, status')
+
+  if (existingErr || !existingRows) {
+    syncLog(`Fel: kunde inte läsa befintliga matcher: ${existingErr?.message ?? 'okänt'}`)
+    return { upserted, updatedMatchIds }
+  }
+
   for (const f of fixtures) {
     const phase = roundToPhase(f.league.round)
     if (!phase) continue
+
+    const existing = findExistingMatch(f, phase, existingRows as ExistingMatchRow[])
+    if (!existing) {
+      syncLog(`Varning: ingen matchande rad för API-fixture ${f.fixture.id} (${f.teams.home.name} – ${f.teams.away.name}, ${f.league.round}) — hoppar över`)
+      continue
+    }
 
     const status = statusFromShort(f.fixture.status.short)
     const homeScore = status === 'finished' ? (f.score.fulltime.home ?? f.goals?.home ?? null) : (status === 'live' ? f.goals?.home ?? null : null)
@@ -107,40 +182,37 @@ async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
       ? await goalScorersForFixture(f)
       : { home: [], away: [] }
 
-    const { data: existing } = await service
-      .from('vmt_matches')
-      .select('id, home_score, away_score')
-      .eq('match_number', f.fixture.id)
-      .maybeSingle()
+    const result = phase === 'group'
+      ? deriveResult(homeScore, awayScore)
+      : (status === 'finished' ? deriveKnockoutResult(f) : null)
 
-    const { error, data } = await service
-      .from('vmt_matches')
-      .upsert({
-        match_number: f.fixture.id,
-        phase,
-        group_label: roundToGroup(f.league.round),
-        home_team: teamNameSv(f.teams.home.name),
-        away_team: teamNameSv(f.teams.away.name),
-        kickoff: f.fixture.date,
-        venue: venueName(f),
-        home_score: homeScore,
-        away_score: awayScore,
-        home_goal_scorers: scorers.home,
-        away_goal_scorers: scorers.away,
-        result: deriveResult(homeScore, awayScore),
-        status,
-      }, { onConflict: 'match_number' })
-      .select('id')
-      .single()
+    const update: Record<string, unknown> = {
+      kickoff: f.fixture.date,
+      venue: venueName(f),
+      home_score: homeScore,
+      away_score: awayScore,
+      home_goal_scorers: scorers.home,
+      away_goal_scorers: scorers.away,
+      result,
+      status,
+    }
+    // Knockout rows are seeded with placeholders ("Vinnare M73") — fill in the
+    // real teams once known. Group rows already have canonical Swedish names.
+    if (phase !== 'group') {
+      update.home_team = teamNameSv(f.teams.home.name)
+      update.away_team = teamNameSv(f.teams.away.name)
+    }
+
+    const { error } = await service.from('vmt_matches').update(update).eq('id', existing.id)
 
     if (error) {
-      syncLog(`Varning: kunde inte spara match ${f.fixture.id}: ${error.message}`)
+      syncLog(`Varning: kunde inte uppdatera match ${existing.match_number}: ${error.message}`)
       continue
     }
 
     upserted++
-    const scoreChanged = existing && (existing.home_score !== homeScore || existing.away_score !== awayScore)
-    if (status === 'finished' && data?.id && (!existing || scoreChanged)) updatedMatchIds.push(data.id)
+    const scoreChanged = existing.home_score !== homeScore || existing.away_score !== awayScore
+    if (status === 'finished' && (existing.status !== 'finished' || scoreChanged)) updatedMatchIds.push(existing.id)
   }
 
   return { upserted, updatedMatchIds }
@@ -170,56 +242,18 @@ export async function recalculateAllSubmissionPoints() {
   const service = createServiceClient()
   syncLog('Räknar om poäng för alla tips')
 
-  // Actual tournament top scorer - set TOURNAMENT_SCORER_WINNER in env when known
-  const actualScorer = process.env.TOURNAMENT_SCORER_WINNER?.trim() || null
-  if (actualScorer) syncLog(`Skyttekung: ${actualScorer}`)
+  // Delegate to the shared engine (lib/recalculate.ts) — the same one the admin
+  // button uses. It covers ALL categories (tabeller, treor, skyttar, annan väg)
+  // and respects manual overrides + scoring_frozen.
+  const result = await recalculateAllScores(service)
 
-  const [
-    { data: submissions },
-    { data: groupPicks },
-    { data: bracketPicks },
-    { data: matches },
-    { data: scorerPicks },
-  ] = await Promise.all([
-    service.from('vmt_submissions').select('id'),
-    service.from('vmt_group_picks').select('submission_id, match_id, pick'),
-    service.from('vmt_bracket_picks').select('submission_id, match_number, pick_team, round'),
-    service.from('vmt_matches').select('id, match_number, phase, home_team, away_team, home_score, away_score, result, status'),
-    service.from('vmt_tournament_scorer_pick').select('submission_id, player_name'),
-  ])
-
-  const matchById = new Map((matches ?? []).map(match => [match.id, match]))
-  const matchByNumber = new Map((matches ?? []).map(match => [match.match_number, match]))
-  const scorerBySubmission = new Map((scorerPicks ?? []).map(p => [p.submission_id, p.player_name]))
-  let updated = 0
-
-  for (const submission of submissions ?? []) {
-    let total = 0
-    for (const pick of groupPicks?.filter(p => p.submission_id === submission.id) ?? []) {
-      const match = matchById.get(pick.match_id)
-      if (match?.status === 'finished' && match.result === pick.pick) total += GROUP_PICK_POINTS
-    }
-
-    for (const pick of bracketPicks?.filter(p => p.submission_id === submission.id) ?? []) {
-      const match = matchByNumber.get(pick.match_number)
-      if (!match || match.status !== 'finished') continue
-      const winner = (match.home_score ?? 0) > (match.away_score ?? 0) ? match.home_team : match.away_team
-      if (winner === pick.pick_team) total += PHASE_POINTS[pick.round]?.exact ?? 0
-    }
-
-    if (actualScorer) {
-      const guess = scorerBySubmission.get(submission.id)
-      if (guess && playerNamesMatch(guess, actualScorer)) {
-        total += TOURNAMENT_SCORER_POINTS
-      }
-    }
-
-    const { error } = await service.from('vmt_submissions').update({ total_points: total }).eq('id', submission.id)
-    if (!error) updated++
+  if (!result.ok) {
+    syncLog(`Poängräkning hoppades över: ${result.reason}`)
+    return 0
   }
 
-  syncLog(`Poäng omräknade för ${updated} tips`)
-  return updated
+  syncLog(`Poäng omräknade för ${result.updated} tips`)
+  return result.updated
 }
 
 export async function syncMatches(options: { includePlayers?: boolean } = {}) {

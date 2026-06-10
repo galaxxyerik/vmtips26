@@ -41,7 +41,7 @@ export default async function ReglerPage() {
               DEADLINE
             </div>
             <div className="font-mono font-bold text-white tnum mt-1" style={{ fontSize: 'clamp(18px, 3vw, 28px)' }}>
-              11 JUNI 2026 · KL 20:00 CEST
+              11 JUNI 2026 · KL 21:00
             </div>
             <p className="text-white/60 text-sm mt-2">Tips inlämnade efter detta datum gäller inte.</p>
           </div>

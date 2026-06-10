@@ -2,11 +2,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z')
 
+// Group: 72 match outcomes ×1 + table positions 12×4×2 + 8 thirds ×1 + 12 scorers ×3
+//        = 72 + 96 + 8 + 36 = 212
+// Knockout: 16×2 + 8×3 + 4×4 + 2×5 + bronze 3 + final 6 = 91
 export const LEADERBOARD_MAX_POINTS = {
-  group: 176,
+  group: 212,
   knockout: 91,
   bonus: 5,
-  total: 272,
+  total: 308,
 } as const
 
 export type LeaderboardPhaseBreakdown = {
@@ -229,7 +232,7 @@ export async function getDashboardLeaderboard(
   const matchRows = (matches ?? []) as MatchRow[]
   const pickRows = (groupPicks ?? []) as GroupPickRow[]
   const finishedGroupMatches = matchRows.filter(match => match.phase === 'group' && match.status === 'finished' && match.result)
-  const possibleTips = Math.min(finishedGroupMatches.length, 36)
+  const possibleTips = Math.min(finishedGroupMatches.length, 72)
   const matchById = new Map(finishedGroupMatches.map(match => [match.id, match]))
 
   const correctBySubmission = new Map<string, number>()

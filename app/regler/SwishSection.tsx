@@ -1,23 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const PHONE = '0768919007'
 const SWISH_URL = `swish://payment?phone=${PHONE}&amount=100&message=VM-tips%2026&edit=0`
 
 export default function SwishSection() {
   const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
-    let node = walker.nextNode()
-    while (node) {
-      if (node.textContent?.includes('KL 17:00')) {
-        node.textContent = node.textContent.replace('KL 17:00', 'KL 20:00')
-      }
-      node = walker.nextNode()
-    }
-  }, [])
 
   function handleCopy() {
     navigator.clipboard.writeText(PHONE).then(() => {

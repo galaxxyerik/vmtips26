@@ -102,6 +102,8 @@ export async function POST(req: NextRequest) {
 
     const canUpdateProvidedSubmission = !!submissionId && !!user && canEdit
     const canUpdateOwnSubmissionByEmail = !!existingByEmail && !!user && existingByEmail.user_id === user.id && canEdit
+    // Non-auth users who have submissionId matching the email's existing submission (UUID is unguessable)
+    const canUpdateBySubmissionIdMatch = !!submissionId && !!existingByEmail && existingByEmail.id === submissionId && canEdit
 
     // Create auth user if password provided
     let userId: string | null = null
@@ -124,8 +126,8 @@ export async function POST(req: NextRequest) {
     let sid: string
     let isUpdate = false
 
-    if (canUpdateProvidedSubmission || canUpdateOwnSubmissionByEmail) {
-      const existing = canUpdateOwnSubmissionByEmail
+    if (canUpdateProvidedSubmission || canUpdateOwnSubmissionByEmail || canUpdateBySubmissionIdMatch) {
+      const existing = (canUpdateOwnSubmissionByEmail || canUpdateBySubmissionIdMatch)
         ? existingByEmail
         : await supabase
             .from('vmt_submissions')

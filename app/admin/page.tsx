@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation'
 import { getSystemConfig, setSystemConfig } from '@/lib/system-config'
 import ControlRoom from './ControlRoom'
 import type { SubmissionData, MatchData } from './ControlRoom'
+import ScorerResultsForm from './ScorerResultsForm'
 import { ADMIN_EMAIL } from '@/lib/admin-email'
+import { GROUPS } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,22 @@ export default async function AdminPage() {
     service.from('vmt_sync_log').select('sync_key, synced_at'),
     getSystemConfig(),
   ])
+
+  // Admin-entered scorer facit (drives gruppskyttekung + turneringsskyttekung points)
+  const { data: scorerContent } = await service
+    .from('vmt_page_content')
+    .select('key, value')
+    .or('key.like.scoring.group_scorer.%,key.eq.scoring.tournament_scorer')
+
+  const initialGroupScorers: Record<string, string> = Object.fromEntries(GROUPS.map(g => [g, '']))
+  let initialTournamentScorer = ''
+  for (const row of scorerContent ?? []) {
+    if (row.key === 'scoring.tournament_scorer') initialTournamentScorer = row.value ?? ''
+    else {
+      const group = row.key.split('.').pop()
+      if (group && group in initialGroupScorers) initialGroupScorers[group] = row.value ?? ''
+    }
+  }
 
   // Capture the previous visit time before bumping it
   const adminLastSeen = systemConfig['admin_last_seen'] ?? null
@@ -96,6 +114,20 @@ export default async function AdminPage() {
           lastPlayerSync={lastPlayerSync}
           adminLastSeen={adminLastSeen}
         />
+
+        {/* ── SKYTTEKUNGS-FACIT ── */}
+        <div className="mt-12 border border-white/10 p-5">
+          <div className="label mb-1">Skyttekungs-facit</div>
+          <p className="text-xs text-white/35 mb-5 max-w-xl leading-relaxed">
+            Fyll i den faktiska skyttekungen per grupp (när gruppen är färdigspelad) och för hela
+            turneringen. Lämna tomt så räknas skytteligan automatiskt från matchdata. Vid delad
+            skytteliga: separera namn med komma. Kör därefter &ldquo;Räkna om poäng&rdquo;.
+          </p>
+          <ScorerResultsForm
+            initialGroupScorers={initialGroupScorers}
+            initialTournamentScorer={initialTournamentScorer}
+          />
+        </div>
       </main>
     </div>
   )
