@@ -369,6 +369,13 @@ export async function syncLiveMatchdayMatches(now = new Date()) {
     return { skipped: true, reason: 'no_matches_today', minIntervalMinutes }
   }
 
+  await service.from('vmt_sync_log').upsert({
+    sync_key: 'match_results_live',
+    synced_at: now.toISOString(),
+    status: 'running',
+    message: `Live-matchsynk startad för ${day}`,
+  }, { onConflict: 'sync_key' })
+
   syncLog(`Startar live-matchsynk för ${day}`)
   const json = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&date=${day}`)
   const fixtures = json?.response ?? []
