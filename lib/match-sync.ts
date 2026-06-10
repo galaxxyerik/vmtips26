@@ -114,10 +114,12 @@ interface ExistingMatchRow {
   kickoff: string
   home_score: number | null
   away_score: number | null
+  result: string | null
   status: string | null
 }
 
 const KO_KICKOFF_TOLERANCE_MS = 3 * 60 * 60 * 1000
+const DEFAULT_LIVE_SYNC_MIN_INTERVAL_MINUTES = 15
 
 /**
  * Map an API-Football fixture onto one of OUR 104 seeded vmt_matches rows.
@@ -151,18 +153,21 @@ function findExistingMatch(f: ApiFixture, phase: string, existing: ExistingMatch
   return byTeams.length === 1 ? byTeams[0] : null
 }
 
-async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
+async function upsertFixtures(
+  fixtures: ApiFixture[],
+  options: { includeScorers: boolean; fetchLiveScorers?: boolean }
+) {
   const service = createServiceClient()
   let upserted = 0
-  const updatedMatchIds: number[] = []
+  const changedMatchIds: number[] = []
 
   const { data: existingRows, error: existingErr } = await service
     .from('vmt_matches')
-    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, status')
+    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, result, status')
 
   if (existingErr || !existingRows) {
     syncLog(`Fel: kunde inte läsa befintliga matcher: ${existingErr?.message ?? 'okänt'}`)
-    return { upserted, updatedMatchIds }
+    return { upserted, changedMatchIds }
   }
 
   for (const f of fixtures) {
@@ -178,7 +183,8 @@ async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
     const status = statusFromShort(f.fixture.status.short)
     const homeScore = status === 'finished' ? (f.score.fulltime.home ?? f.goals?.home ?? null) : (status === 'live' ? f.goals?.home ?? null : null)
     const awayScore = status === 'finished' ? (f.score.fulltime.away ?? f.goals?.away ?? null) : (status === 'live' ? f.goals?.away ?? null : null)
-    const scorers = includeScorers || status === 'live'
+    const shouldFetchScorers = options.includeScorers || (status === 'live' && options.fetchLiveScorers !== false)
+    const scorers = shouldFetchScorers
       ? await goalScorersForFixture(f)
       : { home: [], away: [] }
 
@@ -191,10 +197,12 @@ async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
       venue: venueName(f),
       home_score: homeScore,
       away_score: awayScore,
-      home_goal_scorers: scorers.home,
-      away_goal_scorers: scorers.away,
       result,
       status,
+    }
+    if (shouldFetchScorers) {
+      update.home_goal_scorers = scorers.home
+      update.away_goal_scorers = scorers.away
     }
     // Knockout rows are seeded with placeholders ("Vinnare M73") — fill in the
     // real teams once known. Group rows already have canonical Swedish names.
@@ -212,17 +220,21 @@ async function upsertFixtures(fixtures: ApiFixture[], includeScorers: boolean) {
 
     upserted++
     const scoreChanged = existing.home_score !== homeScore || existing.away_score !== awayScore
-    if (status === 'finished' && (existing.status !== 'finished' || scoreChanged)) updatedMatchIds.push(existing.id)
+    const resultChanged = existing.result !== result
+    const statusChanged = existing.status !== status
+    if ((status === 'live' || status === 'finished') && (scoreChanged || resultChanged || statusChanged)) {
+      changedMatchIds.push(existing.id)
+    }
   }
 
-  return { upserted, updatedMatchIds }
+  return { upserted, changedMatchIds }
 }
 
 export async function fetchAndStoreLiveMatches() {
   syncLog('Hämtar live-matcher från API-Football')
   const json = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?live=all&league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}`)
   const fixtures = json?.response ?? []
-  const { upserted } = await upsertFixtures(fixtures, true)
+  const { upserted } = await upsertFixtures(fixtures, { includeScorers: true })
   return fixtures.map(f => ({
     fixtureId: f.fixture.id,
     homeTeam: teamNameSv(f.teams.home.name),
@@ -274,15 +286,15 @@ export async function syncMatches(options: { includePlayers?: boolean } = {}) {
     return { fixtures: 0, finished: 0, recalculated: 0, message: 'Data tillgänglig från 11 juni 2026' }
   }
 
-  const allResult = await upsertFixtures(allFixtures, false)
+  const allResult = await upsertFixtures(allFixtures, { includeScorers: false })
   syncLog(`${allResult.upserted} fixtures uppdaterade`)
 
   const finishedJson = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&status=FT`)
   const finishedFixtures = finishedJson?.response ?? []
-  const finishedResult = await upsertFixtures(finishedFixtures, true)
+  const finishedResult = await upsertFixtures(finishedFixtures, { includeScorers: true })
   syncLog(`${finishedResult.upserted} färdiga matcher uppdaterade`)
 
-  const recalculated = finishedResult.updatedMatchIds.length > 0
+  const recalculated = finishedResult.changedMatchIds.length > 0
     ? await recalculateAllSubmissionPoints()
     : 0
 
@@ -297,4 +309,87 @@ export async function syncMatches(options: { includePlayers?: boolean } = {}) {
 
   syncLog('Matchsynk klar')
   return { fixtures: allResult.upserted, finished: finishedResult.upserted, recalculated }
+}
+
+function utcDateString(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function utcDayRange(date: Date) {
+  const day = utcDateString(date)
+  return {
+    day,
+    start: `${day}T00:00:00.000Z`,
+    end: new Date(Date.parse(`${day}T00:00:00.000Z`) + 24 * 60 * 60 * 1000).toISOString(),
+  }
+}
+
+function configuredLiveSyncMinIntervalMinutes() {
+  const value = Number(process.env.VMT_LIVE_SYNC_MIN_INTERVAL_MINUTES)
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_LIVE_SYNC_MIN_INTERVAL_MINUTES
+}
+
+export async function syncLiveMatchdayMatches(now = new Date()) {
+  const service = createServiceClient()
+  const minIntervalMinutes = configuredLiveSyncMinIntervalMinutes()
+  const hour = now.getUTCHours()
+
+  if (hour < 14 || hour >= 24) {
+    return { skipped: true, reason: 'outside_live_sync_window', minIntervalMinutes }
+  }
+
+  const { data: lastRun } = await service
+    .from('vmt_sync_log')
+    .select('synced_at')
+    .eq('sync_key', 'match_results_live')
+    .maybeSingle()
+
+  const lastRunAt = lastRun?.synced_at ? new Date(lastRun.synced_at).getTime() : 0
+  if (lastRunAt && now.getTime() - lastRunAt < minIntervalMinutes * 60 * 1000) {
+    return { skipped: true, reason: 'cooldown', minIntervalMinutes }
+  }
+
+  const { day, start, end } = utcDayRange(now)
+  const { data: localMatches, error: matchdayErr } = await service
+    .from('vmt_matches')
+    .select('id')
+    .gte('kickoff', start)
+    .lt('kickoff', end)
+    .limit(1)
+
+  if (matchdayErr) throw new Error(`Kunde inte kontrollera matchdag: ${matchdayErr.message}`)
+
+  if (!localMatches?.length) {
+    await service.from('vmt_sync_log').upsert({
+      sync_key: 'match_results_live',
+      synced_at: now.toISOString(),
+      status: 'skipped',
+      message: `Ingen matchdag ${day}`,
+    }, { onConflict: 'sync_key' })
+    return { skipped: true, reason: 'no_matches_today', minIntervalMinutes }
+  }
+
+  syncLog(`Startar live-matchsynk för ${day}`)
+  const json = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&date=${day}`)
+  const fixtures = json?.response ?? []
+  const result = await upsertFixtures(fixtures, { includeScorers: false, fetchLiveScorers: false })
+  const recalculated = result.changedMatchIds.length > 0
+    ? await recalculateAllSubmissionPoints()
+    : 0
+
+  await service.from('vmt_sync_log').upsert({
+    sync_key: 'match_results_live',
+    synced_at: now.toISOString(),
+    status: 'ok',
+    message: `${result.upserted} matcher uppdaterade, ${recalculated} tips omräknade`,
+  }, { onConflict: 'sync_key' })
+
+  syncLog('Live-matchsynk klar')
+  return {
+    skipped: false,
+    fixtures: result.upserted,
+    recalculated,
+    changedMatches: result.changedMatchIds.length,
+    minIntervalMinutes,
+  }
 }
