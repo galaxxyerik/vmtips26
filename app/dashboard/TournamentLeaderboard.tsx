@@ -141,18 +141,25 @@ function LeaderboardTable({ data }: { data: DashboardLeaderboardData }) {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
 
+  const sorted = [...payload].sort((a, b) => b.value - a.value)
+  const visible = sorted.slice(0, 10)
+  const overflow = sorted.length - visible.length
+
   return (
     <div className="border border-white/10 bg-navy-950 px-3 py-2">
       <div className="mb-1 font-display text-sm font-black uppercase tracking-wide text-swe-yellow">
         {label}
       </div>
       <div className="space-y-1">
-        {payload.map((item: any) => (
+        {visible.map((item: any) => (
           <div key={item.dataKey} className="flex min-w-32 items-center justify-between gap-4 font-sans text-xs">
             <span style={{ color: item.color }}>{item.name}</span>
             <span className="font-mono text-white tnum">{item.value}p</span>
           </div>
         ))}
+        {overflow > 0 && (
+          <div className="pt-1 font-sans text-xs text-white/35">+{overflow} till</div>
+        )}
       </div>
     </div>
   )
