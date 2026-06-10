@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { syncLiveMatchdayMatches } from '@/lib/match-sync'
 
 interface MatchRow {
   match_number: number
@@ -11,6 +12,15 @@ interface MatchRow {
   kickoff: string
   home_goal_scorers: { player: string; minute: number | null }[] | null
   away_goal_scorers: { player: string; minute: number | null }[] | null
+}
+
+function isLiveSyncWindow(date = new Date()) {
+  const hour = date.getUTCHours()
+  return hour >= 14 && hour < 24
+}
+
+function isTodayUtc(iso: string, date = new Date()) {
+  return iso.slice(0, 10) === date.toISOString().slice(0, 10)
 }
 
 // Per-instance in-memory cache for the Supabase read result (not the API-Football call)
@@ -47,6 +57,16 @@ export async function GET() {
       homeGoalScorers: row.home_goal_scorers ?? [],
       awayGoalScorers: row.away_goal_scorers ?? [],
     }))
+
+    const now = new Date()
+    const shouldRefresh = isLiveSyncWindow(now) && (liveRows as MatchRow[] ?? []).some(row =>
+      row.status === 'live' || isTodayUtc(row.kickoff, now)
+    )
+    if (shouldRefresh) {
+      syncLiveMatchdayMatches(now).catch(err =>
+        console.warn(`[${now.toISOString()}] Live-match refresh skipped/failed:`, err)
+      )
+    }
 
     cachedPayload = { ok: true, matches, cachedAt: new Date().toISOString() }
     cachedAt = Date.now()
