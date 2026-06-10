@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { fetchAndStoreLiveMatches } from '@/lib/match-sync'
 
 interface MatchRow {
   match_number: number
@@ -37,7 +36,6 @@ export async function GET() {
 
     if (error) throw error
 
-    const now = new Date()
     const matches = (liveRows as MatchRow[] ?? []).map(row => ({
       fixtureId: row.match_number,
       homeTeam: row.home_team,
@@ -50,16 +48,7 @@ export async function GET() {
       awayGoalScorers: row.away_goal_scorers ?? [],
     }))
 
-    // If there are live matches right now, kick off a background refresh via the cron function
-    // so the next poll gets updated scores. We don't await it to keep this response fast.
-    const hasLive = (liveRows as MatchRow[] ?? []).some(row => row.status === 'live')
-    if (hasLive) {
-      fetchAndStoreLiveMatches().catch(err =>
-        console.warn(`[${now.toISOString()}] Background live-match refresh failed:`, err)
-      )
-    }
-
-    cachedPayload = { ok: true, matches, cachedAt: now.toISOString() }
+    cachedPayload = { ok: true, matches, cachedAt: new Date().toISOString() }
     cachedAt = Date.now()
     return NextResponse.json(cachedPayload)
   } catch (err) {
