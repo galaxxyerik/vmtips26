@@ -241,7 +241,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {[
               { value: String(totalCount), label: 'DELTAGARE', yellow: false },
               { value: `${pot.toLocaleString('sv-SE')} KR`, label: 'I POTTEN', yellow: true },
-              { value: '11 JUNI', label: 'DEADLINE KL 21:00', yellow: false },
+              { value: '11 JUNI', label: 'DEADLINE KL 21:30', yellow: false },
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -290,7 +290,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               {user && !mySubmission && (
                 <div>
                   <div className="font-display font-black text-swe-yellow uppercase tracking-wide text-sm mb-1.5">
-                    DEADLINE: 11 JUNI KL 21:00
+                    DEADLINE: 11 JUNI KL 21:30
                   </div>
                   <p className="text-white text-sm mb-4">Du har inte lagt ditt tips än.</p>
                   <Link href="/" className="btn-primary text-sm px-6 h-10 inline-flex items-center">
