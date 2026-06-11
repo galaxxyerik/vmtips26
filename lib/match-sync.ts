@@ -272,18 +272,31 @@ export async function syncMatches(options: { includePlayers?: boolean } = {}) {
   const service = createServiceClient()
   syncLog('Startar matchsynk')
 
-  const allJson = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}`)
-  const allFixtures = allJson?.response ?? []
+  let allFixtures: ApiFixture[] = []
+  let apiError: string | null = null
+  try {
+    const allJson = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}`)
+    allFixtures = allJson?.response ?? []
+  } catch (err) {
+    apiError = err instanceof Error ? err.message : String(err)
+    syncLog(`API-Football misslyckades: ${apiError}`)
+  }
 
   if (allFixtures.length === 0) {
+    // Poäng måste räknas om även utan API-data, annars slår manuellt inlagda
+    // resultat i vmt_matches aldrig igenom på leaderboarden.
+    const recalculated = await recalculateAllSubmissionPoints()
+    const message = apiError
+      ? `API-fel — ${recalculated} tips omräknade från manuell matchdata`
+      : `Inga fixtures — ${recalculated} tips omräknade`
     await service.from('vmt_sync_log').upsert({
       sync_key: 'match_results',
       synced_at: new Date().toISOString(),
-      status: 'empty',
-      message: 'Data tillgänglig från 11 juni 2026',
+      status: apiError ? 'degraded' : 'empty',
+      message,
     }, { onConflict: 'sync_key' })
-    syncLog('API-Football returnerade inga VM-fixtures')
-    return { fixtures: 0, finished: 0, recalculated: 0, message: 'Data tillgänglig från 11 juni 2026' }
+    syncLog(message)
+    return { fixtures: 0, finished: 0, recalculated, message }
   }
 
   const allResult = await upsertFixtures(allFixtures, { includeScorers: false })
@@ -294,9 +307,9 @@ export async function syncMatches(options: { includePlayers?: boolean } = {}) {
   const finishedResult = await upsertFixtures(finishedFixtures, { includeScorers: true })
   syncLog(`${finishedResult.upserted} färdiga matcher uppdaterade`)
 
-  const recalculated = finishedResult.changedMatchIds.length > 0
-    ? await recalculateAllSubmissionPoints()
-    : 0
+  // Alltid omräkning — resultat kan ha lagts in manuellt i vmt_matches utan
+  // att API-synken ser någon ändring.
+  const recalculated = await recalculateAllSubmissionPoints()
 
   if (options.includePlayers) await syncPlayerStats()
 
@@ -334,7 +347,9 @@ export async function syncLiveMatchdayMatches(now = new Date()) {
   const minIntervalMinutes = configuredLiveSyncMinIntervalMinutes()
   const hour = now.getUTCHours()
 
-  if (hour < 14 || hour >= 24) {
+  // VM-matchdagar sträcker sig från ~13:00 UTC till ~05:00 UTC (sena kvällsmatcher
+  // i Nordamerika). Vila bara under de döda timmarna 06–13 UTC.
+  if (hour >= 6 && hour < 13) {
     return { skipped: true, reason: 'outside_live_sync_window', minIntervalMinutes }
   }
 
@@ -378,26 +393,39 @@ export async function syncLiveMatchdayMatches(now = new Date()) {
 
   syncLog(`Startar live-matchsynk för ${day}`)
   try {
-    const json = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&date=${day}`)
-    const fixtures = json?.response ?? []
-    const result = await upsertFixtures(fixtures, { includeScorers: false, fetchLiveScorers: false })
-    const recalculated = result.changedMatchIds.length > 0
-      ? await recalculateAllSubmissionPoints()
-      : 0
+    let upserted = 0
+    let changedMatches = 0
+    let apiError: string | null = null
+    try {
+      const json = await apiFootballFetch<ApiFixtureResponse>(`/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&date=${day}`)
+      const fixtures = json?.response ?? []
+      const result = await upsertFixtures(fixtures, { includeScorers: false, fetchLiveScorers: false })
+      upserted = result.upserted
+      changedMatches = result.changedMatchIds.length
+    } catch (err) {
+      // API:t nere (t.ex. plan utan säsong 2026) — fortsätt ändå så att manuellt
+      // inlagda resultat i vmt_matches poängsätts automatiskt.
+      apiError = err instanceof Error ? err.message : String(err)
+      syncLog(`API-Football misslyckades: ${apiError} — räknar om poäng från befintlig matchdata`)
+    }
+
+    const recalculated = await recalculateAllSubmissionPoints()
 
     await service.from('vmt_sync_log').upsert({
       sync_key: 'match_results_live',
       synced_at: now.toISOString(),
-      status: 'ok',
-      message: `${result.upserted} matcher uppdaterade, ${recalculated} tips omräknade`,
+      status: apiError ? 'degraded' : 'ok',
+      message: apiError
+        ? `API-fel — ${recalculated} tips omräknade från manuell matchdata`
+        : `${upserted} matcher uppdaterade, ${recalculated} tips omräknade`,
     }, { onConflict: 'sync_key' })
 
     syncLog('Live-matchsynk klar')
     return {
       skipped: false,
-      fixtures: result.upserted,
+      fixtures: upserted,
       recalculated,
-      changedMatches: result.changedMatchIds.length,
+      changedMatches,
       minIntervalMinutes,
     }
   } catch (err) {
