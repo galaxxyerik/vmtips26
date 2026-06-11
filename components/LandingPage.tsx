@@ -8,6 +8,7 @@ import { hasDraft, getDraftStep, getDraftTimestamp, clearDraft, loadDraft, saveD
 import { ONBOARDING_KEY } from '@/lib/types'
 import { Editable } from '@/components/Editable'
 import NavBar from '@/components/NavBar'
+import { canEditPicks } from '@/lib/deadlines'
 
 const STEP_PATHS: Record<string, string> = {
   'group-stage': '/onboarding/group-stage',
@@ -234,7 +235,23 @@ export default function LandingPage({ userName }: LandingPageProps) {
             className="mt-6 text-base sm:text-lg text-white/60 max-w-[420px] leading-snug font-medium"
           />
 
-          {/* Entry form */}
+          {/* Entry form — replaced by a closed notice once the deadline has passed
+              (server-side enforcement lives in /api/submit-picks) */}
+          {!canEditPicks() ? (
+            <div className="mt-8 max-w-[420px] border border-white/15 p-5">
+              <p className="font-display font-black uppercase tracking-tight text-lg text-swe-yellow">
+                Anmälan är stängd
+              </p>
+              <p className="mt-2 text-sm text-white/60 leading-snug">
+                Deadline passerade 11 juni kl 21:30 och VM är igång. Inga nya tips kan lämnas in och inlämnade tips är låsta.
+              </p>
+              <p className="mt-4 text-sm">
+                <a href="/login" className="text-white/70 hover:text-white transition-colors">
+                  Redan anmäld? Logga in och följ tabellen →
+                </a>
+              </p>
+            </div>
+          ) : (
           <form onSubmit={handleStart} className="mt-8 space-y-2 max-w-[420px]">
             <input
               name="entry-name"
@@ -267,6 +284,7 @@ export default function LandingPage({ userName }: LandingPageProps) {
               Börja nu och fyll klart senare. Om du kommer tillbaka med samma mejl ligger det du redan fyllt i kvar. Har du redan skickat in ditt tips kan du logga in och ändra det fram till VM-start den 11 juni.
             </p>
           </form>
+          )}
 
           <Editable
             contentKey="landing.deadline"
