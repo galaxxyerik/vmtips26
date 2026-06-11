@@ -1,6 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { syncLiveMatchdayMatches } from '@/lib/match-sync'
+
+// The after()-triggered live sync (API fetch + upserts + point recalc) must fit
+// within the function's lifetime
+export const maxDuration = 60
 
 interface MatchRow {
   match_number: number
@@ -63,8 +67,13 @@ export async function GET() {
       row.status === 'live' || isTodayUtc(row.kickoff, now)
     )
     if (shouldRefresh) {
-      syncLiveMatchdayMatches(now).catch(err =>
-        console.warn(`[${now.toISOString()}] Live-match refresh skipped/failed:`, err)
+      // Vercel freezes the instance as soon as the response is sent — a bare
+      // floating promise dies mid-flight (scores never updated; sync_log stuck
+      // on 'running'). after() keeps the function alive until the sync is done.
+      after(() =>
+        syncLiveMatchdayMatches(now).catch(err =>
+          console.warn(`[${now.toISOString()}] Live-match refresh skipped/failed:`, err)
+        )
       )
     }
 
