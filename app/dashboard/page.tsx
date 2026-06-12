@@ -146,9 +146,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     : { data: [] }
   const userPicks = Object.fromEntries((myGroupPicks ?? []).map(row => [row.match_id, row.pick]))
 
-  // Next match card — live first, then next scheduled
+  // Next match for hero — live first, then next scheduled
   let nextDbMatch: { id: number; home_team: string; away_team: string; kickoff: string; status: string; home_score: number | null; away_score: number | null } | null = null
-  if (mySubmission) {
+  if (isOpen) {
     const currentLive = (liveCandidateMatches ?? []).find(m => m.status === 'live') ?? null
     if (currentLive) {
       nextDbMatch = currentLive
@@ -192,8 +192,63 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         />
 
         {/* Bottom-left: editorial countdown / tournament-open message */}
-        <div className="absolute bottom-0 left-0 px-6 sm:px-10 pb-8 sm:pb-10">
+        <div className="absolute bottom-0 left-0 px-6 sm:px-10 pb-8 sm:pb-12 max-w-[85vw] sm:max-w-[60vw]">
           {isOpen ? (
+            nextDbMatch ? (() => {
+              const isMatchLive = nextDbMatch.status === 'live'
+              const myPick = userPicks[nextDbMatch.id] ?? null
+              const pickLabels: Record<string, string> = { '1': 'hemmaseger', 'X': 'oavgjort', '2': 'bortaseger' }
+              const kickoffDate = new Date(nextDbMatch.kickoff)
+              const weekday = kickoffDate.toLocaleDateString('sv-SE', { weekday: 'long', timeZone: 'Europe/Stockholm' })
+              const dateStr = kickoffDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', timeZone: 'Europe/Stockholm' })
+              const timeStr = kickoffDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })
+              return (
+                <>
+                  {/* Overline */}
+                  <div className="flex items-center gap-2 mb-3">
+                    {isMatchLive && <span className="h-1.5 w-1.5 rounded-full bg-swe-yellow animate-pulse" />}
+                    <span className="font-sans uppercase tracking-[0.12em] text-white/55" style={{ fontSize: '11px' }}>
+                      {isMatchLive ? 'Live just nu' : 'Nästa match'}
+                    </span>
+                  </div>
+                  {/* Match headline */}
+                  <div className="font-display font-black text-white leading-none" style={{ fontSize: 'clamp(28px, 4vw, 52px)' }}>
+                    {nextDbMatch.home_team}
+                    {isMatchLive
+                      ? <span className="text-white/40 mx-3" style={{ fontSize: 'clamp(20px, 3vw, 38px)' }}>{nextDbMatch.home_score ?? 0}–{nextDbMatch.away_score ?? 0}</span>
+                      : <span className="text-white/25 mx-3" style={{ fontSize: 'clamp(16px, 2vw, 26px)' }}>VS</span>
+                    }
+                    {nextDbMatch.away_team}
+                  </div>
+                  {/* Date/time */}
+                  {!isMatchLive && (
+                    <div className="mt-2 font-sans uppercase tracking-[0.1em] text-white/40 capitalize" style={{ fontSize: '11px' }}>
+                      {weekday} {dateStr} · {timeStr} CEST
+                    </div>
+                  )}
+                  {/* Thin rule */}
+                  <div className="my-4" style={{ width: '80px', height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+                  {/* User's pick — the visual anchor */}
+                  {myPick ? (
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="font-sans text-white/40 uppercase tracking-[0.12em]" style={{ fontSize: '11px' }}>
+                        Du tippade
+                      </span>
+                      <span className="font-display font-black text-swe-yellow leading-none" style={{ fontSize: 'clamp(52px, 7vw, 80px)' }}>
+                        {myPick}
+                      </span>
+                      <span className="font-sans text-white/50 uppercase tracking-wider" style={{ fontSize: '12px' }}>
+                        {pickLabels[myPick]} · håll tummarna
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="font-sans uppercase tracking-[0.12em] text-white/35" style={{ fontSize: '11px' }}>
+                      Logga in för att se ditt tips
+                    </div>
+                  )}
+                </>
+              )
+            })() : (
             <>
               <div
                 className="font-display font-black text-white leading-none"
@@ -209,6 +264,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 {nextMatch.date} · {nextMatch.time} CEST · SVERIGE MOT {nextMatch.opponent.toUpperCase()}
               </div>
             </>
+            )
           ) : (
             <>
               {/* Kicker overline */}
@@ -253,56 +309,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       <main className="mx-auto max-w-5xl px-4 lg:px-8">
         <LiveMatches initialMatches={liveCandidateMatches ?? []} userPicks={userPicks} />
-
-        {/* ── NÄSTA MATCH / LIVE-KORT ── */}
-        {mySubmission && nextDbMatch && (() => {
-          const match = nextDbMatch
-          const myPick = userPicks[match.id] ?? null
-          const isLive = match.status === 'live'
-          const pickLabels: Record<string, string> = { '1': 'hemmaseger', 'X': 'oavgjort', '2': 'bortaseger' }
-          const kickoffDate = new Date(match.kickoff)
-          const weekday = kickoffDate.toLocaleDateString('sv-SE', { weekday: 'long', timeZone: 'Europe/Stockholm' })
-          const dateStr = kickoffDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', timeZone: 'Europe/Stockholm' })
-          const timeStr = kickoffDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })
-          return (
-            <div className="mb-6 border border-white/10">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.06]">
-                {isLive && <span className="h-2 w-2 rounded-full bg-swe-yellow animate-pulse" />}
-                <span className="font-display font-black uppercase text-[10px] tracking-[0.15em] text-white/40">
-                  {isLive ? 'Live just nu' : 'Nästa match'}
-                </span>
-              </div>
-              <div className="px-4 py-4">
-                <div className="font-display font-black uppercase text-white text-xl tracking-wide leading-none">
-                  {match.home_team}
-                  {isLive
-                    ? <span className="mx-3 text-white/50">{match.home_score ?? 0}–{match.away_score ?? 0}</span>
-                    : <span className="mx-3 text-white/20 text-sm">vs</span>
-                  }
-                  {match.away_team}
-                </div>
-                {!isLive && (
-                  <div className="mt-1.5 text-white/35 text-[11px] uppercase tracking-[0.12em] font-sans capitalize">
-                    {weekday} {dateStr} · {timeStr} CEST
-                  </div>
-                )}
-                {myPick ? (
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <div className="border border-swe-yellow/25 bg-swe-yellow/[0.06] px-3 py-1.5 flex items-center gap-2.5">
-                      <span className="font-display font-black text-swe-yellow text-lg leading-none">{myPick}</span>
-                      <span className="text-white/40 text-[12px] font-sans">{pickLabels[myPick]}</span>
-                    </div>
-                    <span className="text-white/30 text-[13px] font-sans">Nu håller vi tummarna!</span>
-                  </div>
-                ) : (
-                  <div className="mt-3 text-white/25 text-[12px] font-sans italic">
-                    Inget tips registrerat för den här matchen.
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })()}
 
         {/* ── STAT STRIP (pre-tournament only) ── */}
         {!isOpen && (
