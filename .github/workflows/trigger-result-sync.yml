@@ -36,3 +36,12 @@ jobs:
           echo "== Leaderboard =="
           curl -sf https://vmtips26.vercel.app/api/dashboard/leaderboard \
             | jq -r '.entries[] | "\(.rank). \(.name): \(.totalPoints)p"'
+
+      - name: Verify stored results for finished matches
+        env:
+          # Public anon key (same one shipped in the client bundle); RLS limits it to public reads
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvenR1eXhjd3VtcXllcWtncXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTYyNzgsImV4cCI6MjA5MzEzMjI3OH0.VsedQPlsiwB3O8SKJlbW5mrAwopGILsFItqi-aXfkZI
+        run: |
+          echo "== vmt_matches rows for matches 1-6 =="
+          curl -sf 'https://poztuyxcwumqyeqkgqym.supabase.co/rest/v1/vmt_matches?match_number=lte.6&select=match_number,home_team,away_team,home_score,away_score,status,manual_override&order=match_number' \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" | jq .
