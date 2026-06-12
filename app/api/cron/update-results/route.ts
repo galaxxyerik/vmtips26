@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: false, skipped: true, reason: 'emergency_mode' }, { status: 503 })
     }
 
-    const result = await updateResults()
+    // ?primary=api-football|scrape overrides RESULT_PRIMARY_SOURCE for one run
+    const result = await updateResults(new Date(), req.nextUrl.searchParams.get('primary'))
     return NextResponse.json(result)
   } catch (err) {
     console.error(`[${new Date().toISOString()}] update-results error:`, err)

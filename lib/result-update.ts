@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
 import { upsertFixtures, type ApiFixture } from '@/lib/match-sync'
 import { recalculateAllScores } from '@/lib/recalculate'
-import { scrapeFinishedFixtures } from '@/lib/result-scrape'
+import { scrapeFinishedFixtures, type ScrapeOutcome } from '@/lib/result-scrape'
 
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
@@ -42,6 +42,7 @@ export interface UpdateResultsSummary {
   ok: boolean
   skipped?: string
   source: 'api-football' | 'scrape' | 'none'
+  scrapeSource?: 'espn' | 'sofascore' | null
   fixturesFetched: number
   matchesUpdated: number
   recalculatedSubmissions: number
@@ -56,15 +57,26 @@ export interface UpdateResultsSummary {
  * 1. Find seeded vmt_matches whose kickoff has passed and that have no
  *    processed marker yet — nothing pending means no API calls at all.
  * 2. Fetch finished fixtures from API-Football; if that fails or returns
- *    nothing, fall back to scraping Sofascore (lib/result-scrape.ts).
+ *    nothing, fall back to the other.
  * 3. Update vmt_matches via the existing upsertFixtures() (only the matches
  *    table is ever written — user picks are never touched).
  * 4. Distribute points via the existing engine recalculateAllScores()
  *    (lib/recalculate.ts) — called as-is, not reimplemented.
  * 5. Mark matches that are now finished with a result as processed, but only
  *    if points were actually recalculated (e.g. not when scoring_frozen).
+ *
+ * Source priority: the scrape chain (ESPN → Sofascore, lib/result-scrape.ts)
+ * is tried FIRST by default — the current API-Football free plan has no access
+ * to season 2026 at all, so leading with it would burn a doomed request every
+ * run. API-Football remains the fallback, and is still the only source that
+ * delivers goal scorers. If the plan is ever upgraded, set the env var
+ * RESULT_PRIMARY_SOURCE=api-football (or call the cron endpoint with
+ * ?primary=api-football) to flip the order back.
  */
-export async function updateResults(now = new Date()): Promise<UpdateResultsSummary> {
+export async function updateResults(
+  now = new Date(),
+  primaryOverride?: string | null
+): Promise<UpdateResultsSummary> {
   const service = createServiceClient()
   const warnings: string[] = []
 
@@ -106,34 +118,50 @@ export async function updateResults(now = new Date()): Promise<UpdateResultsSumm
 
   syncLog(`update-results: ${pending.length} matcher väntar på resultat/poäng`)
 
-  // ── 2. Primary source: API-Football ────────────────────────────────────────
-  let fixtures: ApiFixture[] = []
-  let source: UpdateResultsSummary['source'] = 'api-football'
-  try {
-    const json = await apiFootballFetch<ApiFixtureResponse>(
-      `/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&status=FT-AET-PEN`
-    )
-    fixtures = json?.response ?? []
-    if (fixtures.length === 0) warnings.push('API-Football returnerade 0 färdiga fixtures')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    warnings.push(`API-Football misslyckades: ${message}`)
-    syncLog(`update-results: API-Football misslyckades: ${message}`)
-  }
+  // ── 2. Fetch finished results, in configured priority order ────────────────
+  const primary: 'api-football' | 'scrape' =
+    primaryOverride === 'api-football' || primaryOverride === 'scrape'
+      ? primaryOverride
+      : process.env.RESULT_PRIMARY_SOURCE === 'api-football' ? 'api-football' : 'scrape'
 
-  // ── 2b. Fallback: scrape Sofascore for the pending matchdays ───────────────
-  if (fixtures.length === 0) {
-    source = 'scrape'
-    const dates = [...new Set(pending.map(m => m.kickoff.slice(0, 10)))]
-    try {
-      fixtures = await scrapeFinishedFixtures(dates)
-      syncLog(`update-results: fallback-scrape gav ${fixtures.length} färdiga matcher`)
-      if (fixtures.length === 0) warnings.push('Fallback-scrape returnerade 0 färdiga matcher')
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      warnings.push(`Fallback-scrape misslyckades: ${message}`)
-      syncLog(`update-results: fallback-scrape misslyckades: ${message}`)
-      source = 'none'
+  let fixtures: ApiFixture[] = []
+  let source: UpdateResultsSummary['source'] = 'none'
+  let scrapeSource: ScrapeOutcome['source'] = null
+
+  const attempts: ('api-football' | 'scrape')[] =
+    primary === 'api-football' ? ['api-football', 'scrape'] : ['scrape', 'api-football']
+
+  for (const attempt of attempts) {
+    if (fixtures.length > 0) break
+    if (attempt === 'api-football') {
+      try {
+        const json = await apiFootballFetch<ApiFixtureResponse>(
+          `/fixtures?league=${WC2026_LEAGUE_ID}&season=${WC2026_SEASON}&status=FT-AET-PEN`
+        )
+        fixtures = json?.response ?? []
+        if (fixtures.length > 0) source = 'api-football'
+        else warnings.push('API-Football returnerade 0 färdiga fixtures')
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        warnings.push(`API-Football misslyckades: ${message}`)
+        syncLog(`update-results: API-Football misslyckades: ${message}`)
+      }
+    } else {
+      try {
+        const scraped = await scrapeFinishedFixtures(pending)
+        if (scraped.fixtures.length > 0) {
+          fixtures = scraped.fixtures
+          scrapeSource = scraped.source
+          source = 'scrape'
+        } else {
+          warnings.push('Scrape (ESPN/Sofascore) returnerade 0 färdiga matcher')
+        }
+        syncLog(`update-results: scrape (${scraped.source ?? 'ingen källa'}) gav ${scraped.fixtures.length} färdiga matcher`)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        warnings.push(`Scrape misslyckades: ${message}`)
+        syncLog(`update-results: scrape misslyckades: ${message}`)
+      }
     }
   }
 
@@ -192,7 +220,7 @@ export async function updateResults(now = new Date()): Promise<UpdateResultsSumm
 
   const pendingRemaining = pending.length - newlyProcessed.length
   const summaryMessage =
-    `källa=${source}, ${fixtures.length} fixtures, ${matchesUpdated} matcher uppdaterade, ` +
+    `källa=${source}${scrapeSource ? ` (${scrapeSource})` : ''}, ${fixtures.length} fixtures, ${matchesUpdated} matcher uppdaterade, ` +
     `${recalc.ok ? recalc.updated : 0} tips omräknade, ${newlyProcessed.length} matcher processade, ` +
     `${pendingRemaining} kvar${warnings.length ? ` — ${warnings.join('; ')}` : ''}`
 
@@ -208,6 +236,7 @@ export async function updateResults(now = new Date()): Promise<UpdateResultsSumm
   return {
     ok: true,
     source,
+    scrapeSource,
     fixturesFetched: fixtures.length,
     matchesUpdated,
     recalculatedSubmissions: recalc.ok ? recalc.updated : 0,

@@ -9,6 +9,9 @@
  *     stub access token so /api/me/submission-picks can authenticate
  *   - API-Football    (/apifootball/...) — finished fixtures for two matches;
  *     can be switched to fail mode to exercise the scrape fallback
+ *   - ESPN            (/espn/apis/site/v2/sports/soccer/fifa.world/scoreboard)
+ *     — serves the Mexico match with home/away SWAPPED to prove the scraper
+ *     re-orients results to our own row
  *   - Sofascore       (/sofascore/api/v1/sport/football/scheduled-events/:date)
  *
  * Every write is recorded in an oplog so the verify driver can prove no user
@@ -20,7 +23,8 @@
  *   NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
  *   SUPABASE_SERVICE_ROLE_KEY=stub-service  NEXT_PUBLIC_SUPABASE_ANON_KEY=stub-anon
  *   API_FOOTBALL_BASE_URL=http://localhost:54321/apifootball
- *   RESULT_SCRAPE_BASE_URL=http://localhost:54321/sofascore
+ *   ESPN_SCRAPE_BASE_URL=http://localhost:54321/espn
+ *   SOFASCORE_SCRAPE_BASE_URL=http://localhost:54321/sofascore
  */
 import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
@@ -51,6 +55,8 @@ function kickoffFor(m) {
 let db = {}
 let oplog = []
 let apiFootballMode = 'ok'
+let espnMode = 'ok'
+let sofaMode = 'ok'
 
 function seed() {
   db = {
@@ -123,6 +129,47 @@ const API_FOOTBALL_FINISHED = [
     ],
   },
 ]
+
+// Same two results as ESPN would serve them. The Mexico game is deliberately
+// listed with home/away SWAPPED (South Africa as "home") — the scraper must
+// re-orient it to our seeded row (Mexiko home) and still produce result '1'.
+const ESPN_EVENTS_BY_DATE = {
+  '20260611': {
+    events: [
+      {
+        id: '8001', date: KICKOFFS[1],
+        status: { type: { completed: true, state: 'post' } },
+        competitions: [{
+          competitors: [
+            { homeAway: 'home', winner: false, score: '1', team: { displayName: 'South Africa' } },
+            { homeAway: 'away', winner: true, score: '2', team: { displayName: 'Mexico' } },
+          ],
+        }],
+      },
+      {
+        id: '8002', date: KICKOFFS[2],
+        status: { type: { completed: true, state: 'post' } },
+        competitions: [{
+          competitors: [
+            { homeAway: 'home', winner: false, score: '1', team: { displayName: 'South Korea' } },
+            { homeAway: 'away', winner: false, score: '1', team: { displayName: 'Czechia' } },
+          ],
+        }],
+      },
+      // Unfinished game the same day — must be ignored
+      {
+        id: '8003', date: '2026-06-11T22:00:00.000Z',
+        status: { type: { completed: false, state: 'in' } },
+        competitions: [{
+          competitors: [
+            { homeAway: 'home', score: '0', team: { displayName: 'Canada' } },
+            { homeAway: 'away', score: '0', team: { displayName: 'Bosnia and Herzegovina' } },
+          ],
+        }],
+      },
+    ],
+  },
+}
 
 // Same two results as Sofascore would serve them (English/Sofascore team names,
 // incl. names that differ from API-Football: South Korea, Czech Republic).
@@ -274,10 +321,12 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req)
       seed()
       apiFootballMode = body?.apiFootballMode ?? 'ok'
-      return json(res, 200, { ok: true, apiFootballMode })
+      espnMode = body?.espnMode ?? 'ok'
+      sofaMode = body?.sofaMode ?? 'ok'
+      return json(res, 200, { ok: true, apiFootballMode, espnMode, sofaMode })
     }
     if (url.pathname === '/control/state') {
-      return json(res, 200, { db, oplog, apiFootballMode })
+      return json(res, 200, { db, oplog, apiFootballMode, espnMode, sofaMode })
     }
 
     // ── API-Football stub ─────────────────────────────────────────────────────
@@ -294,9 +343,16 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { errors: [], response: [] })
     }
 
+    // ── ESPN stub ─────────────────────────────────────────────────────────────
+    if (url.pathname === '/espn/apis/site/v2/sports/soccer/fifa.world/scoreboard') {
+      if (espnMode === 'fail') return json(res, 403, { error: 'stub: ESPN blocked' })
+      return json(res, 200, ESPN_EVENTS_BY_DATE[params.get('dates')] ?? { events: [] })
+    }
+
     // ── Sofascore stub ────────────────────────────────────────────────────────
     const sofaMatch = url.pathname.match(/^\/sofascore\/api\/v1\/sport\/football\/scheduled-events\/(\d{4}-\d{2}-\d{2})$/)
     if (sofaMatch) {
+      if (sofaMode === 'fail') return json(res, 403, { error: 'stub: Sofascore blocked' })
       return json(res, 200, SOFASCORE_EVENTS_BY_DATE[sofaMatch[1]] ?? { events: [] })
     }
 

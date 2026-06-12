@@ -73,9 +73,15 @@ Zero border-radius everywhere. No emojis in UI. Swedish copy throughout.
 New `/api/cron/update-results` (branch `claude/wc26-auto-result-fetch-gu2g1f`): fetches
 finished WC results and distributes points automatically.
 
-- `lib/result-update.ts`: pending = kicked-off matches without a processed marker; fetches
-  API-Football `status=FT-AET-PEN`; on failure/empty falls back to **Sofascore public JSON
-  API** (`lib/result-scrape.ts` — livescore.com rejected, it's a JS-only SPA). Both paths
+- `lib/result-update.ts`: pending = kicked-off matches without a processed marker. Source
+  priority (confirmed in prod June 12): **ESPN public scoreboard JSON first** (works from
+  Vercel datacenter IPs, no key), then Sofascore (403s Vercel IPs), then API-Football
+  (the free plan has NO season 2026 — "Free plans do not have access to this season" — so
+  it's last; it's still the only source with goal scorers). Flip order with env
+  `RESULT_PRIMARY_SOURCE=api-football` or one-off `?primary=api-football` if the plan is
+  upgraded. Scraped results are anchored to OUR vmt_matches rows (Swedish team pair, or
+  phase+kickoff for placeholder KO rows) and re-oriented if a source lists home/away
+  swapped (`lib/result-scrape.ts`; livescore.com rejected, it's a JS-only SPA). All paths
   write via the existing `upsertFixtures` matcher, then call `recalculateAllScores` (the ONE
   engine, untouched). Processed markers = `vmt_sync_log` rows `points_processed_match_<id>`
   (no DDL needed on live DB; scoring is idempotent full-recalc so markers are bookkeeping).
@@ -88,10 +94,12 @@ finished WC results and distributes points automatically.
   (`correct`/`wrong`/`pending`/null, honors `manual_override`) per group match;
   `MyTipDetails` renders ✓ (pitch-400) / ✗ (loss-500) / – per row.
 - Small safe fixes: `upsertFixtures` no longer nulls `venue` when source has none;
-  `API_FOOTBALL_BASE_URL`/`RESULT_SCRAPE_BASE_URL` env overrides for local testing.
+  `API_FOOTBALL_BASE_URL`/`ESPN_SCRAPE_BASE_URL`/`SOFASCORE_SCRAPE_BASE_URL` env overrides
+  for local testing.
 - Verified via local stub harness (`scripts/stub-services.mjs` emulates PostgREST/Auth/
-  API-Football/Sofascore; `scripts/verify-update-results.mjs` runs 49 assertions: both
-  sources, idempotency, 401 without secret, zero writes outside
+  API-Football/ESPN/Sofascore; `scripts/verify-update-results.mjs` runs ~80 assertions:
+  every source order incl. all-sources-down, swapped home/away re-orientation, idempotency,
+  401 without secret, zero writes outside
   vmt_matches/vmt_submissions.total_points/vmt_sync_log, pick tables byte-identical).
   Live DB/production unreachable from the web sandbox — re-verify in prod after merge by
   curling the endpoint with CRON_SECRET and checking `vmt_sync_log`.
