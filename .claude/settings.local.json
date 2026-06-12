@@ -12,7 +12,8 @@
       "Bash(git commit *)",
       "PowerShell(ls \"C:\\\\Users\\\\Erik\\\\Desktop\\\\vmtips26\\\\app\" -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object FullName)",
       "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__execute_sql",
-      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__get_logs"
+      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__get_logs",
+      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__list_tables"
     ]
   }
 }
