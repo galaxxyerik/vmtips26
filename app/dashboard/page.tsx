@@ -146,6 +146,25 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     : { data: [] }
   const userPicks = Object.fromEntries((myGroupPicks ?? []).map(row => [row.match_id, row.pick]))
 
+  // Next match card — live first, then next scheduled
+  let nextDbMatch: { id: number; home_team: string; away_team: string; kickoff: string; status: string; home_score: number | null; away_score: number | null } | null = null
+  if (mySubmission) {
+    const currentLive = (liveCandidateMatches ?? []).find(m => m.status === 'live') ?? null
+    if (currentLive) {
+      nextDbMatch = currentLive
+    } else {
+      const { data } = await service
+        .from('vmt_matches')
+        .select('id, home_team, away_team, kickoff, status, home_score, away_score')
+        .eq('status', 'scheduled')
+        .gt('kickoff', now.toISOString())
+        .order('kickoff', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      nextDbMatch = data
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-navy-950">
@@ -234,6 +253,56 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       <main className="mx-auto max-w-5xl px-4 lg:px-8">
         <LiveMatches initialMatches={liveCandidateMatches ?? []} userPicks={userPicks} />
+
+        {/* ── NÄSTA MATCH / LIVE-KORT ── */}
+        {mySubmission && nextDbMatch && (() => {
+          const match = nextDbMatch
+          const myPick = userPicks[match.id] ?? null
+          const isLive = match.status === 'live'
+          const pickLabels: Record<string, string> = { '1': 'hemmaseger', 'X': 'oavgjort', '2': 'bortaseger' }
+          const kickoffDate = new Date(match.kickoff)
+          const weekday = kickoffDate.toLocaleDateString('sv-SE', { weekday: 'long', timeZone: 'Europe/Stockholm' })
+          const dateStr = kickoffDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', timeZone: 'Europe/Stockholm' })
+          const timeStr = kickoffDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })
+          return (
+            <div className="mb-6 border border-white/10">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.06]">
+                {isLive && <span className="h-2 w-2 rounded-full bg-swe-yellow animate-pulse" />}
+                <span className="font-display font-black uppercase text-[10px] tracking-[0.15em] text-white/40">
+                  {isLive ? 'Live just nu' : 'Nästa match'}
+                </span>
+              </div>
+              <div className="px-4 py-4">
+                <div className="font-display font-black uppercase text-white text-xl tracking-wide leading-none">
+                  {match.home_team}
+                  {isLive
+                    ? <span className="mx-3 text-white/50">{match.home_score ?? 0}–{match.away_score ?? 0}</span>
+                    : <span className="mx-3 text-white/20 text-sm">vs</span>
+                  }
+                  {match.away_team}
+                </div>
+                {!isLive && (
+                  <div className="mt-1.5 text-white/35 text-[11px] uppercase tracking-[0.12em] font-sans capitalize">
+                    {weekday} {dateStr} · {timeStr} CEST
+                  </div>
+                )}
+                {myPick ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="border border-swe-yellow/25 bg-swe-yellow/[0.06] px-3 py-1.5 flex items-center gap-2.5">
+                      <span className="font-display font-black text-swe-yellow text-lg leading-none">{myPick}</span>
+                      <span className="text-white/40 text-[12px] font-sans">{pickLabels[myPick]}</span>
+                    </div>
+                    <span className="text-white/30 text-[13px] font-sans">Nu håller vi tummarna!</span>
+                  </div>
+                ) : (
+                  <div className="mt-3 text-white/25 text-[12px] font-sans italic">
+                    Inget tips registrerat för den här matchen.
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── STAT STRIP (pre-tournament only) ── */}
         {!isOpen && (
