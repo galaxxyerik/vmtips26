@@ -7,6 +7,9 @@ name: Trigger result sync
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/canada-bosnia-score-update-xdid6c
 
 jobs:
   sync:
