@@ -87,8 +87,8 @@ export default function NavBar({ userName }: NavBarProps) {
           {navLink('/regler', 'Regler')}
           {isAdmin && navLink('/admin', 'Admin')}
           {!resolvedUserName && (
-            <Link href="/" className="ml-2 shrink-0 btn-primary h-8 px-4 text-xs whitespace-nowrap">
-              Tippa nu →
+            <Link href="/login" className="ml-2 shrink-0 btn-primary h-8 px-4 text-xs whitespace-nowrap">
+              Logga in →
             </Link>
           )}
 
