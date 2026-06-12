@@ -1,0 +1,35 @@
+name: Trigger result sync
+
+# Manual trigger for the traffic-driven live result sync. The public
+# /api/matches/live endpoint kicks off syncLiveMatchdayMatches (ESPN fetch +
+# full point recalculation) via after() when a matchday is in progress.
+# Useful when no one is browsing the dashboard right after a final whistle.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger live sync (state before)
+        run: |
+          echo "== Live/scheduled matches before sync =="
+          curl -sf https://vmtips26.vercel.app/api/matches/live \
+            | jq '{cachedAt, matches: [.matches[] | {match: .fixtureId, home: .homeTeam, away: .awayTeam, score: "\(.homeScore)-\(.awayScore)", status}]}'
+
+      - name: Wait for background sync to complete
+        run: sleep 90
+
+      - name: State after sync
+        run: |
+          echo "== Live/scheduled matches after sync (finished matches drop out) =="
+          curl -sf https://vmtips26.vercel.app/api/matches/live \
+            | jq '{cachedAt, matches: [.matches[] | {match: .fixtureId, home: .homeTeam, away: .awayTeam, score: "\(.homeScore)-\(.awayScore)", status}]}'
+
+      - name: Show leaderboard totals
+        run: |
+          echo "== Leaderboard =="
+          curl -sf https://vmtips26.vercel.app/api/dashboard/leaderboard \
+            | jq -r '.entries[] | "\(.rank). \(.name): \(.totalPoints)p"'
