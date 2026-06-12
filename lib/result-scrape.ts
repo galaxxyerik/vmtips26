@@ -76,6 +76,8 @@ interface RawResult {
 export interface ScrapeOutcome {
   fixtures: ApiFixture[]
   source: 'espn' | 'sofascore' | null
+  // Per-source/date diagnostics, surfaced in the cron response for remote debugging
+  log: string[]
 }
 
 function svName(name: string) {
@@ -266,26 +268,53 @@ const SOURCES: { name: 'espn' | 'sofascore'; fetchDay: (date: string) => Promise
 ]
 
 /**
+ * Each kickoff date is queried together with the day before and after: ESPN
+ * buckets its scoreboard by US Eastern time (a 02:00 UTC game lives on the
+ * previous ESPN date) and late kickoffs can drift a UTC day in either source.
+ */
+function widenDates(dates: string[]): string[] {
+  const out = new Set<string>()
+  for (const date of dates) {
+    const noon = Date.parse(`${date}T12:00:00Z`)
+    for (const delta of [-1, 0, 1]) {
+      out.add(new Date(noon + delta * 86_400_000).toISOString().slice(0, 10))
+    }
+  }
+  return [...out].sort().slice(0, 12) // hard cap on requests per source
+}
+
+/**
  * Scrape finished results for the pending matches. Tries each source in order
  * and returns as soon as one produces at least one fixture that maps onto a
  * pending row; partial data is fine — the rest is retried on the next run.
  * Throws only if every source failed on every date.
  */
 export async function scrapeFinishedFixtures(pending: PendingMatchForScrape[]): Promise<ScrapeOutcome> {
-  const dates = [...new Set(pending.map(m => m.kickoff.slice(0, 10)))]
+  const dates = widenDates([...new Set(pending.map(m => m.kickoff.slice(0, 10)))])
+  const log: string[] = []
   let lastError: unknown = null
   let anySourceResponded = false
 
   for (const source of SOURCES) {
     const raws: RawResult[] = []
+    const seen = new Set<string>()
     let sourceResponded = false
     for (const date of dates) {
       try {
-        raws.push(...await source.fetchDay(date))
+        const dayResults = await source.fetchDay(date)
         sourceResponded = true
+        log.push(`${source.name} ${date}: ${dayResults.length} färdiga`)
+        for (const raw of dayResults) {
+          const key = raw.sourceId || `${raw.home}|${raw.away}|${raw.kickoffIso}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          raws.push(raw)
+        }
       } catch (err) {
         lastError = err
-        syncLog(`Scrape (${source.name}) misslyckades för ${date}: ${err instanceof Error ? err.message : String(err)}`)
+        const message = err instanceof Error ? err.message : String(err)
+        log.push(`${source.name} ${date}: FEL ${message}`)
+        syncLog(`Scrape (${source.name}) misslyckades för ${date}: ${message}`)
       }
     }
     anySourceResponded ||= sourceResponded
@@ -293,18 +322,24 @@ export async function scrapeFinishedFixtures(pending: PendingMatchForScrape[]): 
     const fixtures: ApiFixture[] = []
     for (const raw of raws) {
       const row = matchPendingRow(raw, pending)
-      if (!row) continue // not one of our pending matches (other game or unknown name)
+      if (!row) {
+        // Other game, already-processed match, or a team name we don't know —
+        // logged so name/date mismatches are visible in the cron response
+        log.push(`${source.name} omatchad: ${raw.home}–${raw.away} ${raw.homeScore}–${raw.awayScore} (${raw.kickoffIso})`)
+        continue
+      }
       const fixture = toApiFixture(raw, row)
       if (fixture) {
         fixtures.push(fixture)
       } else {
+        log.push(`${source.name} ofullständig: ${raw.home}–${raw.away} (${raw.kickoffIso})`)
         syncLog(`Scrape (${source.name}): ofullständigt resultat för ${raw.home} – ${raw.away} — hoppar över`)
       }
     }
 
     if (fixtures.length > 0) {
       syncLog(`Scrape (${source.name}): ${fixtures.length} färdiga matcher mappade`)
-      return { fixtures, source: source.name }
+      return { fixtures, source: source.name, log }
     }
     syncLog(`Scrape (${source.name}): inga matchande resultat — provar nästa källa`)
   }
@@ -312,5 +347,5 @@ export async function scrapeFinishedFixtures(pending: PendingMatchForScrape[]): 
   if (!anySourceResponded && dates.length > 0) {
     throw lastError instanceof Error ? lastError : new Error('Scrape misslyckades för alla källor och datum')
   }
-  return { fixtures: [], source: null }
+  return { fixtures: [], source: null, log }
 }

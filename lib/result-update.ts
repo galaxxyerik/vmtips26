@@ -43,6 +43,7 @@ export interface UpdateResultsSummary {
   skipped?: string
   source: 'api-football' | 'scrape' | 'none'
   scrapeSource?: 'espn' | 'sofascore' | null
+  scrapeLog?: string[]
   fixturesFetched: number
   matchesUpdated: number
   recalculatedSubmissions: number
@@ -127,6 +128,7 @@ export async function updateResults(
   let fixtures: ApiFixture[] = []
   let source: UpdateResultsSummary['source'] = 'none'
   let scrapeSource: ScrapeOutcome['source'] = null
+  let scrapeLog: string[] = []
 
   const attempts: ('api-football' | 'scrape')[] =
     primary === 'api-football' ? ['api-football', 'scrape'] : ['scrape', 'api-football']
@@ -149,6 +151,7 @@ export async function updateResults(
     } else {
       try {
         const scraped = await scrapeFinishedFixtures(pending)
+        scrapeLog = scraped.log
         if (scraped.fixtures.length > 0) {
           fixtures = scraped.fixtures
           scrapeSource = scraped.source
@@ -237,6 +240,7 @@ export async function updateResults(
     ok: true,
     source,
     scrapeSource,
+    scrapeLog,
     fixturesFetched: fixtures.length,
     matchesUpdated,
     recalculatedSubmissions: recalc.ok ? recalc.updated : 0,

@@ -156,6 +156,17 @@ check('second run changed nothing', JSON.stringify(after1.db) === JSON.stringify
 console.log('── Scenario 3: Mitt tips indicators (server-side) ──')
 await checkMittTips()
 
+console.log('── Scenario 3b: ESPN buckets by US-Eastern date → ±1-day window finds it ──')
+await reset({ espnMode: 'shifted' })
+const runShift = await triggerCron()
+check('shifted-date run returns 200', runShift.status === 200, JSON.stringify(runShift.body))
+check("shifted dates still found via 'espn'", runShift.body.source === 'scrape' && runShift.body.scrapeSource === 'espn',
+  JSON.stringify({ source: runShift.body.source, scrapeSource: runShift.body.scrapeSource, log: runShift.body.scrapeLog }))
+check('shifted: both matches processed', runShift.body.newlyProcessed?.length === 2, JSON.stringify(runShift.body.newlyProcessed))
+check('scrapeLog included in response', Array.isArray(runShift.body.scrapeLog) && runShift.body.scrapeLog.length > 0,
+  JSON.stringify(runShift.body.scrapeLog))
+assertResultState(await getState(), 'espn-shifted')
+
 console.log('── Scenario 4: ESPN down → Sofascore fallback ──')
 await reset({ espnMode: 'fail' })
 const run3 = await triggerCron()

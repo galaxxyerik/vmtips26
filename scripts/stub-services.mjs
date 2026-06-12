@@ -346,7 +346,10 @@ const server = createServer(async (req, res) => {
     // ── ESPN stub ─────────────────────────────────────────────────────────────
     if (url.pathname === '/espn/apis/site/v2/sports/soccer/fifa.world/scoreboard') {
       if (espnMode === 'fail') return json(res, 403, { error: 'stub: ESPN blocked' })
-      return json(res, 200, ESPN_EVENTS_BY_DATE[params.get('dates')] ?? { events: [] })
+      // 'shifted' simulates ESPN's US-Eastern date bucketing: the June 11
+      // games are only served when asked for dates=20260612
+      const key = espnMode === 'shifted' ? String(Number(params.get('dates')) - 1) : params.get('dates')
+      return json(res, 200, ESPN_EVENTS_BY_DATE[key] ?? { events: [] })
     }
 
     // ── Sofascore stub ────────────────────────────────────────────────────────
