@@ -32,7 +32,8 @@
       "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__list_projects",
       "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__execute_sql",
       "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__get_logs",
-      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__list_tables"
+      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__list_tables",
+      "mcp__88fe7b04-292f-44d8-b5f1-37010b4ee589__get_publishable_keys"
     ]
   }
 }
