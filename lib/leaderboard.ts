@@ -155,6 +155,20 @@ function previewLeaderboard(currentUserId: string | null, now: Date): DashboardL
   }
 }
 
+// A "matchday" ends at 06:00 UTC the next morning — World Cup evening games in
+// the Americas kick off after midnight UTC and must count toward the day the
+// matchday started, not the calendar day they happen to land on.
+const MATCHDAY_SHIFT_MS = 6 * 60 * 60 * 1000
+
+function matchdayKey(kickoff: string) {
+  return new Date(new Date(kickoff).getTime() - MATCHDAY_SHIFT_MS).toISOString().slice(0, 10)
+}
+
+function matchdayLabel(dayKey: string) {
+  const [, month, day] = dayKey.split('-')
+  return `${Number(day)}/${Number(month)}`
+}
+
 function buildGraph(
   submissions: SubmissionRow[],
   matches: MatchRow[],
@@ -162,13 +176,13 @@ function buildGraph(
 ): LeaderboardGraphPoint[] {
   const finishedMatches = matches
     .filter(match => match.phase === 'group' && match.status === 'finished' && match.result)
-    .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime())
 
   if (finishedMatches.length === 0) {
     return makeFlatGraph(submissions.map(submission => ({ id: submission.id })))
   }
 
   const matchById = new Map(finishedMatches.map(match => [match.id, match]))
+  const dayByMatch = new Map(finishedMatches.map(match => [match.id, matchdayKey(match.kickoff)]))
   const picksBySubmission = new Map<string, GroupPickRow[]>()
   for (const pick of groupPicks) {
     const bucket = picksBySubmission.get(pick.submission_id) ?? []
@@ -176,24 +190,28 @@ function buildGraph(
     picksBySubmission.set(pick.submission_id, bucket)
   }
 
-  const dayKeys = Array.from(new Set(finishedMatches.map(match => match.kickoff.slice(0, 10))))
+  const dayKeys = [...new Set(finishedMatches.map(match => matchdayKey(match.kickoff)))].sort()
 
-  return dayKeys.map((dayKey, index) => {
-    const until = new Date(`${dayKey}T23:59:59.999Z`).getTime()
+  // Zero point so every line visibly grows from tournament start
+  const start: LeaderboardGraphPoint = {
+    label: 'Start',
+    values: Object.fromEntries(submissions.map(submission => [submission.id, 0])),
+  }
 
-    return {
-      label: `Dag ${index + 1}`,
-      values: Object.fromEntries(submissions.map(submission => {
-        const score = (picksBySubmission.get(submission.id) ?? []).reduce((total, pick) => {
-          const match = matchById.get(pick.match_id)
-          if (!match || new Date(match.kickoff).getTime() > until) return total
-          return match.result === pick.pick ? total + 1 : total
-        }, 0)
+  const days = dayKeys.map(dayKey => ({
+    label: matchdayLabel(dayKey),
+    values: Object.fromEntries(submissions.map(submission => {
+      const score = (picksBySubmission.get(submission.id) ?? []).reduce((total, pick) => {
+        const matchDay = dayByMatch.get(pick.match_id)
+        if (!matchDay || matchDay > dayKey) return total
+        return matchById.get(pick.match_id)!.result === pick.pick ? total + 1 : total
+      }, 0)
 
-        return [submission.id, score]
-      })),
-    }
-  })
+      return [submission.id, score]
+    })),
+  }))
+
+  return [start, ...days]
 }
 
 export async function getDashboardLeaderboard(
@@ -270,6 +288,6 @@ export async function getDashboardLeaderboard(
     maxPoints: LEADERBOARD_MAX_POINTS,
     entries,
     graph,
-    graphPlaceholder: !isOpen || graph.length === 1,
+    graphPlaceholder: !isOpen || graph.length <= 1,
   }
 }

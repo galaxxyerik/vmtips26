@@ -168,14 +168,24 @@ function CustomTooltip({ active, payload, label }: any) {
 function PointsGraph({ data }: { data: DashboardLeaderboardData }) {
   const chartRef = useRef<HTMLDivElement | null>(null)
   const [chartSize, setChartSize] = useState({ width: 0, height: 0 })
+
+  // 40+ overlapping lines are unreadable on a phone — show the top 5 plus the
+  // logged-in user, with the rest covered by the table above.
+  const visibleEntries = useMemo(() => {
+    const top = data.entries.slice(0, 5)
+    const me = data.entries.find(entry => entry.isCurrentUser)
+    return me && !top.some(entry => entry.id === me.id) ? [...top, me] : top
+  }, [data.entries])
+
+  const colorFor = (entry: LeaderboardEntry, index: number) =>
+    entry.isCurrentUser ? '#FFC000' : LINE_COLORS[(index % (LINE_COLORS.length - 1)) + 1]
+
   const chartData = useMemo<ChartPoint[]>(() => {
     return data.graph.map(point => ({
       label: point.label,
-      ...Object.fromEntries(data.entries.map(entry => [entry.id, point.values[entry.id] ?? 0])),
+      ...Object.fromEntries(visibleEntries.map(entry => [entry.id, point.values[entry.id] ?? 0])),
     }))
-  }, [data.entries, data.graph])
-
-  const currentEntry = data.entries.find(entry => entry.isCurrentUser)
+  }, [visibleEntries, data.graph])
 
   useEffect(() => {
     const node = chartRef.current
@@ -199,6 +209,10 @@ function PointsGraph({ data }: { data: DashboardLeaderboardData }) {
   return (
     <div>
       <SectionHeader>Poängutveckling</SectionHeader>
+      <p className="-mt-2 mb-4 font-sans text-[11px] leading-relaxed text-white/35">
+        Rätt 1X2-tips per matchdag, 1p styck. Visar topp 5 och dig — tabell- och
+        skyttepoäng tillkommer när grupperna är färdigspelade.
+      </p>
       <div ref={chartRef} className="relative h-[200px] min-w-0 sm:h-[260px]">
         {data.graphPlaceholder && (
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-center font-sans text-sm text-white/40">
@@ -210,7 +224,7 @@ function PointsGraph({ data }: { data: DashboardLeaderboardData }) {
             width={chartSize.width}
             height={chartSize.height}
             data={chartData}
-            margin={{ top: 16, right: 12, bottom: 8, left: 0 }}
+            margin={{ top: 12, right: 12, bottom: 8, left: 0 }}
           >
             <XAxis
               dataKey="label"
@@ -219,15 +233,21 @@ function PointsGraph({ data }: { data: DashboardLeaderboardData }) {
               tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }}
               interval="preserveStartEnd"
             />
-            <YAxis hide />
+            <YAxis
+              width={26}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }}
+              allowDecimals={false}
+            />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,192,0,0.24)' }} />
-            {data.entries.map((entry, index) => (
+            {visibleEntries.map((entry, index) => (
               <Line
                 key={entry.id}
                 type="monotone"
                 dataKey={entry.id}
                 name={entry.name}
-                stroke={LINE_COLORS[index % LINE_COLORS.length]}
+                stroke={colorFor(entry, index)}
                 strokeWidth={entry.isCurrentUser ? 2.5 : 1.5}
                 dot={false}
                 activeDot={{ r: entry.isCurrentUser ? 4 : 3 }}
@@ -236,12 +256,21 @@ function PointsGraph({ data }: { data: DashboardLeaderboardData }) {
             ))}
           </LineChart>
         )}
-        {currentEntry && !data.graphPlaceholder && (
-          <div className="absolute right-0 top-3 font-display text-xs font-black uppercase tracking-wide text-swe-yellow">
-            {currentEntry.name}
-          </div>
-        )}
       </div>
+      {!data.graphPlaceholder && (
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+          {visibleEntries.map((entry, index) => (
+            <span
+              key={entry.id}
+              className="flex items-center gap-1.5 font-display text-[10px] font-black uppercase tracking-wide text-white/60"
+            >
+              <span className="h-2 w-2 shrink-0" style={{ backgroundColor: colorFor(entry, index) }} />
+              {entry.name}
+              {entry.isCurrentUser && <span className="text-swe-yellow">· Du</span>}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
