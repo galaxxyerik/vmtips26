@@ -33,7 +33,7 @@ export async function GET() {
     service.from('vmt_group_scorer_picks').select('group_label, player_name').eq('submission_id', submission.id),
     service.from('vmt_bracket_picks').select('match_number, pick_team, round').eq('submission_id', submission.id).order('match_number'),
     service.from('vmt_tournament_scorer_pick').select('player_name').eq('submission_id', submission.id).maybeSingle(),
-    service.from('vmt_matches').select('id, group_label, home_team, away_team').eq('phase', 'group').order('id'),
+    service.from('vmt_matches').select('id, group_label, home_team, away_team, result, manual_result, manual_override, status').eq('phase', 'group').order('id'),
   ])
 
   const matchPicks = Object.fromEntries((groupPicks ?? []).map(row => [row.match_id, row.pick]))
@@ -64,12 +64,21 @@ export async function GET() {
     {
       matches: (matches ?? [])
         .filter(match => match.group_label === group)
-        .map(match => ({
-          id: match.id,
-          home_team: match.home_team,
-          away_team: match.away_team,
-          pick: matchPicks[match.id] ?? null,
-        })),
+        .map(match => {
+          const pick = matchPicks[match.id] ?? null
+          // Correctness is decided here on the server from DB state — admin
+          // overrides (manual_result) win over the synced result.
+          const result = match.manual_override ? match.manual_result : match.result
+          const finished = match.status === 'finished' && !!result
+          const outcome = !pick ? null : finished ? (pick === result ? 'correct' : 'wrong') : 'pending'
+          return {
+            id: match.id,
+            home_team: match.home_team,
+            away_team: match.away_team,
+            pick,
+            outcome,
+          }
+        }),
       tableOrder: groupTableOrder[group] ?? [],
       thirdPlaceSelected: (thirdPlace ?? []).find(row => row.group_label === group)?.selected ?? false,
       groupScorer: (groupScorers ?? []).find(row => row.group_label === group)?.player_name ?? null,

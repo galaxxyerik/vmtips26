@@ -116,7 +116,7 @@ export default function MyTipDetails() {
                 {group.matches.map(match => (
                   <div key={match.id} className="grid grid-cols-[1fr_auto_1fr] items-center px-3 py-2 gap-2">
                     <span className={`text-sm font-medium ${match.pick === '1' ? 'text-swe-yellow' : 'text-white/70'}`}>{match.home_team}</span>
-                    <div className="flex gap-1 justify-center px-2">
+                    <div className="flex gap-1 items-center justify-center px-2">
                       {(['1', 'X', '2'] as const).map(value => (
                         <span
                           key={value}
@@ -127,6 +127,14 @@ export default function MyTipDetails() {
                           {value}
                         </span>
                       ))}
+                      <span
+                        className={`w-4 text-center text-xs font-display font-black ${
+                          match.outcome === 'correct' ? 'text-pitch-400' : match.outcome === 'wrong' ? 'text-loss-500' : 'text-white/20'
+                        }`}
+                        title={match.outcome === 'correct' ? 'Rätt' : match.outcome === 'wrong' ? 'Fel' : match.outcome === 'pending' ? 'Ej avgjord' : undefined}
+                      >
+                        {match.outcome === 'correct' ? '✓' : match.outcome === 'wrong' ? '✗' : match.outcome === 'pending' ? '–' : ''}
+                      </span>
                     </div>
                     <span className={`text-sm font-medium text-right ${match.pick === '2' ? 'text-swe-yellow' : 'text-white/70'}`}>{match.away_team}</span>
                   </div>

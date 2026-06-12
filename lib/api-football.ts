@@ -1,4 +1,5 @@
-const API_BASE = 'https://v3.football.api-sports.io'
+// Overridable so local verification can point at a stub server
+const API_BASE = process.env.API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io'
 
 let lastRequestAt = 0
 

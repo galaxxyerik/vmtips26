@@ -7,7 +7,7 @@ import { recalculateAllScores } from '@/lib/recalculate'
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
 
-interface ApiFixture {
+export interface ApiFixture {
   fixture: {
     id: number
     date: string
@@ -153,7 +153,7 @@ function findExistingMatch(f: ApiFixture, phase: string, existing: ExistingMatch
   return byTeams.length === 1 ? byTeams[0] : null
 }
 
-async function upsertFixtures(
+export async function upsertFixtures(
   fixtures: ApiFixture[],
   options: { includeScorers: boolean; fetchLiveScorers?: boolean }
 ) {
@@ -194,12 +194,14 @@ async function upsertFixtures(
 
     const update: Record<string, unknown> = {
       kickoff: f.fixture.date,
-      venue: venueName(f),
       home_score: homeScore,
       away_score: awayScore,
       result,
       status,
     }
+    // Scraped fallback fixtures carry no venue — never null out an existing one
+    const venue = venueName(f)
+    if (venue) update.venue = venue
     if (shouldFetchScorers) {
       update.home_goal_scorers = scorers.home
       update.away_goal_scorers = scorers.away

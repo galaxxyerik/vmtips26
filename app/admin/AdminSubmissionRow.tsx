@@ -11,6 +11,8 @@ interface GroupMatch {
   home_team: string
   away_team: string
   pick: string | null
+  // Server-computed in /api/me/submission-picks; absent in the admin payload
+  outcome?: 'correct' | 'wrong' | 'pending' | null
 }
 
 export interface GroupData {

@@ -68,7 +68,35 @@ Zero border-radius everywhere. No emojis in UI. Swedish copy throughout.
 - Added **1 = hemmaseger · X = oavgjort · 2 = bortaseger** hint above match rows
 - Added **"Turneringsformat"** section on rules page for football beginners
 
-## Latest status — Full QA audit + scoring fixes (June 10, 2026)
+## Latest status — Automatic result fetching cron (June 12, 2026)
+
+New `/api/cron/update-results` (branch `claude/wc26-auto-result-fetch-gu2g1f`): fetches
+finished WC results and distributes points automatically.
+
+- `lib/result-update.ts`: pending = kicked-off matches without a processed marker; fetches
+  API-Football `status=FT-AET-PEN`; on failure/empty falls back to **Sofascore public JSON
+  API** (`lib/result-scrape.ts` — livescore.com rejected, it's a JS-only SPA). Both paths
+  write via the existing `upsertFixtures` matcher, then call `recalculateAllScores` (the ONE
+  engine, untouched). Processed markers = `vmt_sync_log` rows `points_processed_match_<id>`
+  (no DDL needed on live DB; scoring is idempotent full-recalc so markers are bookkeeping).
+  Summary row `sync_key='update_results'` for observability.
+- `vercel.json`: update-results scheduled `0 6 * * *` (after the last ~05:30 UTC matches).
+  It REPLACED the obsolete payment-reminders cron (fired June 10, Hobby plan = max 2 daily
+  crons). Intra-day points still flow via the traffic-triggered live sync; the endpoint also
+  accepts external triggers with `Bearer CRON_SECRET` (e.g. cron-job.org) for sub-daily runs.
+- **Mitt tips**: `/api/me/submission-picks` now returns server-computed `outcome`
+  (`correct`/`wrong`/`pending`/null, honors `manual_override`) per group match;
+  `MyTipDetails` renders ✓ (pitch-400) / ✗ (loss-500) / – per row.
+- Small safe fixes: `upsertFixtures` no longer nulls `venue` when source has none;
+  `API_FOOTBALL_BASE_URL`/`RESULT_SCRAPE_BASE_URL` env overrides for local testing.
+- Verified via local stub harness (`scripts/stub-services.mjs` emulates PostgREST/Auth/
+  API-Football/Sofascore; `scripts/verify-update-results.mjs` runs 49 assertions: both
+  sources, idempotency, 401 without secret, zero writes outside
+  vmt_matches/vmt_submissions.total_points/vmt_sync_log, pick tables byte-identical).
+  Live DB/production unreachable from the web sandbox — re-verify in prod after merge by
+  curling the endpoint with CRON_SECRET and checking `vmt_sync_log`.
+
+## Older status — Full QA audit + scoring fixes (June 10, 2026)
 
 Full pre-tournament QA performed June 10 (deadline June 11 21:00 Stockholm). 31 submissions
 in DB at start AND end of audit — zero user rows touched. `scripts/diagnose-bracket-picks.ts`
