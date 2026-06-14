@@ -6,7 +6,7 @@ import Link from 'next/link'
 import LiveMatches from './LiveMatches'
 import TournamentLeaderboard from './TournamentLeaderboard'
 import { getDashboardLeaderboard, TOURNAMENT_START } from '@/lib/leaderboard'
-import { canEditPicks } from '@/lib/deadlines'
+import { canEditPicks, hasPostDeadlineEditException } from '@/lib/deadlines'
 
 export const dynamic = 'force-dynamic'
 
@@ -294,8 +294,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           )}
         </div>
 
-        {/* Bottom-right: subtle edit link for confirmed users — hidden after the deadline */}
-        {mySubmission?.confirmed && canEditPicks(now) && (
+        {/* Bottom-right: subtle edit link for confirmed users — hidden after the
+            deadline, except for users with a post-deadline edit exception. */}
+        {mySubmission && (canEditPicks(now) ? mySubmission.confirmed : hasPostDeadlineEditException(mySubmission.name)) && (
           <div className="absolute bottom-0 right-0 px-6 sm:px-10 pb-8 sm:pb-10">
             <Link
               href={`/dashboard/${mySubmission.id}`}

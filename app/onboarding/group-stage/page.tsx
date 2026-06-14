@@ -9,6 +9,8 @@ import type { VmtMatch, Pick, GroupLabel, OnboardingDraft } from '@/lib/types'
 import { GROUPS } from '@/lib/types'
 import { randomizeGroupPicks, randomGroupScorer } from '@/lib/group-randomize'
 import { GROUP_INSIGHTS } from '@/lib/group-insights'
+import { canEditPicks } from '@/lib/deadlines'
+import { ADMIN_EMAIL } from '@/lib/admin-email'
 import NavBar from '@/components/NavBar'
 
 export default function GroupStagePage() {
@@ -22,6 +24,14 @@ export default function GroupStagePage() {
   const [syncState, setSyncState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   useEffect(() => {
+    // After the deadline only admins and post-deadline exception users reach the
+    // onboarding flow (server layout gate). Exception users edit from the slutspel
+    // step onward, so bounce them off the locked group stage to the bracket.
+    if (!canEditPicks()) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.email !== ADMIN_EMAIL) router.replace('/onboarding/bracket')
+      })
+    }
     setStep('group-stage')
     const d = loadDraft()
     setDraft(d)
