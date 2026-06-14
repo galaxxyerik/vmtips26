@@ -603,9 +603,19 @@ function MatchesTab({
     const clearStaged = pending === 'CLEAR'
     // What the row will resolve to once staged changes are applied.
     const effective = pending ? (clearStaged ? null : pending) : activeResult
+    // A match "counts" the instant it has an effective result — exactly the rule
+    // the scoring engine uses (manual override wins, otherwise the synced result).
+    // Keying the admin marking off the same value keeps the panel and the points
+    // perfectly in sync: anything shown as Klar here is already in the totals.
+    const reported = !!activeResult
+    const accent = pending
+      ? 'border-l-2 border-l-swe-yellow'
+      : reported
+      ? 'border-l-2 border-l-pitch-500/60'
+      : 'border-l-2 border-l-transparent'
 
     return (
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0">
+      <div className={`flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0 ${accent}`}>
         <div className="w-10 shrink-0 text-[10px] font-mono tnum text-white/30">
           {m.kickoff ? formatTime(m.kickoff) : (m.match_number ? `#${m.match_number}` : '')}
         </div>
@@ -625,10 +635,14 @@ function MatchesTab({
             {m.manual_override && (
               <span className="text-[10px] border border-swe-yellow/30 text-swe-yellow/60 px-1">OVERRIDE: {m.manual_result}</span>
             )}
-            {pending && (
-              <span className="text-[10px] border border-pitch-500/40 text-pitch-400 px-1">
-                {clearStaged ? 'RENSAS' : `→ ${pending}`}
+            {pending ? (
+              <span className="text-[10px] border border-swe-yellow/50 text-swe-yellow px-1">
+                {clearStaged ? 'RENSAS — räknas bort' : `ÄNDRAS → ${pending}`}
               </span>
+            ) : reported ? (
+              <span className="text-[10px] border border-pitch-500/40 text-pitch-400 px-1">✓ Klar · räknas i poäng</span>
+            ) : (
+              <span className="text-[10px] text-white/20">Ej inrapporterad</span>
             )}
           </div>
         </div>
@@ -636,7 +650,9 @@ function MatchesTab({
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {(['1','X','2'] as const).map(v => {
             const staged = pending === v
-            const isCurrent = m.manual_override && m.manual_result === v && !pending
+            // Pre-mark the current result whatever its source (manual or synced),
+            // so already-reported matches show as set and aren't re-entered.
+            const isCurrent = !pending && activeResult === v
             return (
               <button
                 key={v}
@@ -646,7 +662,7 @@ function MatchesTab({
                   staged
                     ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
                     : isCurrent
-                    ? 'border-swe-yellow/40 text-swe-yellow/60 bg-swe-yellow/5'
+                    ? 'border-pitch-500/60 text-pitch-400 bg-pitch-900/25'
                     : 'border-white/10 text-white/30 hover:border-white/30 hover:text-white/70'
                 }`}
               >
@@ -672,6 +688,7 @@ function MatchesTab({
     )
   }
 
+  const reportedCount = visibleMatches.filter(m => (m.manual_override ? m.manual_result : m.result)).length
   let lastDate = ''
 
   return (
@@ -689,7 +706,7 @@ function MatchesTab({
           <div className="text-xs text-white/35 mt-0.5">
             {pendingCount > 0
               ? `${pendingCount} ${pendingCount === 1 ? 'osparat resultat' : 'osparade resultat'} — sparas och poäng räknas om för alla`
-              : 'Sätt 1 / X / 2 på matcherna nedan och tryck uppdatera'}
+              : `${reportedCount} av ${visibleMatches.length} matcher inrapporterade i denna fas — de räknas redan i poängen`}
           </div>
         </div>
         <button
