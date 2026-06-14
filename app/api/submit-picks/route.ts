@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendMail } from '@/lib/server-mail'
-import { canEditPicks } from '@/lib/deadlines'
+import { canEditPicks, hasPostDeadlineEditException } from '@/lib/deadlines'
 import { getSystemConfig, isGloballyLocked } from '@/lib/system-config'
 import { logAdminAction } from '@/lib/admin-guard'
 import { ADMIN_EMAIL } from '@/lib/admin-email'
@@ -78,10 +78,22 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient()
 
+    const { data: existingByEmail } = await supabase
+      .from('vmt_submissions')
+      .select('id, user_id, admin_locked, name')
+      .ilike('email', normalizedEmail)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
     // Bypass deadline + lock checks for admin
     const bypassLock = isAdmin && adminOverride === true
+    // Post-deadline edit exception: a named user redoing slutspel picks lost in
+    // the May 28 incident. Only applies to UPDATING their own existing tip — it
+    // never opens new submissions after the deadline.
+    const exceptionEdit = !bypassLock && !canEditPicks() && hasPostDeadlineEditException(existingByEmail?.name)
     if (!bypassLock) {
-      if (!canEditPicks()) {
+      if (!canEditPicks() && !exceptionEdit) {
         return NextResponse.json({ error: 'Deadlinen har passerat — inga fler ändringar tillåtna.' }, { status: 403 })
       }
       const sysConfig = await getSystemConfig()
@@ -90,15 +102,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const canEdit = bypassLock || canEditPicks()
-
-    const { data: existingByEmail } = await supabase
-      .from('vmt_submissions')
-      .select('id, user_id, admin_locked')
-      .ilike('email', normalizedEmail)
-      .order('submitted_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const canEdit = bypassLock || canEditPicks() || exceptionEdit
 
     const canUpdateProvidedSubmission = !!submissionId && !!user && canEdit
     const canUpdateOwnSubmissionByEmail = !!existingByEmail && !!user && existingByEmail.user_id === user.id && canEdit

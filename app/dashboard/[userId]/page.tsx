@@ -2,7 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
-import { canEditPicks } from '@/lib/deadlines'
+import { canEditPicks, hasPostDeadlineEditException } from '@/lib/deadlines'
 import MyTipDetails from './MyTipDetails'
 import PublicTipSummary from './PublicTipSummary'
 
@@ -37,7 +37,8 @@ export default async function UserProfilePage({ params }: Props) {
   if (!submission) notFound()
 
   const isOwn = !!user && user.id === submission.user_id
-  const editable = isOwn && canEditPicks()
+  const postDeadlineException = !canEditPicks() && hasPostDeadlineEditException(submission.name)
+  const editable = isOwn && (canEditPicks() || postDeadlineException)
 
   // For confirmed non-own submissions, load picks for public display
   let publicData: React.ComponentProps<typeof PublicTipSummary> | null = null
@@ -106,7 +107,9 @@ export default async function UserProfilePage({ params }: Props) {
           )}
           {editable && (
             <p className="text-white/35 text-sm mt-2">
-              Ditt tips är fortfarande öppet för ändringar fram till 11 juni kl 17:00.
+              {postDeadlineException
+                ? 'Du kan göra om ditt slutspel och skicka in tipset igen.'
+                : 'Ditt tips är fortfarande öppet för ändringar fram till 11 juni kl 21:30.'}
             </p>
           )}
         </div>

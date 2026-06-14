@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveDraft } from '@/lib/onboarding-storage'
-import { canEditPicks } from '@/lib/deadlines'
+import { canEditPicks, hasPostDeadlineEditException } from '@/lib/deadlines'
 import { SlutspelSection, type BracketPick, type GroupData } from '@/app/admin/AdminSubmissionRow'
 import type { OnboardingDraft } from '@/lib/types'
 
@@ -23,7 +23,9 @@ export default function MyTipDetails() {
   const [error, setError] = useState<string | null>(null)
   const [activeGroup, setActiveGroup] = useState('A')
   const [data, setData] = useState<PicksPayload | null>(null)
-  const editable = canEditPicks()
+  // Post-deadline exception users edit only the slutspel (bracket onward).
+  const exceptionEdit = !canEditPicks() && hasPostDeadlineEditException(data?.draft?.name)
+  const editable = canEditPicks() || exceptionEdit
 
   useEffect(() => {
     let cancelled = false
@@ -50,8 +52,9 @@ export default function MyTipDetails() {
   async function handleUpdate() {
     if (!data || !editable) return
     setUpdating(true)
-    saveDraft({ ...data.draft, step: 'group-stage' })
-    router.push('/onboarding/group-stage')
+    const step = exceptionEdit ? 'bracket' : 'group-stage'
+    saveDraft({ ...data.draft, step })
+    router.push(`/onboarding/${step}`)
   }
 
   if (loading) {
@@ -71,7 +74,11 @@ export default function MyTipDetails() {
           <div>
             <div className="label">Dina picks</div>
             <div className="text-xs text-white/35">
-              {editable ? 'Du kan fortfarande justera allt fram till 11 juni kl 17:00.' : 'Deadline har passerat och tipset är låst.'}
+              {!editable
+                ? 'Deadline har passerat och tipset är låst.'
+                : exceptionEdit
+                  ? 'Gör om ditt slutspel och skicka in igen — gruppspelet är låst.'
+                  : 'Du kan fortfarande justera allt fram till 11 juni kl 21:30.'}
             </div>
           </div>
           {editable && (
@@ -80,7 +87,7 @@ export default function MyTipDetails() {
               disabled={updating}
               className="btn-primary h-9 shrink-0 px-4 text-sm disabled:opacity-40"
             >
-              {updating ? 'Öppnar...' : 'Uppdatera mitt tips'}
+              {updating ? 'Öppnar...' : exceptionEdit ? 'Gör om slutspelet' : 'Uppdatera mitt tips'}
             </button>
           )}
         </div>

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ContentProvider } from '@/contexts/AdminEditContext'
 import AdminEditBar from '@/components/AdminEditBar'
 import FloatingReturnToTips from '@/components/FloatingReturnToTips'
+import ContinueTipPrompt from '@/components/ContinueTipPrompt'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { ADMIN_EMAIL } from '@/lib/admin-email'
 
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen bg-navy-950 text-gray-100">
         <ContentProvider initialContent={content} isAdmin={isAdmin}>
           {children}
+          <ContinueTipPrompt />
           <FloatingReturnToTips />
           <AdminEditBar />
           <SpeedInsights />

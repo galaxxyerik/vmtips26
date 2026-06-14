@@ -28,6 +28,7 @@ export interface MatchData {
   group_label: string | null
   home_team: string
   away_team: string
+  kickoff: string | null
   result: string | null
   manual_result: string | null
   manual_override: boolean
@@ -528,8 +529,6 @@ function ParticipantsTab({
 
 // ── Matches Tab ────────────────────────────────────────────────────────────────
 
-const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
-
 function MatchesTab({
   matches,
   onOverride,
@@ -544,84 +543,136 @@ function MatchesTab({
   config: Record<string, string>
 }) {
   const [phase, setPhase] = useState<'group' | 'knockout'>('group')
-  const [selectedGroup, setSelectedGroup] = useState('A')
+  // Staged 1/X/2 (or 'CLEAR') per match — applied in one go by "Uppdatera poäng".
   const [pendingResult, setPendingResult] = useState<Record<number, string>>({})
-  const [saving, setSaving] = useState<Record<number, boolean>>({})
-
-  const groupMatches = matches.filter(m => m.phase === 'group' && m.group_label === selectedGroup)
-  const knockoutMatches = matches.filter(m => m.phase !== 'group').sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0))
+  const [updating, setUpdating] = useState(false)
 
   const scoringFrozen = config['scoring_frozen'] === 'true'
   const emergencyMode = config['emergency_mode'] === 'true'
 
-  async function doOverride(matchId: number, result: string | null) {
-    setSaving(prev => ({ ...prev, [matchId]: true }))
-    await onOverride(matchId, result)
-    setSaving(prev => ({ ...prev, [matchId]: false }))
-    if (result !== null) {
-      setPendingResult(prev => { const n = {...prev}; delete n[matchId]; return n })
+  // Match-chronological order (by kickoff), match number as tie-breaker.
+  function byKickoff(a: MatchData, b: MatchData) {
+    const ka = a.kickoff ? Date.parse(a.kickoff) : Number.POSITIVE_INFINITY
+    const kb = b.kickoff ? Date.parse(b.kickoff) : Number.POSITIVE_INFINITY
+    return (ka - kb) || ((a.match_number ?? 0) - (b.match_number ?? 0))
+  }
+
+  const visibleMatches = matches
+    .filter(m => (phase === 'group' ? m.phase === 'group' : m.phase !== 'group'))
+    .sort(byKickoff)
+
+  const pendingCount = Object.keys(pendingResult).length
+  const busy = updating || recalcLoading
+
+  function stage(matchId: number, value: string) {
+    setPendingResult(prev => {
+      const next = { ...prev }
+      if (next[matchId] === value) delete next[matchId]
+      else next[matchId] = value
+      return next
+    })
+  }
+
+  // Save every staged result, then recalculate points once for everyone.
+  async function handleUpdate() {
+    setUpdating(true)
+    for (const [id, val] of Object.entries(pendingResult)) {
+      await onOverride(Number(id), val === 'CLEAR' ? null : val)
     }
+    setPendingResult({})
+    await onRecalculate()
+    setUpdating(false)
+  }
+
+  function formatDate(kickoff: string | null) {
+    if (!kickoff) return 'Tid ej satt'
+    const d = new Date(kickoff)
+    if (Number.isNaN(d.getTime())) return 'Tid ej satt'
+    return d.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+  function formatTime(kickoff: string | null) {
+    if (!kickoff) return ''
+    const d = new Date(kickoff)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
   }
 
   function MatchRow({ m }: { m: MatchData }) {
     const activeResult = m.manual_override ? m.manual_result : m.result
     const pending = pendingResult[m.id]
-    const isSaving = saving[m.id]
+    const clearStaged = pending === 'CLEAR'
+    // What the row will resolve to once staged changes are applied.
+    const effective = pending ? (clearStaged ? null : pending) : activeResult
 
     return (
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/5 last:border-0">
+        <div className="w-10 shrink-0 text-[10px] font-mono tnum text-white/30">
+          {m.kickoff ? formatTime(m.kickoff) : (m.match_number ? `#${m.match_number}` : '')}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-sm">
-            <span className={`font-medium ${activeResult === '1' ? 'text-swe-yellow' : 'text-white/70'}`}>{m.home_team}</span>
+            <span className={`font-medium ${effective === '1' ? 'text-swe-yellow' : 'text-white/70'}`}>{m.home_team}</span>
             <span className="text-white/20 text-xs">vs</span>
-            <span className={`font-medium ${activeResult === '2' ? 'text-swe-yellow' : 'text-white/70'}`}>{m.away_team}</span>
+            <span className={`font-medium ${effective === '2' ? 'text-swe-yellow' : 'text-white/70'}`}>{m.away_team}</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
+            {m.group_label && (
+              <span className="text-[10px] text-white/25">Grupp {m.group_label}</span>
+            )}
             {m.result && (
               <span className="text-[10px] text-white/30">API: {m.result}</span>
             )}
             {m.manual_override && (
               <span className="text-[10px] border border-swe-yellow/30 text-swe-yellow/60 px-1">OVERRIDE: {m.manual_result}</span>
             )}
+            {pending && (
+              <span className="text-[10px] border border-pitch-500/40 text-pitch-400 px-1">
+                {clearStaged ? 'RENSAS' : `→ ${pending}`}
+              </span>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {(['1','X','2'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => setPendingResult(prev => ({ ...prev, [m.id]: v }))}
-              className={`w-8 h-8 text-xs font-display font-black border transition-colors ${
-                pending === v
-                  ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
-                  : m.manual_override && m.manual_result === v && !pending
-                  ? 'border-swe-yellow/40 text-swe-yellow/60 bg-swe-yellow/5'
-                  : 'border-white/10 text-white/30 hover:border-white/30 hover:text-white/70'
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-          <button
-            onClick={() => pending ? doOverride(m.id, pending) : undefined}
-            disabled={!pending || isSaving}
-            className="px-2 h-8 text-[10px] font-display font-black uppercase border border-pitch-500/30 text-pitch-400 hover:bg-pitch-900/20 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSaving ? '…' : 'Set'}
-          </button>
+          {(['1','X','2'] as const).map(v => {
+            const staged = pending === v
+            const isCurrent = m.manual_override && m.manual_result === v && !pending
+            return (
+              <button
+                key={v}
+                onClick={() => stage(m.id, v)}
+                disabled={busy}
+                className={`w-8 h-8 text-xs font-display font-black border transition-colors disabled:opacity-40 ${
+                  staged
+                    ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
+                    : isCurrent
+                    ? 'border-swe-yellow/40 text-swe-yellow/60 bg-swe-yellow/5'
+                    : 'border-white/10 text-white/30 hover:border-white/30 hover:text-white/70'
+                }`}
+              >
+                {v}
+              </button>
+            )
+          })}
           {m.manual_override && (
             <button
-              onClick={() => doOverride(m.id, null)}
-              disabled={isSaving}
-              className="px-2 h-8 text-[10px] font-display font-black uppercase border border-white/10 text-white/25 hover:border-loss-500/30 hover:text-loss-500 disabled:opacity-25 transition-colors"
+              onClick={() => stage(m.id, 'CLEAR')}
+              disabled={busy}
+              className={`px-2 h-8 text-[10px] font-display font-black uppercase border transition-colors disabled:opacity-40 ${
+                clearStaged
+                  ? 'border-loss-500 text-loss-500 bg-loss-900/20'
+                  : 'border-white/10 text-white/25 hover:border-loss-500/30 hover:text-loss-500'
+              }`}
             >
-              Clear
+              {clearStaged ? 'Ångra' : 'Rensa'}
             </button>
           )}
         </div>
       </div>
     )
   }
+
+  let lastDate = ''
 
   return (
     <div className="space-y-6">
@@ -631,18 +682,26 @@ function MatchesTab({
         </div>
       )}
 
-      {/* Force recalculate */}
-      <div className="border border-white/10 px-4 py-3 flex items-center justify-between">
+      {/* Fill in results, then apply + recalculate in one go */}
+      <div className="border border-white/10 px-4 py-3 flex items-center justify-between gap-4">
         <div>
-          <div className="text-sm font-display font-black uppercase tracking-wide text-white">Räkna om poäng</div>
-          <div className="text-xs text-white/35 mt-0.5">Triggar omräkning för alla bekräftade deltagare</div>
+          <div className="text-sm font-display font-black uppercase tracking-wide text-white">Uppdatera poäng</div>
+          <div className="text-xs text-white/35 mt-0.5">
+            {pendingCount > 0
+              ? `${pendingCount} ${pendingCount === 1 ? 'osparat resultat' : 'osparade resultat'} — sparas och poäng räknas om för alla`
+              : 'Sätt 1 / X / 2 på matcherna nedan och tryck uppdatera'}
+          </div>
         </div>
         <button
-          onClick={onRecalculate}
-          disabled={recalcLoading || scoringFrozen}
-          className="px-4 py-2 text-xs font-display font-black uppercase tracking-wide border border-swe-yellow/30 text-swe-yellow hover:bg-swe-yellow/10 disabled:opacity-40 transition-colors"
+          onClick={handleUpdate}
+          disabled={busy || scoringFrozen}
+          className={`px-4 py-2 text-xs font-display font-black uppercase tracking-wide border transition-colors disabled:opacity-40 ${
+            pendingCount > 0
+              ? 'border-swe-yellow bg-swe-yellow/10 text-swe-yellow hover:bg-swe-yellow/20'
+              : 'border-swe-yellow/30 text-swe-yellow hover:bg-swe-yellow/10'
+          }`}
         >
-          {recalcLoading ? 'Räknar…' : 'Räkna om nu'}
+          {busy ? 'Uppdaterar…' : pendingCount > 0 ? `Uppdatera (${pendingCount})` : 'Räkna om poäng'}
         </button>
       </div>
 
@@ -661,54 +720,30 @@ function MatchesTab({
         ))}
       </div>
 
-      {phase === 'group' && (
-        <>
-          <div className="flex flex-wrap gap-1">
-            {ALL_GROUPS.map(g => {
-              const hasOverride = matches.some(m => m.phase === 'group' && m.group_label === g && m.manual_override)
-              return (
-                <button
-                  key={g}
-                  onClick={() => setSelectedGroup(g)}
-                  className={`px-3 py-1.5 text-xs font-display font-black uppercase border transition-colors ${
-                    selectedGroup === g
-                      ? 'bg-swe-yellow text-navy-950 border-swe-yellow'
-                      : hasOverride
-                      ? 'border-swe-yellow/30 text-swe-yellow/60'
-                      : 'border-white/10 text-white/35 hover:text-white'
-                  }`}
-                >
-                  {g}
-                </button>
-              )
-            })}
+      {/* One chronological list (by kickoff) with date headers */}
+      <div className="border border-white/10">
+        {visibleMatches.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-white/25">
+            {phase === 'group' ? 'Inga gruppspelsmatcher hittades.' : 'Inga slutspelsmatcher ännu.'}
           </div>
-
-          <div className="border border-white/10">
-            <div className="px-4 py-2.5 border-b border-white/10 bg-navy-900">
-              <div className="label">Grupp {selectedGroup}</div>
-            </div>
-            {groupMatches.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-white/25">Inga matcher hittades för grupp {selectedGroup}.</div>
-            ) : (
-              groupMatches.map(m => <MatchRow key={m.id} m={m} />)
-            )}
-          </div>
-        </>
-      )}
-
-      {phase === 'knockout' && (
-        <div className="border border-white/10">
-          <div className="px-4 py-2.5 border-b border-white/10 bg-navy-900">
-            <div className="label">Slutspelsmatcher</div>
-          </div>
-          {knockoutMatches.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-white/25">Inga slutspelsmatcher ännu.</div>
-          ) : (
-            knockoutMatches.map(m => <MatchRow key={m.id} m={m} />)
-          )}
-        </div>
-      )}
+        ) : (
+          visibleMatches.map(m => {
+            const dateLabel = formatDate(m.kickoff)
+            const showHeader = dateLabel !== lastDate
+            lastDate = dateLabel
+            return (
+              <div key={m.id}>
+                {showHeader && (
+                  <div className="px-4 py-2 bg-navy-900 border-b border-white/10">
+                    <div className="label text-[10px]">{dateLabel}</div>
+                  </div>
+                )}
+                <MatchRow m={m} />
+              </div>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
