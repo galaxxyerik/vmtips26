@@ -34,7 +34,7 @@ export default async function AdminPage() {
     service.from('vmt_bracket_picks').select('submission_id, pick_team').eq('match_number', 104),
     service
       .from('vmt_matches')
-      .select('id, match_number, phase, group_label, home_team, away_team, result, manual_result, manual_override')
+      .select('id, match_number, phase, group_label, home_team, away_team, kickoff, result, manual_result, manual_override')
       .order('id'),
     service.from('vmt_sync_log').select('sync_key, synced_at'),
     getSystemConfig(),
@@ -82,6 +82,7 @@ export default async function AdminPage() {
     group_label: m.group_label,
     home_team: m.home_team,
     away_team: m.away_team,
+    kickoff: m.kickoff ?? null,
     result: m.result,
     manual_result: m.manual_result ?? null,
     manual_override: m.manual_override ?? false,
