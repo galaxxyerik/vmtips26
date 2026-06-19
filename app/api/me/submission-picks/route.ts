@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveMySubmission } from '@/lib/resolve-submission'
 import type { OnboardingDraft } from '@/lib/types'
 
 const ALL_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
@@ -10,11 +11,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
-  const { data: submission } = await service
-    .from('vmt_submissions')
-    .select('id, name, email')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const submission = await resolveMySubmission<{ id: string; name: string; email: string }>(service, user)
 
   if (!submission) return NextResponse.json({ error: 'Missing submission' }, { status: 404 })
 

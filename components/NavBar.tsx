@@ -34,13 +34,16 @@ export default function NavBar({ userName }: NavBarProps) {
         return
       }
 
-      const { data } = await supabase
-        .from('vmt_submissions')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (!cancelled) setMySubmissionId(data?.id ?? null)
+      // Resolve via the server: it uses the service role to match by user_id and
+      // self-heals an anonymously submitted tip (user_id null) by email, which
+      // the client can't read directly (RLS column grants hide the email column).
+      try {
+        const res = await fetch('/api/me/submission', { cache: 'no-store' })
+        const data = res.ok ? await res.json() : null
+        if (!cancelled) setMySubmissionId(data?.submissionId ?? null)
+      } catch {
+        if (!cancelled) setMySubmissionId(null)
+      }
     }
 
     loadMySubmission()

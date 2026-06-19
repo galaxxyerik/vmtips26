@@ -71,7 +71,7 @@ function LeaderboardRow({ entry, isOpen }: { entry: LeaderboardEntry; isOpen: bo
       className={`grid min-h-14 grid-cols-[52px_minmax(0,1fr)_78px] items-center border-t border-white/8 px-3 sm:px-4 ${isOpen ? 'sm:grid-cols-[72px_minmax(0,1fr)_104px_72px_82px]' : 'sm:grid-cols-[72px_minmax(0,1fr)_104px]'} ${isOpen && entry.rank === 4 ? 'border-t-2 border-t-white/15' : ''} ${rowTone}`}
     >
       <div className={`font-mono text-[28px] font-bold leading-none tnum ${isOpen && entry.rank === 1 ? 'text-[#FFC000]' : 'text-white/70'}`}>
-        {entry.rank}
+        {isOpen && entry.isTied && <span className="text-[0.6em] align-top">T</span>}{entry.rank}
       </div>
 
       <div className="min-w-0">

@@ -23,6 +23,7 @@ export type LeaderboardEntry = {
   userId: string | null
   name: string
   rank: number
+  isTied: boolean
   totalPoints: number
   rankMovement: number
   correctTips: number
@@ -97,10 +98,27 @@ function phaseBreakdown(totalPoints: number): LeaderboardPhaseBreakdown {
   return { group, knockout, bonus }
 }
 
-function rankEntries(entries: Omit<LeaderboardEntry, 'rank'>[]): LeaderboardEntry[] {
-  return entries
+function rankEntries(entries: Omit<LeaderboardEntry, 'rank' | 'isTied'>[]): LeaderboardEntry[] {
+  const sorted = entries
+    .slice()
     .sort((a, b) => b.totalPoints - a.totalPoints || a.name.localeCompare(b.name, 'sv'))
-    .map((entry, index) => ({ ...entry, rank: index + 1 }))
+
+  // Standard competition ranking ("1224"): everyone on the same points shares a
+  // rank and the next rank skips accordingly. isTied flags those shared ranks so
+  // the UI can show them as T1, T2 … — equal points must never look like
+  // different standings.
+  const counts = new Map<number, number>()
+  for (const entry of sorted) counts.set(entry.totalPoints, (counts.get(entry.totalPoints) ?? 0) + 1)
+
+  let rank = 0
+  let lastPoints: number | null = null
+  return sorted.map((entry, index) => {
+    if (lastPoints === null || entry.totalPoints !== lastPoints) {
+      rank = index + 1
+      lastPoints = entry.totalPoints
+    }
+    return { ...entry, rank, isTied: (counts.get(entry.totalPoints) ?? 0) > 1 }
+  })
 }
 
 function makeFlatGraph(entries: Pick<LeaderboardEntry, 'id'>[]) {
