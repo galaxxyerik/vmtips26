@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveMySubmission } from '@/lib/resolve-submission'
 import { canEditPicks, hasPostDeadlineEditException, POST_DEADLINE_EDIT_START_STEP } from '@/lib/deadlines'
 
 export const dynamic = 'force-dynamic'
@@ -13,11 +14,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ eligible: false })
 
   const service = createServiceClient()
-  const { data: submission } = await service
-    .from('vmt_submissions')
-    .select('id, name')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const submission = await resolveMySubmission<{ id: string; name: string | null }>(service, user, 'id, name')
 
   if (!submission) return NextResponse.json({ eligible: false })
 
