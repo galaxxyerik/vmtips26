@@ -1,9 +1,9 @@
 import { NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { syncLiveMatchdayMatches } from '@/lib/match-sync'
+import { refreshLiveData } from '@/lib/result-update'
 
-// The after()-triggered live sync (API fetch + upserts + point recalc) must fit
-// within the function's lifetime
+// The after()-triggered live refresh (ESPN fetch + upserts + point recalc) must
+// fit within the function's lifetime
 export const maxDuration = 60
 
 interface MatchRow {
@@ -16,21 +16,24 @@ interface MatchRow {
   kickoff: string
   home_goal_scorers: { player: string; minute: number | null }[] | null
   away_goal_scorers: { player: string; minute: number | null }[] | null
+  result: '1' | 'X' | '2' | null
 }
 
+// VM-matchdagar löper ~13:00 UTC → ~05:00 UTC (sena Nordamerika-kvällsmatcher).
+// Vila bara under döda timmarna 06–13 UTC.
 function isLiveSyncWindow(date = new Date()) {
   const hour = date.getUTCHours()
-  return hour >= 14 && hour < 24
+  return hour >= 13 || hour < 6
 }
 
 function isTodayUtc(iso: string, date = new Date()) {
   return iso.slice(0, 10) === date.toISOString().slice(0, 10)
 }
 
-// Per-instance in-memory cache for the Supabase read result (not the API-Football call)
+// Per-instance in-memory cache for the Supabase read result (not the ESPN call)
 let cachedAt = 0
 let cachedPayload: unknown = null
-const CACHE_TTL_MS = 30_000  // 30s — fast enough for live scores, cheap on Supabase
+const CACHE_TTL_MS = 15_000  // 15s — keeps live scores fresh, cheap on Supabase
 
 export async function GET() {
   try {
@@ -40,13 +43,19 @@ export async function GET() {
     }
 
     const service = createServiceClient()
+    const cols = 'match_number, home_team, away_team, home_score, away_score, status, kickoff, home_goal_scorers, away_goal_scorers, result'
 
-    // Read authoritative match data from Supabase (written by cron via fetchAndStoreLiveMatches)
-    const { data: liveRows, error } = await service
-      .from('vmt_matches')
-      .select('match_number, home_team, away_team, home_score, away_score, status, kickoff, home_goal_scorers, away_goal_scorers')
-      .in('status', ['live', 'scheduled'])
-      .order('kickoff', { ascending: true })
+    // Read authoritative match data from Supabase (written by the ESPN refresh
+    // below). Live + scheduled, plus matches finished within the last few hours
+    // so the panel can flip a just-ended match to its final score instead of
+    // leaving it LIVE.
+    const recentFinishedFrom = new Date(Date.now() - 180 * 60 * 1000).toISOString()
+    const [{ data: openRows, error: openErr }, { data: finishedRows, error: finishedErr }] = await Promise.all([
+      service.from('vmt_matches').select(cols).in('status', ['live', 'scheduled']).order('kickoff', { ascending: true }),
+      service.from('vmt_matches').select(cols).eq('status', 'finished').gte('kickoff', recentFinishedFrom).order('kickoff', { ascending: true }),
+    ])
+    const error = openErr ?? finishedErr
+    const liveRows = [...(openRows ?? []), ...(finishedRows ?? [])]
 
     if (error) throw error
 
@@ -58,6 +67,7 @@ export async function GET() {
       awayScore: row.away_score,
       status: row.status,
       kickoff: row.kickoff,
+      result: row.result,
       homeGoalScorers: row.home_goal_scorers ?? [],
       awayGoalScorers: row.away_goal_scorers ?? [],
     }))
@@ -69,10 +79,11 @@ export async function GET() {
     if (shouldRefresh) {
       // Vercel freezes the instance as soon as the response is sent — a bare
       // floating promise dies mid-flight (scores never updated; sync_log stuck
-      // on 'running'). after() keeps the function alive until the sync is done.
+      // on 'running'). after() keeps the function alive until the refresh is done.
+      // refreshLiveData self-throttles, so polling at 30s won't hammer ESPN.
       after(() =>
-        syncLiveMatchdayMatches(now).catch(err =>
-          console.warn(`[${now.toISOString()}] Live-match refresh skipped/failed:`, err)
+        refreshLiveData(now).catch(err =>
+          console.warn(`[${now.toISOString()}] Live refresh skipped/failed:`, err)
         )
       )
     }

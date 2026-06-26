@@ -17,27 +17,22 @@ interface MatchRow {
   away_score: number | null
   home_goal_scorers: GoalScorer[] | null
   away_goal_scorers: GoalScorer[] | null
+  result: '1' | 'X' | '2' | null
   status: 'scheduled' | 'live' | 'finished'
 }
 
+// Shape returned by /api/matches/live
 interface LiveApiMatch {
-  fixtureId: number
-  homeTeam: string
-  awayTeam: string
-  homeTeamApi?: string
-  awayTeamApi?: string
+  fixtureId: number | null
   homeScore: number | null
   awayScore: number | null
-  elapsed: number | null
   status: string
-  events?: {
-    time?: { elapsed?: number | null }
-    team?: { name?: string }
-    player?: { name?: string }
-    type?: string
-    detail?: string
-  }[]
+  result: '1' | 'X' | '2' | null
+  homeGoalScorers?: GoalScorer[] | null
+  awayGoalScorers?: GoalScorer[] | null
 }
+
+const PICK_LABELS: Record<string, string> = { '1': 'hemmaseger', X: 'oavgjort', '2': 'bortaseger' }
 
 function isLiveWindow(match: MatchRow) {
   const kickoff = new Date(match.kickoff).getTime()
@@ -50,20 +45,11 @@ function scorersText(scorers: GoalScorer[] | null | undefined) {
   return scorers.map(s => `${s.player}${s.minute ? ` ${s.minute}'` : ''}`).join(', ')
 }
 
-function resultPick(homeScore: number | null, awayScore: number | null) {
+function resultFromScore(homeScore: number | null, awayScore: number | null): '1' | 'X' | '2' | null {
   if (homeScore === null || awayScore === null) return null
   if (homeScore > awayScore) return '1'
   if (homeScore === awayScore) return 'X'
   return '2'
-}
-
-function scorersFromEvents(match: LiveApiMatch, team: string): GoalScorer[] {
-  return (match.events ?? [])
-    .filter(event => event.type === 'Goal' && event.team?.name === team && event.detail !== 'Missed Penalty')
-    .map(event => ({
-      player: event.player?.name ?? 'Okänd målskytt',
-      minute: event.time?.elapsed ?? null,
-    }))
 }
 
 export default function LiveMatches({
@@ -74,7 +60,6 @@ export default function LiveMatches({
   userPicks: Record<number, string>
 }) {
   const [matches, setMatches] = useState(initialMatches)
-  const [elapsedByMatch, setElapsedByMatch] = useState<Record<number, number | null>>({})
   const shouldPoll = useMemo(() => initialMatches.some(isLiveWindow), [initialMatches])
 
   useEffect(() => {
@@ -86,9 +71,6 @@ export default function LiveMatches({
         const res = await fetch('/api/matches/live')
         const json = await res.json()
         if (!active || !json.matches) return
-        setElapsedByMatch(Object.fromEntries(
-          json.matches.map((row: LiveApiMatch) => [row.fixtureId, row.elapsed])
-        ))
         setMatches(current => current.map(match => {
           const live = json.matches.find((row: LiveApiMatch) => row.fixtureId === match.match_number)
           if (!live) return match
@@ -96,9 +78,12 @@ export default function LiveMatches({
             ...match,
             home_score: live.homeScore,
             away_score: live.awayScore,
-            home_goal_scorers: scorersFromEvents(live, live.homeTeamApi ?? live.homeTeam),
-            away_goal_scorers: scorersFromEvents(live, live.awayTeamApi ?? live.awayTeam),
-            status: 'live',
+            // Keep DB scorers if the live payload doesn't carry any (the scrape
+            // sources don't provide goal scorers — only API-Football does).
+            home_goal_scorers: live.homeGoalScorers?.length ? live.homeGoalScorers : match.home_goal_scorers,
+            away_goal_scorers: live.awayGoalScorers?.length ? live.awayGoalScorers : match.away_goal_scorers,
+            result: live.result ?? match.result,
+            status: (live.status as MatchRow['status']) ?? match.status,
           }
         }))
       } catch {
@@ -107,7 +92,7 @@ export default function LiveMatches({
     }
 
     poll()
-    const id = window.setInterval(poll, 60_000)
+    const id = window.setInterval(poll, 30_000)
     return () => {
       active = false
       window.clearInterval(id)
@@ -125,16 +110,42 @@ export default function LiveMatches({
       </div>
       <div className="divide-y divide-white/5">
         {visible.map(match => {
-          const livePick = resultPick(match.home_score, match.away_score)
-          const tippedRightNow = livePick && userPicks[match.id] === livePick
+          const finished = match.status === 'finished'
+          const pick = userPicks[match.id] ?? null
+          const currentResult = match.result ?? resultFromScore(match.home_score, match.away_score)
+          const hasScore = match.home_score !== null && match.away_score !== null
+
+          // What to tell the user about their pick right now.
+          let badge: { text: string; tone: 'good' | 'bad' | 'muted' } | null = null
+          if (pick) {
+            if (finished) {
+              badge = currentResult === pick
+                ? { text: 'Rätt ✓', tone: 'good' }
+                : { text: 'Fel ✗', tone: 'bad' }
+            } else if (!hasScore) {
+              badge = { text: 'Avvaktar avspark', tone: 'muted' }
+            } else {
+              badge = currentResult === pick
+                ? { text: 'Ditt tips leder', tone: 'good' }
+                : { text: 'Ditt tips ligger under', tone: 'bad' }
+            }
+          }
+
+          const toneClass =
+            badge?.tone === 'good'
+              ? 'border-pitch-500/30 bg-pitch-900/20 text-pitch-400'
+              : badge?.tone === 'bad'
+                ? 'border-loss-500/30 bg-loss-900/20 text-loss-500'
+                : 'border-white/15 text-white/45'
+
           return (
             <div key={match.id} className="px-4 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
                   <div className="font-display font-black uppercase tracking-wide text-white text-base">
                     {match.home_team} {match.home_score ?? 0}–{match.away_score ?? 0} {match.away_team}
-                    <span className="ml-2 text-xs text-swe-yellow">
-                      LIVE{elapsedByMatch[match.match_number ?? 0] ? ` ${elapsedByMatch[match.match_number ?? 0]}'` : ''}
+                    <span className={`ml-2 text-xs ${finished ? 'text-white/40' : 'text-swe-yellow'}`}>
+                      {finished ? 'SLUT' : 'LIVE'}
                     </span>
                   </div>
                   <div className="mt-1 grid gap-1 text-[11px] text-white/45">
@@ -142,11 +153,32 @@ export default function LiveMatches({
                     <div>{match.away_team}: {scorersText(match.away_goal_scorers)}</div>
                   </div>
                 </div>
-                {tippedRightNow && (
-                  <div className="border border-pitch-500/30 bg-pitch-900/20 px-3 py-1 text-xs font-display font-black uppercase tracking-wide text-pitch-400">
-                    Ditt tips leder
-                  </div>
-                )}
+
+                {/* Always surface what the user tipped on this match */}
+                <div className="flex shrink-0 items-center gap-3">
+                  {pick ? (
+                    <div className="text-right">
+                      <div className="font-sans text-[10px] uppercase tracking-[0.12em] text-white/40">
+                        Du tippade
+                      </div>
+                      <div className="font-display font-black leading-none text-swe-yellow text-2xl">
+                        {pick}
+                        <span className="ml-1.5 align-middle font-sans text-[10px] uppercase tracking-wide text-white/45">
+                          {PICK_LABELS[pick]}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="font-sans text-[10px] uppercase tracking-[0.12em] text-white/30">
+                      Inget tips
+                    </div>
+                  )}
+                  {badge && (
+                    <div className={`border px-2.5 py-1 text-[11px] font-display font-black uppercase tracking-wide ${toneClass}`}>
+                      {badge.text}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )

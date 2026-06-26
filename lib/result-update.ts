@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { apiFootballFetch, syncLog } from '@/lib/api-football'
 import { upsertFixtures, type ApiFixture } from '@/lib/match-sync'
 import { recalculateAllScores } from '@/lib/recalculate'
-import { scrapeFinishedFixtures, type ScrapeOutcome } from '@/lib/result-scrape'
+import { scrapeFinishedFixtures, scrapeLiveScores, type ScrapeOutcome } from '@/lib/result-scrape'
 
 const WC2026_LEAGUE_ID = 1
 const WC2026_SEASON = 2026
@@ -248,4 +248,114 @@ export async function updateResults(
     pendingRemaining,
     warnings,
   }
+}
+
+const LIVE_REFRESH_KEY = 'live_refresh'
+const LIVE_SCORES_KEY = 'live_scores'
+// Don't re-scrape ESPN more often than this regardless of how many people are
+// viewing the dashboard. 30s is well under a poll cycle but keeps request
+// volume sane across multiple serverless instances.
+const LIVE_REFRESH_MIN_INTERVAL_MS = 30_000
+
+/**
+ * Update the running score of in-play matches from ESPN. Writes ONLY
+ * home_score/away_score/status='live' on vmt_matches — never a 1X2 result — so
+ * the leaderboard stays put until a match finishes (updateResults handles that).
+ */
+export async function updateLiveScores(now = new Date()) {
+  const service = createServiceClient()
+
+  // Matches plausibly in play: kicked off within the last ~3h and not finished.
+  const windowStart = new Date(now.getTime() - 180 * 60 * 1000).toISOString()
+  const { data: candidates, error } = await service
+    .from('vmt_matches')
+    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, status')
+    .lt('kickoff', now.toISOString())
+    .gte('kickoff', windowStart)
+    .neq('status', 'finished')
+    .order('kickoff')
+
+  if (error) throw new Error(`Kunde inte läsa pågående matcher: ${error.message}`)
+  if (!candidates?.length) return { updated: 0, log: ['inga pågående matcher'] }
+
+  const { updates, log } = await scrapeLiveScores(
+    candidates.map(m => ({
+      id: m.id,
+      match_number: m.match_number,
+      phase: m.phase,
+      home_team: m.home_team,
+      away_team: m.away_team,
+      kickoff: m.kickoff,
+    }))
+  )
+
+  const byId = new Map(candidates.map(m => [m.id, m]))
+  let updated = 0
+  for (const u of updates) {
+    const current = byId.get(u.id)
+    if (!current) continue
+    if (current.home_score === u.homeScore && current.away_score === u.awayScore && current.status === 'live') {
+      continue
+    }
+    const { error: updErr } = await service
+      .from('vmt_matches')
+      .update({ home_score: u.homeScore, away_score: u.awayScore, status: 'live' })
+      .eq('id', u.id)
+      .neq('status', 'finished') // never overwrite a finished match
+    if (updErr) {
+      log.push(`live-update M${current.match_number ?? u.id} fel: ${updErr.message}`)
+      continue
+    }
+    updated++
+  }
+
+  await service.from('vmt_sync_log').upsert({
+    sync_key: LIVE_SCORES_KEY,
+    synced_at: now.toISOString(),
+    status: 'ok',
+    message: `${updated} pågående matcher uppdaterade${log.length ? ` — ${log.join('; ')}` : ''}`,
+  }, { onConflict: 'sync_key' })
+
+  return { updated, log }
+}
+
+/**
+ * Traffic-triggered refresh for the live dashboard: bump in-play scores AND
+ * pick up any matches that have just finished (distributing their points),
+ * both from the working ESPN source. Self-throttled via a sync_log timestamp so
+ * concurrent viewers can't hammer ESPN. Never throws — callers fire it from
+ * after() and only log failures.
+ */
+export async function refreshLiveData(now = new Date()) {
+  const service = createServiceClient()
+
+  const { data: lastRun } = await service
+    .from('vmt_sync_log')
+    .select('synced_at')
+    .eq('sync_key', LIVE_REFRESH_KEY)
+    .maybeSingle()
+  const lastAt = lastRun?.synced_at ? new Date(lastRun.synced_at).getTime() : 0
+  if (lastAt && now.getTime() - lastAt < LIVE_REFRESH_MIN_INTERVAL_MS) {
+    return { skipped: true as const, reason: 'cooldown' }
+  }
+
+  // Claim the slot up front so parallel invocations honour the cooldown.
+  await service.from('vmt_sync_log').upsert({
+    sync_key: LIVE_REFRESH_KEY,
+    synced_at: now.toISOString(),
+    status: 'running',
+    message: 'live-refresh',
+  }, { onConflict: 'sync_key' })
+
+  try {
+    await updateLiveScores(now)
+  } catch (err) {
+    syncLog(`refreshLiveData: live-score-fel: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  try {
+    await updateResults(now)
+  } catch (err) {
+    syncLog(`refreshLiveData: update-results-fel: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  return { skipped: false as const }
 }

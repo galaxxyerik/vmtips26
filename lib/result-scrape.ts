@@ -172,7 +172,7 @@ interface EspnCompetitor {
 interface EspnEvent {
   id?: string
   date?: string
-  status?: { type?: { completed?: boolean; state?: string } }
+  status?: { displayClock?: string; type?: { completed?: boolean; state?: string } }
   competitions?: { competitors?: EspnCompetitor[] }[]
 }
 
@@ -348,4 +348,136 @@ export async function scrapeFinishedFixtures(pending: PendingMatchForScrape[]): 
     throw lastError instanceof Error ? lastError : new Error('Scrape misslyckades för alla källor och datum')
   }
   return { fixtures: [], source: null, log }
+}
+
+// ── Live (in-progress) scores ────────────────────────────────────────────────
+//
+// The finished-result scrape above only emits matches ESPN marks completed.
+// For the dashboard "Live just nu" panel we also want the running score of
+// matches that are still in play. ESPN's scoreboard already carries those
+// (status.type.state === 'in') with the current goal tally — we just read them
+// and anchor them to our pending rows. Crucially these are written WITHOUT a
+// derived 1X2 result, so the leaderboard never moves on a provisional score —
+// points are still distributed only when updateResults() sees the final.
+
+export interface LiveScoreUpdate {
+  id: number
+  homeScore: number
+  awayScore: number
+  elapsed: number | null
+}
+
+interface RawLive {
+  home: string
+  away: string
+  homeScore: number
+  awayScore: number
+  elapsed: number | null
+  kickoffIso: string
+  sourceId: string
+}
+
+function parseClockMinutes(displayClock: string | undefined): number | null {
+  if (!displayClock) return null
+  const minutes = Number.parseInt(displayClock, 10)
+  return Number.isFinite(minutes) ? minutes : null
+}
+
+async function fetchEspnLiveDay(date: string): Promise<RawLive[]> {
+  const espnDate = date.replaceAll('-', '')
+  const res = await fetch(
+    `${ESPN_BASE}/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${espnDate}`,
+    { headers: { accept: 'application/json', 'user-agent': BROWSER_UA }, cache: 'no-store' }
+  )
+  if (!res.ok) throw new Error(`ESPN svarade ${res.status} för ${date}`)
+  const json = (await res.json()) as { events?: EspnEvent[] }
+
+  const out: RawLive[] = []
+  for (const ev of json.events ?? []) {
+    if (ev.status?.type?.state !== 'in') continue
+    const comps = ev.competitions?.[0]?.competitors ?? []
+    const home = comps.find(c => c.homeAway === 'home')
+    const away = comps.find(c => c.homeAway === 'away')
+    if (!home?.team?.displayName || !away?.team?.displayName || !ev.date) continue
+
+    const homeScore = home.score != null ? Number(home.score) : null
+    const awayScore = away.score != null ? Number(away.score) : null
+    if (!Number.isFinite(homeScore as number) || !Number.isFinite(awayScore as number)) continue
+
+    out.push({
+      home: home.team.displayName,
+      away: away.team.displayName,
+      homeScore: homeScore as number,
+      awayScore: awayScore as number,
+      elapsed: parseClockMinutes(ev.status?.displayClock),
+      kickoffIso: ev.date,
+      sourceId: ev.id ?? '',
+    })
+  }
+  return out
+}
+
+/**
+ * Scrape running scores for in-play matches and map them onto pending rows.
+ * ESPN only (the source that serves Vercel IPs); failures are logged, never
+ * thrown — a missing live tick is harmless and retried on the next poll.
+ */
+export async function scrapeLiveScores(
+  pending: PendingMatchForScrape[]
+): Promise<{ updates: LiveScoreUpdate[]; log: string[] }> {
+  const log: string[] = []
+  if (pending.length === 0) return { updates: [], log }
+
+  const dates = widenDates([...new Set(pending.map(m => m.kickoff.slice(0, 10)))])
+  const seen = new Set<string>()
+  const raws: RawLive[] = []
+  for (const date of dates) {
+    try {
+      const dayResults = await fetchEspnLiveDay(date)
+      log.push(`espn-live ${date}: ${dayResults.length} pågående`)
+      for (const raw of dayResults) {
+        const key = raw.sourceId || `${raw.home}|${raw.away}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        raws.push(raw)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      log.push(`espn-live ${date}: FEL ${message}`)
+      syncLog(`Live-scrape (ESPN) misslyckades för ${date}: ${message}`)
+    }
+  }
+
+  const updates: LiveScoreUpdate[] = []
+  for (const raw of raws) {
+    const row = matchPendingRow(
+      {
+        home: raw.home,
+        away: raw.away,
+        homeScore: raw.homeScore,
+        awayScore: raw.awayScore,
+        homePen: null,
+        awayPen: null,
+        winner: null,
+        kickoffIso: raw.kickoffIso,
+        sourceId: raw.sourceId,
+      },
+      pending
+    )
+    if (!row) {
+      log.push(`espn-live omatchad: ${raw.home}–${raw.away} ${raw.homeScore}–${raw.awayScore}`)
+      continue
+    }
+    // Orient to OUR row: flip if the source listed our away team as its home.
+    const srcHome = svName(raw.home)
+    const flipped = srcHome === row.away_team
+    updates.push({
+      id: row.id,
+      homeScore: flipped ? raw.awayScore : raw.homeScore,
+      awayScore: flipped ? raw.homeScore : raw.awayScore,
+      elapsed: raw.elapsed,
+    })
+  }
+
+  return { updates, log }
 }
