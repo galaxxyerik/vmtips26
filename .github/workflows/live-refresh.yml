@@ -1,0 +1,40 @@
+name: Live score refresh
+
+# Keeps live scores and points fresh even when nobody has the site open.
+#
+# The dashboard's live panel updates via traffic: viewing /dashboard polls
+# /api/matches/live, which fetches fresh ESPN scores and distributes points for
+# finished matches (server-side, self-throttled to <=30s). With no visitors that
+# never fires. This workflow plays the visitor: it GETs the public live endpoint
+# on a loop so scores keep ticking during matches regardless of who's watching.
+#
+# GitHub's scheduler has a 5-minute minimum and is best-effort, so each run
+# loops a handful of pings ~60s apart to approximate a 1-minute cadence. The
+# endpoint is public (no secret needed) and a no-op outside match hours. For a
+# guaranteed exact 1-minute cadence, point an external pinger (e.g. cron-job.org)
+# at the same URL — this workflow and that can run side by side harmlessly.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: live-refresh
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Ping live endpoint every ~60s
+        run: |
+          URL="https://vmtips26.vercel.app/api/matches/live"
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL" || echo "000")
+            echo "ping $i -> HTTP $code"
+            if [ "$i" -lt 5 ]; then sleep 55; fi
+          done
