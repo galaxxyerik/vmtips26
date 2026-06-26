@@ -136,7 +136,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   // Live match data
   const { data: liveCandidateMatches } = await service
     .from('vmt_matches')
-    .select('id, match_number, home_team, away_team, kickoff, home_score, away_score, home_goal_scorers, away_goal_scorers, status, result')
+    .select('id, match_number, home_team, away_team, kickoff, home_score, away_score, home_goal_scorers, away_goal_scorers, status, result, live_minute')
     .gte('kickoff', new Date(now.getTime() - 130 * 60 * 1000).toISOString())
     .lte('kickoff', new Date(now.getTime() + 5 * 60 * 1000).toISOString())
     .order('kickoff')

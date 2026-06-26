@@ -364,7 +364,7 @@ export interface LiveScoreUpdate {
   id: number
   homeScore: number
   awayScore: number
-  elapsed: number | null
+  minute: string | null
 }
 
 interface RawLive {
@@ -372,15 +372,9 @@ interface RawLive {
   away: string
   homeScore: number
   awayScore: number
-  elapsed: number | null
+  minute: string | null
   kickoffIso: string
   sourceId: string
-}
-
-function parseClockMinutes(displayClock: string | undefined): number | null {
-  if (!displayClock) return null
-  const minutes = Number.parseInt(displayClock, 10)
-  return Number.isFinite(minutes) ? minutes : null
 }
 
 async function fetchEspnLiveDay(date: string): Promise<RawLive[]> {
@@ -409,7 +403,8 @@ async function fetchEspnLiveDay(date: string): Promise<RawLive[]> {
       away: away.team.displayName,
       homeScore: homeScore as number,
       awayScore: awayScore as number,
-      elapsed: parseClockMinutes(ev.status?.displayClock),
+      // ESPN's match clock as shown on its scoreboard ("67'", "45+2'", "HT").
+      minute: ev.status?.displayClock?.trim() || null,
       kickoffIso: ev.date,
       sourceId: ev.id ?? '',
     })
@@ -475,7 +470,7 @@ export async function scrapeLiveScores(
       id: row.id,
       homeScore: flipped ? raw.awayScore : raw.homeScore,
       awayScore: flipped ? raw.homeScore : raw.awayScore,
-      elapsed: raw.elapsed,
+      minute: raw.minute,
     })
   }
 

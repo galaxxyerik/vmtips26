@@ -269,7 +269,7 @@ export async function updateLiveScores(now = new Date()) {
   const windowStart = new Date(now.getTime() - 180 * 60 * 1000).toISOString()
   const { data: candidates, error } = await service
     .from('vmt_matches')
-    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, status')
+    .select('id, match_number, phase, home_team, away_team, kickoff, home_score, away_score, status, live_minute')
     .lt('kickoff', now.toISOString())
     .gte('kickoff', windowStart)
     .neq('status', 'finished')
@@ -294,12 +294,15 @@ export async function updateLiveScores(now = new Date()) {
   for (const u of updates) {
     const current = byId.get(u.id)
     if (!current) continue
-    if (current.home_score === u.homeScore && current.away_score === u.awayScore && current.status === 'live') {
-      continue
-    }
+    const unchanged =
+      current.home_score === u.homeScore &&
+      current.away_score === u.awayScore &&
+      current.status === 'live' &&
+      current.live_minute === u.minute
+    if (unchanged) continue
     const { error: updErr } = await service
       .from('vmt_matches')
-      .update({ home_score: u.homeScore, away_score: u.awayScore, status: 'live' })
+      .update({ home_score: u.homeScore, away_score: u.awayScore, status: 'live', live_minute: u.minute })
       .eq('id', u.id)
       .neq('status', 'finished') // never overwrite a finished match
     if (updErr) {

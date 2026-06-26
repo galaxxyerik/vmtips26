@@ -17,6 +17,7 @@ interface MatchRow {
   home_goal_scorers: { player: string; minute: number | null }[] | null
   away_goal_scorers: { player: string; minute: number | null }[] | null
   result: '1' | 'X' | '2' | null
+  live_minute: string | null
 }
 
 // VM-matchdagar löper ~13:00 UTC → ~05:00 UTC (sena Nordamerika-kvällsmatcher).
@@ -43,7 +44,7 @@ export async function GET() {
     }
 
     const service = createServiceClient()
-    const cols = 'match_number, home_team, away_team, home_score, away_score, status, kickoff, home_goal_scorers, away_goal_scorers, result'
+    const cols = 'match_number, home_team, away_team, home_score, away_score, status, kickoff, home_goal_scorers, away_goal_scorers, result, live_minute'
 
     // Read authoritative match data from Supabase (written by the ESPN refresh
     // below). Live + scheduled, plus matches finished within the last few hours
@@ -68,6 +69,7 @@ export async function GET() {
       status: row.status,
       kickoff: row.kickoff,
       result: row.result,
+      minute: row.live_minute,
       homeGoalScorers: row.home_goal_scorers ?? [],
       awayGoalScorers: row.away_goal_scorers ?? [],
     }))

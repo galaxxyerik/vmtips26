@@ -18,6 +18,7 @@ interface MatchRow {
   home_goal_scorers: GoalScorer[] | null
   away_goal_scorers: GoalScorer[] | null
   result: '1' | 'X' | '2' | null
+  live_minute: string | null
   status: 'scheduled' | 'live' | 'finished'
 }
 
@@ -28,6 +29,7 @@ interface LiveApiMatch {
   awayScore: number | null
   status: string
   result: '1' | 'X' | '2' | null
+  minute?: string | null
   homeGoalScorers?: GoalScorer[] | null
   awayGoalScorers?: GoalScorer[] | null
 }
@@ -83,6 +85,7 @@ export default function LiveMatches({
             home_goal_scorers: live.homeGoalScorers?.length ? live.homeGoalScorers : match.home_goal_scorers,
             away_goal_scorers: live.awayGoalScorers?.length ? live.awayGoalScorers : match.away_goal_scorers,
             result: live.result ?? match.result,
+            live_minute: live.minute ?? match.live_minute,
             status: (live.status as MatchRow['status']) ?? match.status,
           }
         }))
@@ -114,6 +117,11 @@ export default function LiveMatches({
           const pick = userPicks[match.id] ?? null
           const currentResult = match.result ?? resultFromScore(match.home_score, match.away_score)
           const hasScore = match.home_score !== null && match.away_score !== null
+          const hasScorers = !!match.home_goal_scorers?.length || !!match.away_goal_scorers?.length
+          // Normalise ESPN's clock to e.g. "67'" (it sometimes omits the apostrophe)
+          const minuteLabel = !finished && match.live_minute
+            ? /[a-zA-Z']/.test(match.live_minute) ? match.live_minute : `${match.live_minute}'`
+            : null
 
           // What to tell the user about their pick right now.
           let badge: { text: string; tone: 'good' | 'bad' | 'muted' } | null = null
@@ -145,13 +153,20 @@ export default function LiveMatches({
                   <div className="font-display font-black uppercase tracking-wide text-white text-base">
                     {match.home_team} {match.home_score ?? 0}–{match.away_score ?? 0} {match.away_team}
                     <span className={`ml-2 text-xs ${finished ? 'text-white/40' : 'text-swe-yellow'}`}>
-                      {finished ? 'SLUT' : 'LIVE'}
+                      {finished ? 'SLUT' : minuteLabel ? `LIVE ${minuteLabel}` : 'LIVE'}
                     </span>
                   </div>
-                  <div className="mt-1 grid gap-1 text-[11px] text-white/45">
-                    <div>{match.home_team}: {scorersText(match.home_goal_scorers)}</div>
-                    <div>{match.away_team}: {scorersText(match.away_goal_scorers)}</div>
-                  </div>
+                  {/* Goal scorers — only when a source actually provides them */}
+                  {hasScorers && (
+                    <div className="mt-1 grid gap-1 text-[11px] text-white/45">
+                      {!!match.home_goal_scorers?.length && (
+                        <div>{match.home_team}: {scorersText(match.home_goal_scorers)}</div>
+                      )}
+                      {!!match.away_goal_scorers?.length && (
+                        <div>{match.away_team}: {scorersText(match.away_goal_scorers)}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Always surface what the user tipped on this match */}
